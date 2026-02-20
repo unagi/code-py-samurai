@@ -8,7 +8,7 @@ Skulptで内部的にJSに変換してブラウザ上で動作。サーバーサ
 
 ## Current Phase
 
-**Phase 1-2**: ターンシステム & 最小プレイ可能セット (次)
+**Phase 1-3**: Beginnerタワー完成 (全9レベル) (次)
 
 ## Tech Stack
 
@@ -47,7 +47,7 @@ src/
 ## Phase Roadmap
 
 1. ~~**Phase 1-1**: プロジェクトセットアップ & コアデータ構造~~ (完了 - 104テスト Pass)
-2. **Phase 1-2**: ターンシステム & 最小プレイセット (Level 1-3動作)
+2. ~~**Phase 1-2**: ターンシステム & 最小プレイセット~~ (完了 - 161テスト Pass)
 3. **Phase 1-3**: Beginnerタワー完成 (全9レベル)
 4. **Phase 1-4**: Intermediateタワー & ゲーム管理 (Epic Mode含む)
 5. **Phase 2**: Python→JS変換層 (Skulpt統合)
