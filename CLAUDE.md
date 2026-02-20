@@ -8,7 +8,7 @@ Skulptで内部的にJSに変換してブラウザ上で動作。サーバーサ
 
 ## Current Phase
 
-**Phase 1-3**: Beginnerタワー完成 (全9レベル) (次)
+**Phase 1-4**: Intermediateタワー & ゲーム管理 (Epic Mode含む) (次)
 
 ## Tech Stack
 
