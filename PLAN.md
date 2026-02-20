@@ -65,10 +65,13 @@ py-samurai/
 ├── public/
 │   └── assets/
 │       ├── sprites/           # キャラクタースプライト
-│       │   ├── samurai-cat/   # プレイヤーキャラ
-│       │   ├── sludge/        # 敵キャラ
+│       │   ├── warrior/       # プレイヤーrole
+│       │   ├── sludge/        # 敵role
+│       │   ├── thick-sludge/
 │       │   ├── archer/
+│       │   ├── wizard/
 │       │   ├── captive/
+│       │   └── golem/
 │       │   └── ...
 │       ├── tiles/             # 床、壁、階段タイル
 │       └── ui/                # UIアセット

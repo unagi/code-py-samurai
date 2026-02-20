@@ -1,0 +1,19 @@
+current_role	current_pack	frame_count	sample_png	target_role	target_pack	note
+archer	idle-shoot	6	frame-05.png	archer	idle-shoot	
+captive	bound-rescued	9	bound-f01.png	captive	bound-rescued	
+golem	idle-walk	3	idle-left-f01.png	golem	idle-walk	
+sludge	attack-02	11	attack-left-f01.png	sludge	attack-02	
+sludge	damaged	8	damaged-left-f01.png	sludge	damaged	
+sludge	damaged-death	11	damaged-left-f01.png	sludge	damaged-death	
+sludge	idle-02	11	frame-03.png	sludge	idle-02	
+thick-sludge	attack	9	attack-left-f01.png	thick-sludge	attack	
+thick-sludge	damaged-death-02	11	damaged-left-f01.png	thick-sludge	damaged-death-02	
+thick-sludge	death-damaged	9	damaged-left-f02.png	thick-sludge	death-damaged	
+thick-sludge	idle-03	9	frame-03.png	thick-sludge	idle-03	
+warrior	attack-03	7	attack-east-f02.png	warrior	attack-03	
+warrior	idle	1	idle-north-f01.png	warrior	idle	
+warrior	rescue	8	rescue-left-f01.png	warrior	rescue	
+warrior	rest	8	rest-left-f01.png	warrior	rest	
+warrior	victory-death	8	death-left-f01.png	warrior	victory-death	
+warrior	walk	3	walk-east-f02.png	warrior	walk	
+wizard	idle-cast-etc	8	cast-left-f03.png	wizard	idle-cast-etc	

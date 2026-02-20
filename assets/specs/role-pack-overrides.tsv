@@ -1,0 +1,14 @@
+# pack_name	role
+# Optional manual override for ambiguous packs.
+# Example:
+# attack-02	sludge
+attack	thick-sludge
+idle-02	sludge
+damaged	sludge
+damaged-death	sludge
+attack-02	sludge
+idle-03	thick-sludge
+damaged-death-02	thick-sludge
+idle-walk	golem
+death-damaged	thick-sludge
+victory-death	warrior

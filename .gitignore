@@ -2,3 +2,27 @@ node_modules/
 dist/
 .DS_Store
 *.local
+
+# Local work caches
+.uv-cache/
+.venv-bg/
+
+# Asset workflow (keep dirs, ignore heavy working files)
+assets/incoming/raw/*
+!assets/incoming/raw/.gitkeep
+assets/review/sessions/*
+!assets/review/sessions/.gitkeep
+assets/delivery/staging/
+assets/delivery/mapped/
+assets/specs/raw-role-manifest.tsv
+assets/delivery/sprites/*
+!assets/delivery/sprites/.gitkeep
+assets/delivery/effects/*
+!assets/delivery/effects/.gitkeep
+assets/delivery/tiles/*
+!assets/delivery/tiles/.gitkeep
+assets/delivery/ui/*
+!assets/delivery/ui/.gitkeep
+
+# Upstream reference repo snapshot (not part of deliverables)
+original/
