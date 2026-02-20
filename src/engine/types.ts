@@ -9,6 +9,7 @@ export interface IFloor {
   width: number;
   height: number;
   stairsLocation: [number, number];
+  units: IUnit[];
   outOfBounds(x: number, y: number): boolean;
   get(x: number, y: number): IUnit | undefined;
 }
@@ -81,5 +82,7 @@ export interface LevelDefinition {
     x: number;
     y: number;
     direction: AbsoluteDirection;
+    abilities?: string[];
+    abilityConfig?: Record<string, Record<string, unknown>>;
   }>;
 }

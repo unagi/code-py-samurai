@@ -14,6 +14,7 @@ function createMockFloor(opts: {
     width,
     height,
     stairsLocation: [stairsX, stairsY] as [number, number],
+    units: [],
     outOfBounds(x: number, y: number) {
       return x < 0 || y < 0 || x > width - 1 || y > height - 1;
     },

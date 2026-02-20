@@ -1,4 +1,6 @@
 import type { ILogger } from "../types";
+import type { BaseAbility } from "../abilities/base";
+import { createAbility } from "../abilities/index";
 import { BaseUnit } from "./base";
 
 /**
@@ -21,5 +23,9 @@ export class Captive extends BaseUnit {
 
   get name(): string {
     return "Captive";
+  }
+
+  protected createAbility(name: string): BaseAbility | null {
+    return createAbility(name, this);
   }
 }

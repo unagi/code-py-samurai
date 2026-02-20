@@ -45,7 +45,7 @@ export class Floor implements IFloor {
   }
 
   get otherUnits(): IUnit[] {
-    return this.units.filter((u) => !u.isWarrior());
+    return this.units.filter((u) => !u.isWarrior() && !u.isGolem());
   }
 
   get(x: number, y: number): IUnit | undefined {

@@ -9,6 +9,14 @@ import { Rescue } from "./rescue";
 import { Pivot } from "./pivot";
 import { Look } from "./look";
 import { Shoot } from "./shoot";
+import { DirectionOfStairs } from "./direction-of-stairs";
+import { DirectionOf } from "./direction-of";
+import { DistanceOf } from "./distance-of";
+import { Listen } from "./listen";
+import { Bind } from "./bind";
+import { Explode } from "./explode";
+import { Detonate } from "./detonate";
+import { Form } from "./form";
 
 type AbilityConstructor = new (unit: IUnit) => BaseAbility;
 
@@ -22,6 +30,14 @@ const ABILITY_MAP: Record<string, AbilityConstructor> = {
   "pivot!": Pivot,
   look: Look,
   "shoot!": Shoot,
+  direction_of_stairs: DirectionOfStairs,
+  direction_of: DirectionOf,
+  distance_of: DistanceOf,
+  listen: Listen,
+  "bind!": Bind,
+  "explode!": Explode,
+  "detonate!": Detonate,
+  "form!": Form,
 };
 
 /**
@@ -36,4 +52,22 @@ export function createAbility(
   return new Ctor(unit);
 }
 
-export { Walk, Feel, Health, Attack, Rest, Rescue, Pivot, Look, Shoot };
+export {
+  Walk,
+  Feel,
+  Health,
+  Attack,
+  Rest,
+  Rescue,
+  Pivot,
+  Look,
+  Shoot,
+  DirectionOfStairs,
+  DirectionOf,
+  DistanceOf,
+  Listen,
+  Bind,
+  Explode,
+  Detonate,
+  Form,
+};

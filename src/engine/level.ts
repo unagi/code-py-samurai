@@ -56,7 +56,22 @@ export class Level {
     for (const unitDef of units) {
       const unit = createUnit(unitDef.type, this._logger);
       if (unit) {
+        // Add per-unit abilities if specified (e.g., explode! for ticking captives)
+        if (unitDef.abilities && unitDef.abilities.length > 0) {
+          (unit as any).addAbilities(...unitDef.abilities);
+        }
         this.floor.add(unit, unitDef.x, unitDef.y, unitDef.direction);
+        // Apply ability configuration after placement (e.g., explode!.time = 7)
+        if (unitDef.abilityConfig) {
+          for (const [abilityName, config] of Object.entries(
+            unitDef.abilityConfig
+          )) {
+            const ability = (unit as any).abilities.get(abilityName);
+            if (ability) {
+              Object.assign(ability, config);
+            }
+          }
+        }
       }
     }
 

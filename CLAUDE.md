@@ -8,7 +8,7 @@ Skulptで内部的にJSに変換してブラウザ上で動作。サーバーサ
 
 ## Current Phase
 
-**Phase 1-4**: Intermediateタワー & ゲーム管理 (Epic Mode含む) (次)
+**Phase 2**: Python→JS変換層 (Skulpt統合) (次)
 
 ## Tech Stack
 
@@ -27,9 +27,16 @@ Skulptで内部的にJSに変換してブラウザ上で動作。サーバーサ
 ```
 src/
 ├── engine/          # ゲームエンジン (pure TS, フレームワーク非依存)
-│   ├── abilities/   # walk, attack, feel, etc.
-│   └── units/       # warrior, sludge, archer, etc.
-├── levels/          # レベルデータ (beginner/ intermediate/)
+│   ├── abilities/   # walk, attack, feel, look, shoot, rescue, bind, etc. (18種)
+│   ├── units/       # warrior, sludge, thick-sludge, archer, wizard, captive, golem
+│   ├── tower.ts     # Tower - レベル群の管理
+│   ├── profile.ts   # Profile - プレイヤー進行状態 (保存/読込対応)
+│   ├── game.ts      # Game - ゲームフロー (Normal/Epic Mode)
+│   └── level.ts     # Level - 1レベルの実行管理
+├── levels/          # レベルデータ
+│   ├── beginner/    # Beginner タワー (9レベル)
+│   ├── intermediate/ # Intermediate タワー (9レベル)
+│   └── index.ts     # Tower インスタンスの export
 ├── python/          # Skulpt統合 & Python↔JS API bridge
 ├── renderer/        # Canvas描画 & スプライトアニメーション
 ├── ui/              # React UI (screens/ components/)
@@ -48,8 +55,8 @@ src/
 
 1. ~~**Phase 1-1**: プロジェクトセットアップ & コアデータ構造~~ (完了 - 104テスト Pass)
 2. ~~**Phase 1-2**: ターンシステム & 最小プレイセット~~ (完了 - 161テスト Pass)
-3. **Phase 1-3**: Beginnerタワー完成 (全9レベル)
-4. **Phase 1-4**: Intermediateタワー & ゲーム管理 (Epic Mode含む)
+3. ~~**Phase 1-3**: Beginnerタワー完成 (全9レベル)~~ (完了 - 211テスト Pass)
+4. ~~**Phase 1-4**: Intermediateタワー & ゲーム管理 (Epic Mode含む)~~ (完了 - 301テスト Pass)
 5. **Phase 2**: Python→JS変換層 (Skulpt統合)
 6. **Phase 3**: 基本Web UI & コードエディタ (React + CodeMirror)
 7. **Phase 4**: ゲームレンダラー & アニメーション (Canvas + Sprite)
