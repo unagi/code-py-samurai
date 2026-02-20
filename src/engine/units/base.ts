@@ -23,6 +23,9 @@ export abstract class BaseUnit implements IUnit {
   get attackPower(): number {
     return 0;
   }
+  get shootPower(): number {
+    return 0;
+  }
   get maxHealth(): number {
     return 0;
   }

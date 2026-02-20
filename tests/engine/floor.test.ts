@@ -9,6 +9,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     health: 20,
     maxHealth: 20,
     attackPower: 5,
+    shootPower: 3,
     isBound: () => false,
     isWarrior: () => true,
     isGolem: () => false,

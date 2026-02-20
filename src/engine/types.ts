@@ -22,6 +22,7 @@ export interface IUnit {
   health: number;
   readonly maxHealth: number;
   readonly attackPower: number;
+  readonly shootPower: number;
   isBound(): boolean;
   isWarrior(): boolean;
   isGolem(): boolean;

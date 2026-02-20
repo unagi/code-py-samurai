@@ -5,6 +5,10 @@ import { Feel } from "./feel";
 import { Health } from "./health";
 import { Attack } from "./attack";
 import { Rest } from "./rest";
+import { Rescue } from "./rescue";
+import { Pivot } from "./pivot";
+import { Look } from "./look";
+import { Shoot } from "./shoot";
 
 type AbilityConstructor = new (unit: IUnit) => BaseAbility;
 
@@ -14,6 +18,10 @@ const ABILITY_MAP: Record<string, AbilityConstructor> = {
   health: Health,
   "attack!": Attack,
   "rest!": Rest,
+  "rescue!": Rescue,
+  "pivot!": Pivot,
+  look: Look,
+  "shoot!": Shoot,
 };
 
 /**
@@ -28,4 +36,4 @@ export function createAbility(
   return new Ctor(unit);
 }
 
-export { Walk, Feel, Health, Attack, Rest };
+export { Walk, Feel, Health, Attack, Rest, Rescue, Pivot, Look, Shoot };
