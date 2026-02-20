@@ -7,7 +7,7 @@ export class Floor implements IFloor {
   readonly width: number;
   readonly height: number;
   private _stairsLocation: [number, number] = [-1, -1];
-  private _allUnits: { unit: IUnit; position: Position | null }[] = [];
+  private _allUnits: IUnit[] = [];
 
   constructor(width: number, height: number) {
     this.width = width;
@@ -30,27 +30,18 @@ export class Floor implements IFloor {
     unit: IUnit,
     x: number,
     y: number,
-    direction: AbsoluteDirection = "north",
-    onAdd?: (unit: IUnit, position: Position) => void
+    direction: AbsoluteDirection = "north"
   ): void {
-    const position = new Position(this, x, y, direction);
-    this._allUnits.push({ unit, position });
-    if (onAdd) {
-      onAdd(unit, position);
-    }
+    unit.position = new Position(this, x, y, direction);
+    this._allUnits.push(unit);
   }
 
   removeUnit(unit: IUnit): void {
-    const entry = this._allUnits.find((e) => e.unit === unit);
-    if (entry) {
-      entry.position = null;
-    }
+    unit.position = null;
   }
 
   get units(): IUnit[] {
-    return this._allUnits
-      .filter((e) => e.position !== null)
-      .map((e) => e.unit);
+    return this._allUnits.filter((u) => u.position !== null);
   }
 
   get otherUnits(): IUnit[] {
@@ -58,15 +49,11 @@ export class Floor implements IFloor {
   }
 
   get(x: number, y: number): IUnit | undefined {
-    const entry = this._allUnits.find(
-      (e) => e.position !== null && e.position.at(x, y)
-    );
-    return entry?.unit;
+    return this.units.find((u) => u.position!.at(x, y));
   }
 
   getPosition(unit: IUnit): Position | null {
-    const entry = this._allUnits.find((e) => e.unit === unit);
-    return entry?.position ?? null;
+    return unit.position;
   }
 
   space(x: number, y: number): Space {

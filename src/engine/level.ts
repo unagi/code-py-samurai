@@ -50,17 +50,13 @@ export class Level {
     const allAbilities = [...new Set([...existingAbilities, ...warDef.abilities])];
     this.warrior.addAbilities(...allAbilities);
 
-    this.floor.add(this.warrior, warDef.x, warDef.y, warDef.direction, (u, pos) => {
-      (u as Warrior).position = pos;
-    });
+    this.floor.add(this.warrior, warDef.x, warDef.y, warDef.direction);
 
     // Create and place enemy/captive units
     for (const unitDef of units) {
       const unit = createUnit(unitDef.type, this._logger);
       if (unit) {
-        this.floor.add(unit, unitDef.x, unitDef.y, unitDef.direction, (u, pos) => {
-          (u as any).position = pos;
-        });
+        this.floor.add(unit, unitDef.x, unitDef.y, unitDef.direction);
       }
     }
 

@@ -29,11 +29,20 @@ function createMockFloor(opts: {
 function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
   return {
     character: "@",
+    position: null,
+    health: 20,
+    maxHealth: 20,
+    attackPower: 5,
     isBound: () => false,
     isWarrior: () => false,
     isGolem: () => false,
     hasAbility: () => false,
     toString: () => "unit",
+    takeDamage: () => {},
+    earnPoints: () => {},
+    say: () => {},
+    unbind: () => {},
+    bind: () => {},
     ...overrides,
   };
 }

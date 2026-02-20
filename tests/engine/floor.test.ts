@@ -5,11 +5,20 @@ import type { IUnit } from "@engine/types";
 function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
   return {
     character: "@",
+    position: null,
+    health: 20,
+    maxHealth: 20,
+    attackPower: 5,
     isBound: () => false,
     isWarrior: () => true,
     isGolem: () => false,
     hasAbility: () => false,
     toString: () => "Warrior",
+    takeDamage: () => {},
+    earnPoints: () => {},
+    say: () => {},
+    unbind: () => {},
+    bind: () => {},
     ...overrides,
   };
 }
@@ -81,18 +90,15 @@ describe("Floor", () => {
       expect(floor.get(3, 0)).toBeUndefined();
     });
 
-    it("assigns position to unit via callback", () => {
+    it("assigns position to unit directly", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
       const unit = createMockUnit();
-      let assignedPosition: any = null;
-      floor.add(unit, 3, 0, "east", (u, pos) => {
-        assignedPosition = pos;
-      });
-      expect(assignedPosition).not.toBeNull();
-      expect(assignedPosition.x).toBe(3);
-      expect(assignedPosition.y).toBe(0);
-      expect(assignedPosition.direction).toBe("east");
+      floor.add(unit, 3, 0, "east");
+      expect(unit.position).not.toBeNull();
+      expect(unit.position!.x).toBe(3);
+      expect(unit.position!.y).toBe(0);
+      expect(unit.position!.direction).toBe("east");
     });
   });
 
