@@ -1,20 +1,17 @@
-name: CI
+name: Codecov Upload
 
 on:
   push:
     branches:
       - main
-      - "feature/**"
-      - "fix/**"
-      - "chore/**"
   pull_request:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
-  test:
-    name: Test (Node 24)
+  upload:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +30,14 @@ jobs:
       - name: Install coverage provider
         run: npm i --no-save @vitest/coverage-v8
 
-      - name: Run tests with coverage
+      - name: Generate coverage
         run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          use_oidc: true
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
+          verbose: true
