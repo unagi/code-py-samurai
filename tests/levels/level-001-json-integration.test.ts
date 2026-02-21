@@ -10,7 +10,7 @@ describe("beginner level 001 json integration", () => {
     const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.walk()`;
     const player = compilePythonPlayer(source);
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, ["walk!"]);
 
     const result = level.play();
 

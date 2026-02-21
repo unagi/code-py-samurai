@@ -2,7 +2,6 @@ import { Floor } from "./floor";
 import type { ILogger, IPlayer, LevelDefinition } from "./types";
 import { Warrior } from "./units/warrior";
 import { createUnit } from "./units/index";
-import { warriorAbilitiesToEngineAbilities } from "./warrior-abilities";
 
 export interface LevelResult {
   passed: boolean;
@@ -52,12 +51,8 @@ export class Level {
     }
     this.warrior.player = player;
 
-    // Add existing abilities from profile + level-defined abilities
-    const levelAbilities = warDef.abilities
-      ? warriorAbilitiesToEngineAbilities(warDef.abilities)
-      : [];
-    const allAbilities = [...new Set([...existingAbilities, ...levelAbilities])];
-    this.warrior.addAbilities(...allAbilities);
+    // Ability injection is runtime-driven from progression state.
+    this.warrior.addAbilities(...new Set(existingAbilities));
 
     this.floor.add(this.warrior, warDef.x, warDef.y, warDef.direction);
 

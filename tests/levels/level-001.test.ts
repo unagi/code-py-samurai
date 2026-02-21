@@ -5,6 +5,8 @@ import { Turn } from "@engine/turn";
 import { level001 } from "../../src/levels/beginner";
 
 describe("Beginner Level 1", () => {
+  const base = ["walk!"];
+
   it("is passed by walking forward every turn", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
@@ -13,7 +15,7 @@ describe("Beginner Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, base);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -28,7 +30,7 @@ describe("Beginner Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, base);
     const result = level.play();
 
     expect(result.turns).toBe(7);
@@ -42,7 +44,7 @@ describe("Beginner Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, base);
     const result = level.play();
 
     expect(result.timeBonus).toBe(8); // 15 initial - 7 turns
@@ -56,7 +58,7 @@ describe("Beginner Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, base);
     const result = level.play();
 
     // No enemies, so warrior score = 0
@@ -78,7 +80,7 @@ describe("Beginner Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, base);
     const result = level.play(20); // Limit turns
 
     expect(result.passed).toBe(false);

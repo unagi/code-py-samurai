@@ -1,5 +1,4 @@
 import type { LevelDefinition } from "../../engine/types";
-import { getWarriorAbilitiesAtLevel } from "../../engine/warrior-abilities";
 import { parseLevelDefinitionJson } from "../level-schema";
 
 import rawLevel001 from "./level-001.json";
@@ -12,25 +11,15 @@ import rawLevel007 from "./level-007.json";
 import rawLevel008 from "./level-008.json";
 import rawLevel009 from "./level-009.json";
 
-function withWarriorAbilities(level: LevelDefinition, levelNumber: number): LevelDefinition {
-  return {
-    ...level,
-    warrior: {
-      ...level.warrior,
-      abilities: getWarriorAbilitiesAtLevel("beginner", levelNumber),
-    },
-  };
-}
-
-export const level001: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel001), 1);
-export const level002: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel002), 2);
-export const level003: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel003), 3);
-export const level004: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel004), 4);
-export const level005: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel005), 5);
-export const level006: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel006), 6);
-export const level007: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel007), 7);
-export const level008: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel008), 8);
-export const level009: LevelDefinition = withWarriorAbilities(parseLevelDefinitionJson(rawLevel009), 9);
+export const level001: LevelDefinition = parseLevelDefinitionJson(rawLevel001);
+export const level002: LevelDefinition = parseLevelDefinitionJson(rawLevel002);
+export const level003: LevelDefinition = parseLevelDefinitionJson(rawLevel003);
+export const level004: LevelDefinition = parseLevelDefinitionJson(rawLevel004);
+export const level005: LevelDefinition = parseLevelDefinitionJson(rawLevel005);
+export const level006: LevelDefinition = parseLevelDefinitionJson(rawLevel006);
+export const level007: LevelDefinition = parseLevelDefinitionJson(rawLevel007);
+export const level008: LevelDefinition = parseLevelDefinitionJson(rawLevel008);
+export const level009: LevelDefinition = parseLevelDefinitionJson(rawLevel009);
 
 export const beginnerLevels: LevelDefinition[] = [
   level001,

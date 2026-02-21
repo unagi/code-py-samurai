@@ -41,17 +41,17 @@ export class Game {
     }
 
     const level = new Level(levelDef, this._logger);
-    level.setup(player, this.profile.abilities);
+    const baselineAbilities = warriorAbilitiesToEngineAbilities(
+      getWarriorAbilitiesAtLevel(this.tower.name, 1),
+    );
+    level.setup(player, [...new Set([...baselineAbilities, ...this.profile.abilities])]);
     const result = level.play(maxTurns);
 
     if (result.passed) {
       this.profile.score += result.totalScore;
       const increment = getWarriorAbilityIncrement(this.tower.name, this.profile.levelNumber);
       const unlockedFromProgression = warriorAbilitiesToEngineAbilities(increment);
-      const unlockedFromLevel = levelDef.warrior.abilities
-        ? warriorAbilitiesToEngineAbilities(levelDef.warrior.abilities)
-        : [];
-      this.profile.addAbilities(...new Set([...unlockedFromProgression, ...unlockedFromLevel]));
+      this.profile.addAbilities(...new Set(unlockedFromProgression));
     }
 
     return result;
@@ -112,16 +112,8 @@ export class Game {
   }
 
   private getAccumulatedAbilities(upToLevel: number): string[] {
-    const fromProgression = warriorAbilitiesToEngineAbilities(
+    return warriorAbilitiesToEngineAbilities(
       getWarriorAbilitiesAtLevel(this.tower.name, upToLevel),
     );
-    const fromLevelDef: string[] = [];
-    for (let n = 1; n <= upToLevel; n++) {
-      const level = this.tower.getLevel(n);
-      if (level?.warrior.abilities) {
-        fromLevelDef.push(...warriorAbilitiesToEngineAbilities(level.warrior.abilities));
-      }
-    }
-    return [...new Set([...fromProgression, ...fromLevelDef])];
   }
 }
