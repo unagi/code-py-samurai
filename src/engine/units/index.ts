@@ -28,4 +28,11 @@ export function createUnit(
   return new Ctor(logger);
 }
 
-export { Warrior, Sludge, ThickSludge, Archer, Captive, Wizard, Golem, BaseUnit };
+export { Warrior } from "./warrior";
+export { Sludge } from "./sludge";
+export { ThickSludge } from "./thick-sludge";
+export { Archer } from "./archer";
+export { Captive } from "./captive";
+export { Wizard } from "./wizard";
+export { Golem } from "./golem";
+export { BaseUnit } from "./base";

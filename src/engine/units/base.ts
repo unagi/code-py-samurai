@@ -18,7 +18,7 @@ export abstract class BaseUnit implements IUnit {
 
   constructor(logger?: ILogger) {
     this._logger = logger ?? { log: () => {} };
-    this._unitId = this.name.toLowerCase().replace(/[^a-z0-9]+/g, "") || "unit";
+    this._unitId = this.name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "") || "unit";
   }
 
   // Override in subclass
@@ -43,14 +43,12 @@ export abstract class BaseUnit implements IUnit {
   }
 
   setUnitId(id: string): void {
-    const normalized = id.toLowerCase().replace(/[^a-z0-9#_-]+/g, "");
+    const normalized = id.toLowerCase().replaceAll(/[^a-z0-9#_-]+/g, "");
     this._unitId = normalized.length > 0 ? normalized : this._unitId;
   }
 
   get health(): number {
-    if (this._health === null) {
-      this._health = this.maxHealth;
-    }
+    this._health ??= this.maxHealth;
     return this._health;
   }
 

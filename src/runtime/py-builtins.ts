@@ -7,7 +7,7 @@ function callBoolMethod(target: Record<string, unknown>, snake: string, camel: s
   if (typeof camelFn === "function") {
     return Boolean((camelFn as () => unknown).call(target));
   }
-  throw new Error(`Space method ${snake}/${camel} is not available.`);
+  throw new TypeError(`Space method ${snake}/${camel} is not available.`);
 }
 
 export interface PythonSpace {

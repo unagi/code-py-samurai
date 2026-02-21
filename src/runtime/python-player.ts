@@ -77,7 +77,7 @@ function countIndent(raw: string): number {
 }
 
 function tokenizePlayTurn(source: string): TokenLine[] {
-  const normalized = source.replace(/\r\n?/g, "\n");
+  const normalized = source.replaceAll(/\r\n?/g, "\n");
   if (normalized.trim().length === 0) {
     throw new ParseError("Python source is empty.");
   }
@@ -352,7 +352,7 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
       const target = evalExpr(expr.target, turn, env) as Record<string, unknown>;
       const fn = target[expr.name] as (() => boolean) | undefined;
       if (typeof fn !== "function") {
-        throw new Error(`Predicate ${expr.name} is not available.`);
+        throw new TypeError(`Predicate ${expr.name} is not available.`);
       }
       return fn.call(target);
     }

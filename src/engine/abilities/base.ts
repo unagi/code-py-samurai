@@ -80,7 +80,7 @@ export abstract class BaseAbility {
    */
   verifyDirection(direction: RelativeDirection): void {
     if (!VALID_DIRECTIONS.includes(direction)) {
-      throw new Error(
+      throw new TypeError(
         `Unknown direction "${direction}". Should be "forward", "backward", "left" or "right".`
       );
     }

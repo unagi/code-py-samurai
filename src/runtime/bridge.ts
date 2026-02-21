@@ -16,7 +16,7 @@ export function asRuntimeTurn(turn: ITurn): RuntimeTurn {
     typeof candidate.hasAction !== "function" ||
     typeof candidate.hasSense !== "function"
   ) {
-    throw new Error("Runtime turn interface is not available.");
+    throw new TypeError("Runtime turn interface is not available.");
   }
   return candidate as RuntimeTurn;
 }

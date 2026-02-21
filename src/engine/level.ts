@@ -168,7 +168,7 @@ export class Level {
   }
 
   static gradeLetter(percent: number): string {
-    if (percent >= 1.0) return "S";
+    if (percent >= 1) return "S";
     if (percent >= 0.9) return "A";
     if (percent >= 0.8) return "B";
     if (percent >= 0.7) return "C";

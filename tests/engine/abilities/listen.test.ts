@@ -5,17 +5,17 @@ import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
-describe("Listen", () => {
-  function setup() {
-    const floor = new Floor(6, 4);
-    floor.placeStairs(5, 3);
-    const warrior = new Warrior();
-    warrior.addAbilities("listen");
-    floor.add(warrior, 0, 0, "east");
-    const ability = warrior.abilities.get("listen") as Listen;
-    return { floor, warrior, ability };
-  }
+function setup() {
+  const floor = new Floor(6, 4);
+  floor.placeStairs(5, 3);
+  const warrior = new Warrior();
+  warrior.addAbilities("listen");
+  floor.add(warrior, 0, 0, "east");
+  const ability = warrior.abilities.get("listen") as Listen;
+  return { floor, warrior, ability };
+}
 
+describe("Listen", () => {
   it("returns empty array when no other units", () => {
     const { ability } = setup();
     expect(ability.perform()).toEqual([]);

@@ -4,16 +4,16 @@ import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 
-describe("Attack", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("attack!");
-    floor.add(warrior, 0, 0, "east");
-    return { floor, warrior };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("attack!");
+  floor.add(warrior, 0, 0, "east");
+  return { floor, warrior };
+}
 
+describe("Attack", () => {
   it("deals attackPower damage to enemy in direction", () => {
     const { floor, warrior } = setup();
     const sludge = new Sludge();

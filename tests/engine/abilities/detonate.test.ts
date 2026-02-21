@@ -6,17 +6,17 @@ import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
-describe("Detonate", () => {
-  function setup() {
-    const floor = new Floor(8, 3);
-    floor.placeStairs(7, 1);
-    const warrior = new Warrior();
-    warrior.addAbilities("detonate!");
-    floor.add(warrior, 0, 1, "east");
-    const ability = warrior.abilities.get("detonate!") as Detonate;
-    return { floor, warrior, ability };
-  }
+function setup() {
+  const floor = new Floor(8, 3);
+  floor.placeStairs(7, 1);
+  const warrior = new Warrior();
+  warrior.addAbilities("detonate!");
+  floor.add(warrior, 0, 1, "east");
+  const ability = warrior.abilities.get("detonate!") as Detonate;
+  return { floor, warrior, ability };
+}
 
+describe("Detonate", () => {
   it("deals 8 damage to center target", () => {
     const { floor, ability } = setup();
     const sludge = new Sludge(); // 12 HP

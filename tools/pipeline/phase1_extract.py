@@ -228,8 +228,8 @@ def tight_crop(
     if not np.any(rows_mask) or not np.any(cols_mask):
         return img
 
-    row_idx = np.where(rows_mask)[0]
-    col_idx = np.where(cols_mask)[0]
+    row_idx = np.nonzero(rows_mask)[0]
+    col_idx = np.nonzero(cols_mask)[0]
 
     y1 = max(0, row_idx[0] - padding)
     y2 = min(img.height, row_idx[-1] + 1 + padding)
@@ -367,7 +367,7 @@ def _cluster_positions(values: list[float], expected: int) -> list[float]:
 
 
 def _fill_positions(
-    existing: list[float], target: int, cell_size: int, total_size: int
+    existing: list[float], target: int, _cell_size: int, total_size: int
 ) -> list[float]:
     """検出済み位置から等間隔で欠損位置を補完."""
     if len(existing) >= 2:
@@ -539,8 +539,8 @@ def process_tiles(
                 cols_mask = np.any(alpha > 10, axis=0)
 
                 if np.any(rows_mask) and np.any(cols_mask):
-                    row_idx_arr = np.where(rows_mask)[0]
-                    col_idx_arr = np.where(cols_mask)[0]
+                    row_idx_arr = np.nonzero(rows_mask)[0]
+                    col_idx_arr = np.nonzero(cols_mask)[0]
                     y1 = row_idx_arr[0]
                     y2 = row_idx_arr[-1] + 1
                     x1 = col_idx_arr[0]

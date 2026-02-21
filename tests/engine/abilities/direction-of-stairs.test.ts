@@ -3,25 +3,25 @@ import { DirectionOfStairs } from "@engine/abilities/direction-of-stairs";
 import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 
-describe("DirectionOfStairs", () => {
-  function setup(
-    warriorX: number,
-    warriorY: number,
-    direction: "north" | "east" | "south" | "west",
-    stairsX: number,
-    stairsY: number
-  ) {
-    const floor = new Floor(6, 4);
-    floor.placeStairs(stairsX, stairsY);
-    const warrior = new Warrior();
-    warrior.addAbilities("direction_of_stairs");
-    floor.add(warrior, warriorX, warriorY, direction);
-    const ability = warrior.abilities.get(
-      "direction_of_stairs"
-    ) as DirectionOfStairs;
-    return { floor, warrior, ability };
-  }
+function setup(
+  warriorX: number,
+  warriorY: number,
+  direction: "north" | "east" | "south" | "west",
+  stairsX: number,
+  stairsY: number
+) {
+  const floor = new Floor(6, 4);
+  floor.placeStairs(stairsX, stairsY);
+  const warrior = new Warrior();
+  warrior.addAbilities("direction_of_stairs");
+  floor.add(warrior, warriorX, warriorY, direction);
+  const ability = warrior.abilities.get(
+    "direction_of_stairs"
+  ) as DirectionOfStairs;
+  return { floor, warrior, ability };
+}
 
+describe("DirectionOfStairs", () => {
   it("returns forward when stairs are ahead", () => {
     const { ability } = setup(0, 1, "east", 3, 1);
     expect(ability.perform()).toBe("forward");
