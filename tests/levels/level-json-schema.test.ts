@@ -105,4 +105,121 @@ describe("level json schema", () => {
       }),
     ).toThrow(/string\[\]/i);
   });
+
+  it("fails when root is not an object", () => {
+    expect(() => parseLevelDefinitionJson(null)).toThrow(TypeError);
+    expect(() => parseLevelDefinitionJson("string")).toThrow(TypeError);
+    expect(() => parseLevelDefinitionJson(42)).toThrow(TypeError);
+  });
+
+  it("fails when floor is not an object", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: "bad",
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        units: [],
+      }),
+    ).toThrow(/floor must be an object/i);
+  });
+
+  it("fails when warrior is not an object", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: "bad",
+        units: [],
+      }),
+    ).toThrow(/warrior must be an object/i);
+  });
+
+  it("fails when units is not an array", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        units: "bad",
+      }),
+    ).toThrow(/units must be an array/i);
+  });
+
+  it("fails when a unit entry is not an object", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        units: [42],
+      }),
+    ).toThrow(/units\[0\] must be an object/i);
+  });
+
+  it("fails when a number field receives non-number", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: "bad",
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        units: [],
+      }),
+    ).toThrow(/must be a number/i);
+  });
+
+  it("fails when a string field receives non-string", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: 123,
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        units: [],
+      }),
+    ).toThrow(/must be a string/i);
+  });
+
+  it("fails when warrior.abilities is not an object", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: {
+          unitId: "w",
+          x: 0,
+          y: 0,
+          direction: "east",
+          abilities: "bad",
+        },
+        units: [],
+      }),
+    ).toThrow(/must be an object/i);
+  });
 });
