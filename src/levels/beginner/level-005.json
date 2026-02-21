@@ -1,6 +1,6 @@
 {
   "description": "You hear cries for help. Captives must need rescuing.",
-  "tip": "Use warrior.feel().captive? to see if there is a captive and warrior.rescue! to rescue him. Don't attack captives.",
+  "tip": "Use space = warrior.feel() and check space is not None and space.is_captive() to detect captives, then call warrior.rescue(). Don't attack captives.",
   "clue": "Don't forget to constantly check if you're taking damage. Rest until your health is full if you aren't taking damage.",
   "timeBonus": 45,
   "aceScore": 123,
