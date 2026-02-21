@@ -74,10 +74,15 @@ button:hover {
   align-items: end;
 }
 
+.controls label {
+  margin-bottom: 0;
+  min-width: 150px;
+}
+
 .game-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: start;
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -102,6 +107,10 @@ button:hover {
 .speed-label select {
   width: auto;
   margin: 0;
+}
+
+.runtime-controls {
+  margin-bottom: 0.8rem;
 }
 
 .grid {
@@ -172,6 +181,11 @@ pre {
   background: #fffdf8;
 }
 
+.code-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
 .result-status {
   font-size: 1.2rem;
   font-weight: 700;
@@ -183,6 +197,10 @@ pre {
   border: 1px solid #c9ab5f;
   border-radius: 8px;
   background: #fff3cf;
+}
+
+.result-inline {
+  margin-top: 0.8rem;
 }
 
 @media (max-width: 740px) {
