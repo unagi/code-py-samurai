@@ -30,11 +30,13 @@ interface TileMeta {
   assetPath?: string;
 }
 
+const VOID_TILE: TileMeta = { kind: "void", altKey: "tiles.empty" };
+
 const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
-  " ": { kind: "empty", altKey: "tiles.empty" },
-  "-": { kind: "frame", altKey: "tiles.frame" },
-  "|": { kind: "frame", altKey: "tiles.frame" },
-  ">": { kind: "stairs", altKey: "tiles.stairs" },
+  " ": { kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
+  "-": { kind: "wall-h", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall.png" },
+  "|": { kind: "wall-v", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall-top.png" },
+  ">": { kind: "stairs", altKey: "tiles.stairs", assetPath: "/assets/tiles/cave-stairs.png" },
   "@": {
     kind: "warrior",
     altKey: "tiles.warrior",
@@ -171,30 +173,56 @@ function buildBoardGrid(board: string): BoardGridData {
   const topPad = Math.floor((rows - sourceRows) / 2);
   const bottomPad = rows - sourceRows - topPad;
 
-  const normalizedLines: string[] = [];
-  for (let y = 0; y < topPad; y++) normalizedLines.push(" ".repeat(columns));
-  for (const line of sourceLines) {
-    const filled = line.padEnd(sourceColumns, " ");
-    normalizedLines.push(`${" ".repeat(leftPad)}${filled}${" ".repeat(rightPad)}`);
-  }
-  for (let y = 0; y < bottomPad; y++) normalizedLines.push(" ".repeat(columns));
-
+  // Build grid with padding awareness: padding spaces → void, board spaces → floor
   const tiles: BoardTile[] = [];
-  for (const line of normalizedLines) {
-    for (const symbol of line) {
-      const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", altKey: "tiles.unknown" };
-      tiles.push({
-        symbol,
-        kind: meta.kind,
-        altKey: meta.altKey,
-        assetPath: meta.assetPath,
-      });
+
+  const pushVoidRow = () => {
+    for (let x = 0; x < columns; x++) {
+      tiles.push({ symbol: " ", kind: VOID_TILE.kind, altKey: VOID_TILE.altKey });
     }
+  };
+
+  const WALL_H_TILE: BoardTile = {
+    symbol: "-", kind: "wall-h", altKey: "tiles.frame",
+    assetPath: "/assets/tiles/cave-wall.png",
+  };
+  const WALL_V_TILE: BoardTile = {
+    symbol: "|", kind: "wall-v", altKey: "tiles.frame",
+    assetPath: "/assets/tiles/cave-wall-top.png",
+  };
+
+  const pushBoardRow = (line: string, isTopWallRow: boolean, isBottomWallRow: boolean) => {
+    const filled = line.padEnd(sourceColumns, " ");
+    const isWallRow = filled.includes("-");
+    // Left padding
+    for (let x = 0; x < leftPad; x++) {
+      tiles.push({ symbol: " ", kind: VOID_TILE.kind, altKey: VOID_TILE.altKey });
+    }
+    // Board content
+    for (const symbol of filled) {
+      if (symbol === " " && isWallRow) {
+        // Corner: space in a wall row → render as wall tile
+        tiles.push(isTopWallRow ? { ...WALL_V_TILE } : { ...WALL_H_TILE });
+      } else {
+        const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", altKey: "tiles.unknown" };
+        tiles.push({ symbol, kind: meta.kind, altKey: meta.altKey, assetPath: meta.assetPath });
+      }
+    }
+    // Right padding
+    for (let x = 0; x < rightPad; x++) {
+      tiles.push({ symbol: " ", kind: VOID_TILE.kind, altKey: VOID_TILE.altKey });
+    }
+  };
+
+  for (let y = 0; y < topPad; y++) pushVoidRow();
+  for (let i = 0; i < sourceLines.length; i++) {
+    pushBoardRow(sourceLines[i], i === 0, i === sourceLines.length - 1);
   }
+  for (let y = 0; y < bottomPad; y++) pushVoidRow();
 
   return {
     columns,
-    rows: normalizedLines.length,
+    rows: topPad + sourceRows + bottomPad,
     tiles,
   };
 }

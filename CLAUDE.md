@@ -64,6 +64,10 @@ src/
 
 詳細は `PLAN.md` を参照。
 
+## Agent Rules
+
+エージェント共通ルールは `AGENTS.md` を参照すること。
+
 ## Reference Files (Original)
 
 - ゲームエンジン: `original/ryanb-ruby-warrior/lib/ruby_warrior/`
