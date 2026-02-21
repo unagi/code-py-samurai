@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
-import level004 from "../../src/levels/beginner/level-004";
+import { level004 } from "../../src/levels/beginner";
 
 describe("Beginner Level 4", () => {
   // Inherited abilities from levels 1-3

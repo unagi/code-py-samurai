@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { RelativeDirection } from "@engine/direction";
-import level001 from "../../../src/levels/intermediate/level-001";
+import { level001 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 1", () => {
   it("passes with solving strategy", () => {

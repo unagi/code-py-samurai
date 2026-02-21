@@ -3,9 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Level } from "@engine/level";
 import { compilePythonPlayer } from "@runtime/python-player";
 
-import level001 from "../../src/levels/beginner/level-001";
-import level002 from "../../src/levels/beginner/level-002";
-import level003 from "../../src/levels/beginner/level-003";
+import { level001, level002, level003 } from "../../src/levels/beginner";
 
 describe("python runtime level integration", () => {
   it("clears beginner level 1 with walk strategy", () => {

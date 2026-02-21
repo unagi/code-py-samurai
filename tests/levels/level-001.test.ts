@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
-import level001 from "../../src/levels/beginner/level-001";
+import { level001 } from "../../src/levels/beginner";
 
 describe("Beginner Level 1", () => {
   it("is passed by walking forward every turn", () => {

@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
 import type { Space } from "@engine/space";
-import level003 from "../../src/levels/beginner/level-003";
+import { level003 } from "../../src/levels/beginner";
 
 describe("Beginner Level 3", () => {
   it("is passed with rest+feel+attack+walk strategy", () => {

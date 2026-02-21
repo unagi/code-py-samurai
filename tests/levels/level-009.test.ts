@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
-import level009 from "../../src/levels/beginner/level-009";
+import { level009 } from "../../src/levels/beginner";
 
 describe("Beginner Level 9", () => {
   const inherited = [

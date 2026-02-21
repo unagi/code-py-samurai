@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
-import level001 from "../../src/levels/beginner/level-001";
+import { level001 } from "../../src/levels/beginner";
 
 const walkingPlayer: IPlayer = {
   playTurn(turn: ITurn): void {

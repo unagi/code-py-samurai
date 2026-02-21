@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
 import type { Space } from "@engine/space";
-import level002 from "../../src/levels/beginner/level-002";
+import { level002 } from "../../src/levels/beginner";
 
 describe("Beginner Level 2", () => {
   it("is passed by feel+attack/walk strategy", () => {
