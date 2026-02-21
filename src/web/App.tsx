@@ -257,7 +257,7 @@ export default function App() {
     <main className="layout">
       <section className="hero">
         <div className="hero-line" />
-        <h1>Py Samurai</h1>
+        <h1>Py Samurai ⚔️🐱</h1>
         <div className="hero-line" />
       </section>
 
@@ -293,19 +293,19 @@ export default function App() {
       <section className="workspace">
         <section className="left-column">
           <article className="console-panel">
-            <h2>Board</h2>
+            <h2>🗺️ Board</h2>
             <pre id="board">{board}</pre>
             <div className="console-controls">
-              <button onClick={startLevel}>Start Lv.{levelNumber}</button>
+              <button onClick={startLevel}>🚀 Start Lv.{levelNumber}</button>
               <button onClick={handlePlay} disabled={isPlaying}>
-                Play
+                ▶️ Play
               </button>
               <button onClick={handlePause} disabled={!isPlaying}>
-                {isPlaying ? "Pause" : "Paused"}
+                {isPlaying ? "⏸️ Pause" : "⏸️ Paused"}
               </button>
-              <button onClick={startLevel}>Reset</button>
+              <button onClick={startLevel}>🔁 Reset</button>
               <label className="speed-label">
-                Speed
+                ⚡ Speed
                 <select
                   value={speedMs}
                   disabled={isPlaying}
@@ -320,9 +320,9 @@ export default function App() {
           </article>
           <article className="editor-panel">
             <div className="player-code-header">
-              <h3>Player Code</h3>
+              <h3>👨‍💻 Player Code</h3>
               <button type="button" onClick={() => setShowTips((prev) => !prev)}>
-                {showTips ? "Hide Tips" : "Show Tips"}
+                {showTips ? "💡 Hide Tips" : "💡 Show Tips"}
               </button>
             </div>
             <div className="editor-layout">
@@ -331,7 +331,7 @@ export default function App() {
                 <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
               </div>
               <aside className="api-panel">
-                <h4>Available API</h4>
+                <h4>📚 Available API</h4>
                 <ul className="api-list">
                   {availableApi.length > 0 ? (
                     availableApi.map((item) => <li key={item}>{item}</li>)
@@ -343,11 +343,11 @@ export default function App() {
             </div>
             {showTips ? (
               <aside className="tips-panel">
-                <h4>Tip</h4>
+                <h4>💡 Tip</h4>
                 <p>{level.tip}</p>
                 {level.clue ? (
                   <>
-                    <h4>Clue</h4>
+                    <h4>🧭 Clue</h4>
                     <p>{level.clue}</p>
                   </>
                 ) : null}
@@ -357,7 +357,7 @@ export default function App() {
         </section>
 
         <article className="logs-panel">
-          <h2>System Logs</h2>
+          <h2>🖥️ System Logs</h2>
           <p className="description">{level.description}</p>
           <pre id="logs">{logs}</pre>
         </article>
@@ -366,7 +366,7 @@ export default function App() {
       {showResultModal && result ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Result">
           <article className="modal-card">
-            <h3>Result</h3>
+            <h3>🏁 Result</h3>
             <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
             <ul>
               <li>Turns: {result.turns}</li>
@@ -386,9 +386,9 @@ export default function App() {
                   startLevel();
                 }}
               >
-                Retry
+                🔁 Retry
               </button>
-              <button onClick={() => setShowResultModal(false)}>Close</button>
+              <button onClick={() => setShowResultModal(false)}>✅ Close</button>
             </div>
           </article>
         </div>

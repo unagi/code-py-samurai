@@ -257,13 +257,23 @@ button:disabled {
 
 .api-list {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
+  list-style: none;
 }
 
 .api-list li {
+  position: relative;
+  padding-left: 1rem;
   margin: 0.22rem 0;
   font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
   font-size: 0.85rem;
+}
+
+.api-list li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: #8d5b33;
 }
 
 .tips-panel {
