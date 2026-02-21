@@ -253,6 +253,10 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    startLevel();
+  }, [level]);
+
   return (
     <main className="layout">
       <section className="hero">
@@ -296,7 +300,6 @@ export default function App() {
             <h2>🗺️ Board</h2>
             <pre id="board">{board}</pre>
             <div className="console-controls">
-              <button onClick={startLevel}>🚀 Start Lv.{levelNumber}</button>
               <button onClick={handlePlay} disabled={isPlaying}>
                 ▶️ Play
               </button>
