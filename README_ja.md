@@ -7,20 +7,19 @@
 [![CodeQL](https://github.com/unagi/code-py-samurai/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/unagi/code-py-samurai/actions/workflows/codeql.yml)
 [![Build](https://github.com/unagi/code-py-samurai/actions/workflows/sonarcloud.yml/badge.svg?branch=main)](https://github.com/unagi/code-py-samurai/actions/workflows/sonarcloud.yml)
 
-Python 学習向けのブラウザゲームです。Ruby Warrior のゲーム性をベースに、Python で遊べるように移植・拡張しています。
-A browser-based game for learning Python, ported and extended from the Ruby Warrior gameplay model.
+Ruby Warrior のゲーム性をベースに、Python で遊べるように移植・拡張した、Python 学習向けのブラウザゲームです。
 
-## Acknowledgements
+## 謝辞
 
-This project is a Python-focused fork based on [ryanb/ruby-warrior](https://github.com/ryanb/ruby-warrior).  
-Thanks to the original project and its community.
+本プロジェクトは [ryanb/ruby-warrior](https://github.com/ryanb/ruby-warrior) を土台とした Python フォークです。  
+オリジナルプロジェクトとコミュニティに感謝します。
 
-## License
+## ライセンス
 
-This repository is released under the **MIT License**. See `LICENSE` for details.  
-The upstream project, [ryanb/ruby-warrior](https://github.com/ryanb/ruby-warrior), is also MIT-licensed.
+このリポジトリは **MIT License** で公開しています。詳細は `LICENSE` を参照してください。  
+ベースとなる [ryanb/ruby-warrior](https://github.com/ryanb/ruby-warrior) も MIT License です。
 
-## Development
+## 開発
 
 ```bash
 npm ci
