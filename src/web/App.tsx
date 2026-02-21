@@ -175,7 +175,6 @@ export default function App() {
   const [logs, setLogs] = useState("(ログなし)");
   const [result, setResult] = useState<LevelResult | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [showTips, setShowTips] = useState(true);
 
   const sessionRef = useRef(new LevelSession());
   const timerRef = useRef<number | null>(null);
@@ -192,6 +191,11 @@ export default function App() {
   }, [selectedTower]);
 
   const availableApi = useMemo(() => getAvailableApiList(level), [level]);
+  const tipsText = useMemo(() => {
+    return level.clue
+      ? `Tip: ${level.tip}\nClue: ${level.clue}`
+      : `Tip: ${level.tip}`;
+  }, [level]);
   const levelSteps = useMemo(() => {
     return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
   }, [selectedTower]);
@@ -326,8 +330,8 @@ export default function App() {
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>👨‍💻 Player Code</h3>
-              <button type="button" onClick={() => setShowTips((prev) => !prev)}>
-                <span className="icon-label"><i className="bi bi-lightbulb-fill" />{showTips ? "Hide Tips" : "Show Tips"}</span>
+              <button type="button" className="tip-trigger" title={tipsText} aria-label={tipsText}>
+                <span className="icon-label"><i className="bi bi-lightbulb-fill" />Tips</span>
               </button>
             </div>
             <div className="editor-layout">
@@ -346,18 +350,6 @@ export default function App() {
                 </ul>
               </aside>
             </div>
-            {showTips ? (
-              <aside className="tips-panel">
-                <h4>💡 Tip</h4>
-                <p>{level.tip}</p>
-                {level.clue ? (
-                  <>
-                    <h4>🧭 Clue</h4>
-                    <p>{level.clue}</p>
-                  </>
-                ) : null}
-              </aside>
-            ) : null}
           </article>
         </section>
 

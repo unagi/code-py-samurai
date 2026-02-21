@@ -39,6 +39,12 @@ body {
     0 0 22px rgba(255, 188, 113, 0.35);
 }
 
+.icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
 .hero-line {
   flex: 1;
   height: 12px;
@@ -241,8 +247,7 @@ button:disabled {
   background: #20130f;
 }
 
-.api-panel,
-.tips-panel {
+.api-panel {
   background: #efe0c4;
   border: 1px solid #af8e67;
   border-radius: 10px;
@@ -250,8 +255,7 @@ button:disabled {
   color: #2d1c12;
 }
 
-.api-panel h4,
-.tips-panel h4 {
+.api-panel h4 {
   margin: 0 0 0.4rem;
 }
 
@@ -276,13 +280,8 @@ button:disabled {
   color: #8d5b33;
 }
 
-.tips-panel {
-  margin-top: 0.7rem;
-}
-
-.tips-panel p {
-  margin: 0 0 0.5rem;
-  font-size: 0.88rem;
+.tip-trigger {
+  white-space: nowrap;
 }
 
 .code-note {

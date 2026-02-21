@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "./web/styles.css";
 import App from "./web/App";
 
