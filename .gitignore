@@ -3,3 +3,17 @@ dist/
 coverage/
 .DS_Store
 *.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Claude Code
+.claude/
+
+# Debug artifacts (regenerable)
+_debug/
+
+# Creator source assets (large images, local only)
+from_creator/
