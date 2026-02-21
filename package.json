@@ -13,8 +13,19 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@codemirror/lang-python": "^6.2.1",
+    "bootstrap-icons": "^1.13.1",
+    "codemirror": "^6.0.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }
