@@ -186,28 +186,14 @@
   </div>
   <button onclick="paused=!paused">⏯ 一時停止/再開</button>
   <button onclick="resetSelection()">🔄 選択リセット</button>
-  <div>
-    <label>表示: </label>
-    <select id="frameSource" onchange="switchSource(this.value)">
-      <option value="frames" selected>透過版 (rembg)</option>
-      <option value="frames_original">オリジナル (RGB)</option>
-    </select>
-  </div>
 </div>
 
 <h2>入力フレーム（参考）</h2>
-<div class="input-row">
-  <div class="input-card">
-    <div class="label">f0（キーフレームA = 出発点）</div>
-    <img src="../../from_creator/gemini/_tooncrafter_test/idle-east-f0_512x320.png" alt="f0">
-    <div class="status status-good">茶耳 ✓ パーツ完全 ✓</div>
-  </div>
-  <div class="input-card">
-    <div class="label">f2（宛先 = ガイド）</div>
-    <img src="../../from_creator/gemini/_tooncrafter_test/idle-east-f2_512x320.png" alt="f2">
-    <div class="status status-warn">オレンジ耳 ⚠ 宛先としてのみ使用</div>
-  </div>
-</div>
+<p class="pick-info">
+  ToonCrafter HF Space に入力したキーフレーム:<br>
+  f0 (idle-east-f0, 茶耳 ✓) → f2 (idle-east-f2, ガイドとして使用)。<br>
+  再現手順は <code>tools/PIPELINE.md</code> を参照。
+</p>
 
 <h2>全16フレーム（クリックで4フレームを選択）</h2>
 <p class="pick-info">
@@ -237,8 +223,8 @@
 </div>
 
 <script>
-const FRAMES_BASE = '../../from_creator/gemini/_tooncrafter_test/';
-let framesDir = FRAMES_BASE + 'frames/';
+const FRAMES_DIR = '../../public/assets/sprites/samurai-cat/idle-east-frames/';
+let framesDir = FRAMES_DIR;
 const TOTAL_FRAMES = 16;
 
 let paused = false;
@@ -375,12 +361,6 @@ function animate(time) {
 }
 
 // Source switching
-async function switchSource(dir) {
-  framesDir = FRAMES_BASE + dir + '/';
-  await loadFrames();
-  buildFrameStrip();
-  updateSelectionUI();
-}
 
 // Controls
 document.getElementById('speedSlider').addEventListener('input', (e) => {
