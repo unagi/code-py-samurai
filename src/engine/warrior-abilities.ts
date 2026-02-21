@@ -24,24 +24,24 @@ const STAT_TO_ENGINE_ABILITY: Record<string, string> = {
 
 const EMPTY_ABILITIES: WarriorAbilitySet = { skills: [], stats: [] };
 
-// Incremental unlock table per tower/level.
-const WARRIOR_ABILITY_INCREMENTS: Record<string, Record<number, WarriorAbilitySet>> = {
-  beginner: {
-    1: { skills: ["walk()", "walk('backward')"], stats: [] },
-    2: { skills: ["feel()", "feel('left')", "attack()", "attack('left')"], stats: [] },
-    3: { skills: ["rest()"], stats: ["hp"] },
-    5: { skills: ["rescue()", "rescue('right')"], stats: [] },
-    7: { skills: ["pivot()", "pivot('backward')"], stats: [] },
-    8: { skills: ["look()", "look('backward')", "shoot()", "shoot('forward')"], stats: [] },
-  },
-  intermediate: {
-    1: { skills: ["walk()", "walk('backward')", "feel()", "feel('left')", "direction_of_stairs()"], stats: [] },
-    2: { skills: ["attack()", "attack('left')", "rest()"], stats: ["hp"] },
-    3: { skills: ["rescue()", "rescue('right')", "bind()", "bind('left')"], stats: [] },
-    4: { skills: ["listen()", "direction_of(space)"], stats: [] },
-    8: { skills: ["look()", "look('backward')", "detonate()", "detonate('forward')"], stats: [] },
-    9: { skills: ["distance_of(space)"], stats: [] },
-  },
+const TOWER_START_LEVEL: Record<string, number> = {
+  beginner: 1,
+  intermediate: 10,
+};
+
+// Incremental unlock table on global warrior level.
+const WARRIOR_ABILITY_INCREMENTS: Record<number, WarriorAbilitySet> = {
+  1: { skills: ["walk()", "walk('backward')"], stats: [] },
+  2: { skills: ["feel()", "feel('left')", "attack()", "attack('left')"], stats: [] },
+  3: { skills: ["rest()"], stats: ["hp"] },
+  5: { skills: ["rescue()", "rescue('right')"], stats: [] },
+  7: { skills: ["pivot()", "pivot('backward')"], stats: [] },
+  8: { skills: ["look()", "look('backward')", "shoot()", "shoot('forward')"], stats: [] },
+  10: { skills: ["direction_of_stairs()"], stats: [] },
+  12: { skills: ["bind()", "bind('left')"], stats: [] },
+  13: { skills: ["listen()", "direction_of(space)"], stats: [] },
+  17: { skills: ["detonate()", "detonate('forward')"], stats: [] },
+  18: { skills: ["distance_of(space)"], stats: [] },
 };
 
 function normalizeSkillName(skill: string): string {
@@ -61,16 +61,33 @@ export function mergeWarriorAbilities(list: WarriorAbilitySet[]): WarriorAbility
   };
 }
 
+export function getGlobalLevelFromTowerLevel(towerName: string, localLevel: number): number {
+  const start = TOWER_START_LEVEL[towerName];
+  if (!start) return localLevel;
+  return start + Math.max(0, localLevel - 1);
+}
+
+export function getMaxWarriorLevel(): number {
+  return Math.max(1, ...Object.keys(WARRIOR_ABILITY_INCREMENTS).map((item) => Number(item)));
+}
+
+export function getWarriorAbilityIncrementAtGlobalLevel(globalLevel: number): WarriorAbilitySet {
+  return WARRIOR_ABILITY_INCREMENTS[globalLevel] ?? EMPTY_ABILITIES;
+}
+
 export function getWarriorAbilityIncrement(towerName: string, level: number): WarriorAbilitySet {
-  const tower = WARRIOR_ABILITY_INCREMENTS[towerName];
-  if (!tower) return EMPTY_ABILITIES;
-  return tower[level] ?? EMPTY_ABILITIES;
+  return getWarriorAbilityIncrementAtGlobalLevel(getGlobalLevelFromTowerLevel(towerName, level));
 }
 
 export function getWarriorAbilitiesAtLevel(towerName: string, level: number): WarriorAbilitySet {
+  return getWarriorAbilitiesAtGlobalLevel(getGlobalLevelFromTowerLevel(towerName, level));
+}
+
+export function getWarriorAbilitiesAtGlobalLevel(globalLevel: number): WarriorAbilitySet {
   const increments: WarriorAbilitySet[] = [];
-  for (let lv = 1; lv <= level; lv++) {
-    const inc = getWarriorAbilityIncrement(towerName, lv);
+  const top = Math.max(1, Math.floor(globalLevel));
+  for (let lv = 1; lv <= top; lv++) {
+    const inc = getWarriorAbilityIncrementAtGlobalLevel(lv);
     if (inc.skills.length === 0 && inc.stats.length === 0) continue;
     increments.push(inc);
   }

@@ -10,7 +10,9 @@ import { tags } from "@lezer/highlight";
 import { Level, type LevelResult } from "../engine/level";
 import type { ILogger, IPlayer, LevelDefinition, WarriorAbilitySet } from "../engine/types";
 import {
-  getWarriorAbilitiesAtLevel,
+  getGlobalLevelFromTowerLevel,
+  getMaxWarriorLevel,
+  getWarriorAbilitiesAtGlobalLevel,
   warriorAbilitiesToEngineAbilities,
 } from "../engine/warrior-abilities";
 import { formatPythonError } from "../runtime/errors";
@@ -95,6 +97,7 @@ const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }>
 interface ProgressStorageData {
   towerName?: string;
   levelNumber?: number;
+  warriorLevel?: number;
   warriorLevelByTower?: Record<string, number>;
 }
 
@@ -113,23 +116,28 @@ function readProgressStorage(): ProgressStorageData {
   }
 }
 
-function buildWarriorLevelByTower(data: ProgressStorageData): Record<string, number> {
-  const byTower: Record<string, number> = {};
-  for (const tower of towers) {
-    const saved = data.warriorLevelByTower?.[tower.name];
-    byTower[tower.name] = clampLevel(saved, tower.levelCount);
+function buildWarriorLevel(data: ProgressStorageData): number {
+  const maxLv = getMaxWarriorLevel();
+  if (typeof data.warriorLevel === "number") {
+    return Math.min(Math.max(1, Math.floor(data.warriorLevel)), maxLv);
   }
 
-  const savedTowerName = data.towerName;
-  if (typeof savedTowerName === "string") {
-    const tower = towers.find((item) => item.name === savedTowerName);
-    if (tower) {
-      const legacyLevel = clampLevel(data.levelNumber, tower.levelCount);
-      byTower[savedTowerName] = Math.max(byTower[savedTowerName] ?? 1, legacyLevel);
+  let migrated = 1;
+  if (data.warriorLevelByTower && typeof data.warriorLevelByTower === "object") {
+    for (const [towerName, local] of Object.entries(data.warriorLevelByTower)) {
+      if (typeof local !== "number") continue;
+      migrated = Math.max(migrated, getGlobalLevelFromTowerLevel(towerName, Math.floor(local)));
     }
   }
 
-  return byTower;
+  if (typeof data.towerName === "string" && typeof data.levelNumber === "number") {
+    migrated = Math.max(
+      migrated,
+      getGlobalLevelFromTowerLevel(data.towerName, Math.floor(data.levelNumber)),
+    );
+  }
+
+  return Math.min(Math.max(1, migrated), maxLv);
 }
 
 function getWarriorIdleFramePath(frameIndex: number): string {
@@ -517,8 +525,8 @@ export default function App() {
     const tower = towers.find((item) => item.name === initialProgress.towerName) ?? towers[0];
     return clampLevel(initialProgress.levelNumber, tower.levelCount);
   });
-  const [warriorLevelByTower, setWarriorLevelByTower] = useState<Record<string, number>>(() => {
-    return buildWarriorLevelByTower(initialProgress);
+  const [warriorLevel, setWarriorLevel] = useState<number>(() => {
+    return buildWarriorLevel(initialProgress);
   });
   const [speedMs, setSpeedMs] = useState(450);
   const [playerCode, setPlayerCode] = useState(() => {
@@ -558,16 +566,12 @@ export default function App() {
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
   }, [towerName]);
-  const warriorLevel = useMemo(() => {
-    return clampLevel(warriorLevelByTower[towerName], selectedTower.levelCount);
-  }, [warriorLevelByTower, towerName, selectedTower.levelCount]);
-
   const level = useMemo(() => {
     return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
   }, [selectedTower, levelNumber]);
   const unlockedWarriorAbilities = useMemo<WarriorAbilitySet>(() => {
-    return getWarriorAbilitiesAtLevel(towerName, warriorLevel);
-  }, [towerName, warriorLevel]);
+    return getWarriorAbilitiesAtGlobalLevel(warriorLevel);
+  }, [warriorLevel]);
   const unlockedEngineAbilities = useMemo(
     () => warriorAbilitiesToEngineAbilities(unlockedWarriorAbilities),
     [unlockedWarriorAbilities],
@@ -690,12 +694,8 @@ export default function App() {
     if (!canContinue) {
       stopTimer();
       if (currentResult?.passed) {
-        setWarriorLevelByTower((prev) => {
-          const current = prev[towerName] ?? 1;
-          const next = Math.max(current, levelNumber);
-          if (next === current) return prev;
-          return { ...prev, [towerName]: next };
-        });
+        const clearedGlobalLevel = getGlobalLevelFromTowerLevel(towerName, levelNumber);
+        setWarriorLevel((prev) => Math.max(prev, clearedGlobalLevel));
       }
       setShowResultModal(true);
     }
@@ -784,12 +784,12 @@ export default function App() {
     try {
       window.localStorage.setItem(
         STORAGE_KEY_PROGRESS,
-        JSON.stringify({ towerName, levelNumber, warriorLevelByTower }),
+        JSON.stringify({ towerName, levelNumber, warriorLevel }),
       );
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [towerName, levelNumber, warriorLevelByTower]);
+  }, [towerName, levelNumber, warriorLevel]);
 
   useEffect(() => {
     try {
@@ -816,7 +816,7 @@ export default function App() {
             disabled={isPlaying}
             onClick={() => goToLevel(step)}
           >
-            Lv.{step}
+            Lv.{getGlobalLevelFromTowerLevel(towerName, step)}
             {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
           </button>
         ))}
@@ -845,7 +845,7 @@ export default function App() {
             <div id="board" className="board-viewport" ref={boardViewportRef}>
               <div className="board-status">
                 <span className="status-chip">
-                  WARRIOR  HP {warriorHealth ?? "--"}/{warriorMaxHealth ?? "--"}  ATK 5
+                  WARRIOR Lv.{warriorLevel}  HP {warriorHealth ?? "--"}/{warriorMaxHealth ?? "--"}  ATK 5
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
