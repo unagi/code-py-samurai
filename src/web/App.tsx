@@ -301,14 +301,16 @@ export default function App() {
             <pre id="board">{board}</pre>
             <div className="console-controls">
               <button onClick={handlePlay} disabled={isPlaying}>
-                ▶️ Play
+                <span className="icon-label"><i className="bi bi-play-fill" />Play</span>
               </button>
               <button onClick={handlePause} disabled={!isPlaying}>
-                {isPlaying ? "⏸️ Pause" : "⏸️ Paused"}
+                <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? "Pause" : "Paused"}</span>
               </button>
-              <button onClick={startLevel}>🔁 Reset</button>
+              <button onClick={startLevel}>
+                <span className="icon-label"><i className="bi bi-arrow-repeat" />Reset</span>
+              </button>
               <label className="speed-label">
-                ⚡ Speed
+                <span className="icon-label"><i className="bi bi-lightning-charge-fill" />Speed</span>
                 <select
                   value={speedMs}
                   disabled={isPlaying}
@@ -325,7 +327,7 @@ export default function App() {
             <div className="player-code-header">
               <h3>👨‍💻 Player Code</h3>
               <button type="button" onClick={() => setShowTips((prev) => !prev)}>
-                {showTips ? "💡 Hide Tips" : "💡 Show Tips"}
+                <span className="icon-label"><i className="bi bi-lightbulb-fill" />{showTips ? "Hide Tips" : "Show Tips"}</span>
               </button>
             </div>
             <div className="editor-layout">
@@ -389,9 +391,11 @@ export default function App() {
                   startLevel();
                 }}
               >
-                🔁 Retry
+                <span className="icon-label"><i className="bi bi-arrow-repeat" />Retry</span>
               </button>
-              <button onClick={() => setShowResultModal(false)}>✅ Close</button>
+              <button onClick={() => setShowResultModal(false)}>
+                <span className="icon-label"><i className="bi bi-check2-circle" />Close</span>
+              </button>
             </div>
           </article>
         </div>
