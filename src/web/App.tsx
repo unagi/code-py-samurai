@@ -175,6 +175,7 @@ export default function App() {
   const [logs, setLogs] = useState("(ログなし)");
   const [result, setResult] = useState<LevelResult | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [showTips, setShowTips] = useState(true);
 
   const sessionRef = useRef(new LevelSession());
   const timerRef = useRef<number | null>(null);
@@ -289,26 +290,6 @@ export default function App() {
         </nav>
         <p className="description">{level.description}</p>
 
-        <article className="panel-sub info-panel">
-          <h3>Level Info</h3>
-          <p>
-            <strong>Tip:</strong> {level.tip}
-          </p>
-          {level.clue ? (
-            <p>
-              <strong>Clue:</strong> {level.clue}
-            </p>
-          ) : null}
-          <h4>Available API</h4>
-          <ul className="api-list">
-            {availableApi.length > 0 ? (
-              availableApi.map((item) => <li key={item}>{item}</li>)
-            ) : (
-              <li>(none)</li>
-            )}
-          </ul>
-        </article>
-
         <div className="controls runtime-controls">
           <button onClick={handlePlay} disabled={isPlaying}>
             Play
@@ -342,9 +323,38 @@ export default function App() {
         </article>
 
         <article className="panel-sub">
-          <h3>Player Code (CodeMirror)</h3>
-          <div ref={editorHostRef} className="editor-host" />
-          <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
+          <div className="player-code-header">
+            <h3>Player Code (CodeMirror)</h3>
+            <button type="button" onClick={() => setShowTips((prev) => !prev)}>
+              {showTips ? "Hide Tips" : "Show Tips"}
+            </button>
+          </div>
+          <div className="editor-layout">
+            <div className="editor-main">
+              <div ref={editorHostRef} className="editor-host" />
+              <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
+            </div>
+            {showTips ? (
+              <aside className="tips-panel">
+                <h4>Tip</h4>
+                <p>{level.tip}</p>
+                {level.clue ? (
+                  <>
+                    <h4>Clue</h4>
+                    <p>{level.clue}</p>
+                  </>
+                ) : null}
+                <h4>Available API</h4>
+                <ul className="api-list">
+                  {availableApi.length > 0 ? (
+                    availableApi.map((item) => <li key={item}>{item}</li>)
+                  ) : (
+                    <li>(none)</li>
+                  )}
+                </ul>
+              </aside>
+            ) : null}
+          </div>
         </article>
 
         {showResultModal && result ? (

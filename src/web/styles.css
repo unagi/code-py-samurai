@@ -159,20 +159,6 @@ button:hover {
   margin-bottom: 0.8rem;
 }
 
-.info-panel {
-  margin-bottom: 0.8rem;
-}
-
-.info-panel h3,
-.info-panel h4 {
-  margin-top: 0;
-  margin-bottom: 0.4rem;
-}
-
-.info-panel p {
-  margin: 0 0 0.4rem;
-}
-
 .api-list {
   margin: 0;
   padding-left: 1.15rem;
@@ -211,6 +197,40 @@ pre {
   border-radius: 8px;
   overflow: hidden;
   background: #fffdf8;
+}
+
+.player-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.player-code-header h3 {
+  margin: 0;
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0.8rem;
+}
+
+.tips-panel {
+  background: #fbf2df;
+  border: 1px solid #dac8a9;
+  border-radius: 8px;
+  padding: 0.7rem;
+}
+
+.tips-panel h4 {
+  margin: 0 0 0.35rem;
+}
+
+.tips-panel p {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
 }
 
 .code-note {
@@ -263,5 +283,9 @@ pre {
   .game-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .editor-layout {
+    grid-template-columns: 1fr;
   }
 }
