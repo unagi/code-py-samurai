@@ -255,7 +255,8 @@ py-samurai/
 # ユーザーが書くコード
 class Player:
     def play_turn(self, warrior):
-        if warrior.feel().is_empty():
+        space = warrior.feel()
+        if space is None:
             warrior.walk()
         else:
             warrior.attack()
@@ -264,13 +265,13 @@ class Player:
 3. APIブリッジ実装:
    - `warrior` オブジェクトのPythonバインディング
    - アクション: `warrior.walk(direction)`, `warrior.attack(direction)`, etc.
-   - センス: `warrior.feel(direction)`, `warrior.health()`, etc.
-   - `Space` オブジェクトのバインディング: `space.is_empty()`, `space.is_enemy()`, etc.
+   - センス: `warrior.feel(direction)`, `warrior.hp`, etc.
+   - `Space` オブジェクトのバインディング: `space.is_enemy()`, `space.is_captive()`, etc.
    - 方向定数: Pythonでは文字列 `"forward"`, `"backward"`, `"left"`, `"right"`
 
 4. Python命名規約への変換:
    - Ruby: `warrior.walk!`, `feel.empty?`, `direction_of_stairs`
-   - Python: `warrior.walk()`, `feel.is_empty()`, `warrior.direction_of_stairs()`
+   - Python: `warrior.walk()`, `space is None`, `warrior.direction_of_stairs()`
 
 5. 既定値注入の廃止（最優先）:
    - UI内の固定コード/擬似AI依存を撤去
@@ -285,7 +286,7 @@ class Player:
 **完了条件** (`npm test` 全Pass):
 - [x] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
 - [x] `tests/runtime/bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがTurnに反映
-- [x] `tests/runtime/py-builtins.test.ts`: Space.is_empty()等のPythonバインディングが正しい値
+- [x] `tests/runtime/py-builtins.test.ts`: Space→Python値変換（空マスの`None`化と述語バインディング）が正しい値
 - [x] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
 - [x] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
 - [x] `tests/runtime/python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
@@ -429,24 +430,21 @@ warrior.bind()              # 前方の敵を拘束
 warrior.detonate()          # 前方で爆破
 
 # === Senses (何度でも使用可能) ===
-warrior.feel()              # → Space (前方1マス)
-warrior.feel("left")        # → Space (左1マス)
-warrior.health()            # → int (現在HP)
-warrior.look()              # → list[Space] (前方3マス)
-warrior.look("backward")    # → list[Space] (後方3マス)
-warrior.listen()            # → list[Space] (ユニットがいる全マス)
+warrior.feel()              # → Space | None (前方1マス)
+warrior.feel("left")        # → Space | None (左1マス)
+warrior.hp                  # → int (現在HP)
+warrior.look()              # → list[Space | None] (前方3マス)
+warrior.look("backward")    # → list[Space | None] (後方3マス)
+warrior.listen()            # → list[Space] (ユニットがいるマスのみ)
 warrior.direction_of_stairs()  # → str ("forward"等)
 warrior.direction_of(space)    # → str (spaceへの相対方向)
 warrior.distance_of(space)     # → int (spaceへのマンハッタン距離)
 
 # === Space メソッド ===
-space.is_empty()            # bool
 space.is_stairs()           # bool
 space.is_enemy()            # bool
 space.is_captive()          # bool
 space.is_wall()             # bool
-space.is_ticking()          # bool
-space.is_golem()            # bool
 ```
 
 ## Key Design Decisions
