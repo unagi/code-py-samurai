@@ -217,6 +217,7 @@ pre {
   gap: 0.8rem;
 }
 
+.api-panel,
 .tips-panel {
   background: #fbf2df;
   border: 1px solid #dac8a9;
@@ -224,6 +225,7 @@ pre {
   padding: 0.7rem;
 }
 
+.api-panel h4,
 .tips-panel h4 {
   margin: 0 0 0.35rem;
 }
@@ -231,6 +233,10 @@ pre {
 .tips-panel p {
   margin: 0 0 0.5rem;
   font-size: 0.88rem;
+}
+
+.tips-panel {
+  margin-top: 0.8rem;
 }
 
 .code-note {

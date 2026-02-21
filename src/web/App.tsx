@@ -334,27 +334,29 @@ export default function App() {
               <div ref={editorHostRef} className="editor-host" />
               <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
             </div>
-            {showTips ? (
-              <aside className="tips-panel">
-                <h4>Tip</h4>
-                <p>{level.tip}</p>
-                {level.clue ? (
-                  <>
-                    <h4>Clue</h4>
-                    <p>{level.clue}</p>
-                  </>
-                ) : null}
-                <h4>Available API</h4>
-                <ul className="api-list">
-                  {availableApi.length > 0 ? (
-                    availableApi.map((item) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>(none)</li>
-                  )}
-                </ul>
-              </aside>
-            ) : null}
+            <aside className="api-panel">
+              <h4>Available API</h4>
+              <ul className="api-list">
+                {availableApi.length > 0 ? (
+                  availableApi.map((item) => <li key={item}>{item}</li>)
+                ) : (
+                  <li>(none)</li>
+                )}
+              </ul>
+            </aside>
           </div>
+          {showTips ? (
+            <aside className="tips-panel">
+              <h4>Tip</h4>
+              <p>{level.tip}</p>
+              {level.clue ? (
+                <>
+                  <h4>Clue</h4>
+                  <p>{level.clue}</p>
+                </>
+              ) : null}
+            </aside>
+          ) : null}
         </article>
 
         {showResultModal && result ? (
