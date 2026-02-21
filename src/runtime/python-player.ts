@@ -1,4 +1,5 @@
 import type { ITurn, IPlayer } from "@engine/types";
+import { asRuntimeTurn, callSense, type RuntimeTurn } from "./bridge";
 
 const ACTION_MAP: Record<string, string> = {
   walk: "walk!",
@@ -20,13 +21,6 @@ const SPACE_PREDICATES = new Set([
 ]);
 
 type CompareOp = "<" | "<=" | ">" | ">=" | "==" | "!=";
-
-interface RuntimeTurn extends ITurn {
-  doAction(name: string, ...args: unknown[]): void;
-  doSense(name: string, ...args: unknown[]): unknown;
-  hasAction(name: string): boolean;
-  hasSense(name: string): boolean;
-}
 
 type Expr =
   | { kind: "number"; value: number }
@@ -54,19 +48,6 @@ class ParseError extends Error {}
 function normalizeDirection(value: unknown): string {
   if (typeof value !== "string") return "forward";
   return value;
-}
-
-function toRuntimeTurn(turn: ITurn): RuntimeTurn {
-  const candidate = turn as Partial<RuntimeTurn>;
-  if (
-    typeof candidate.doAction !== "function" ||
-    typeof candidate.doSense !== "function" ||
-    typeof candidate.hasAction !== "function" ||
-    typeof candidate.hasSense !== "function"
-  ) {
-    throw new Error("Runtime turn interface is not available.");
-  }
-  return candidate as RuntimeTurn;
 }
 
 function tokenizePlayTurn(source: string): TokenLine[] {
@@ -301,7 +282,7 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
       return env.get(expr.name);
     case "sense": {
       const args = expr.args.map((arg) => evalExpr(arg, turn, env));
-      return turn.doSense(expr.sense, ...args);
+      return callSense(turn, expr.sense, ...args);
     }
     case "predicate": {
       const target = evalExpr(expr.target, turn, env) as Record<string, unknown>;
@@ -391,7 +372,7 @@ export function compilePythonPlayer(source: string): IPlayer {
 
   return {
     playTurn(turnInput: ITurn): void {
-      const turn = toRuntimeTurn(turnInput);
+      const turn = asRuntimeTurn(turnInput);
       const env = new Map<string, unknown>();
       runStatements(ast, turn, env);
     },

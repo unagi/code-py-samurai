@@ -9,23 +9,23 @@ class FakeSpace {
     private readonly empty: boolean,
   ) {}
 
-  is_enemy(): boolean {
+  isEnemy(): boolean {
     return this.enemy;
   }
 
-  is_captive(): boolean {
+  isCaptive(): boolean {
     return this.captive;
   }
 
-  is_empty(): boolean {
+  isEmpty(): boolean {
     return this.empty;
   }
 
-  is_stairs(): boolean {
+  isStairs(): boolean {
     return false;
   }
 
-  is_wall(): boolean {
+  isWall(): boolean {
     return false;
   }
 }
