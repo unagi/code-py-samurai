@@ -6,7 +6,7 @@ import type { LevelDefinition } from "./types";
  */
 export class Tower {
   readonly name: string;
-  private _levels: LevelDefinition[];
+  private readonly _levels: LevelDefinition[];
 
   constructor(name: string, levels: LevelDefinition[]) {
     this.name = name;

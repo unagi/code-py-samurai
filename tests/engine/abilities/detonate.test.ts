@@ -61,12 +61,11 @@ describe("Detonate", () => {
 
   it("does not crash on empty spaces", () => {
     const { ability } = setup();
-    // No units around, should not throw
-    ability.perform("forward");
+    expect(() => ability.perform("forward")).not.toThrow();
   });
 
   it("throws on invalid direction", () => {
     const { ability } = setup();
-    expect(() => ability.perform("up" as any)).toThrow("Unknown direction");
+    expect(() => ability.perform("up" as unknown as "forward")).toThrow("Unknown direction");
   });
 });

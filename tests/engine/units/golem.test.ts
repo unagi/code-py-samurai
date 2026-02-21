@@ -41,13 +41,12 @@ describe("Golem", () => {
     golem.turnCallback = (_turn: Turn) => {
       called = true;
     };
-    (golem as any).prepareTurn();
+    golem.prepareTurn();
     expect(called).toBe(true);
   });
 
   it("does nothing when no callback set", () => {
     const { golem } = setup();
-    // Should not throw
-    (golem as any).prepareTurn();
+    expect(() => golem.prepareTurn()).not.toThrow();
   });
 });

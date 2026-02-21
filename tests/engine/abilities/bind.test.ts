@@ -26,8 +26,7 @@ describe("Bind", () => {
 
   it("does nothing on empty space", () => {
     const { ability } = setup();
-    // should not throw
-    ability.perform("forward");
+    expect(() => ability.perform("forward")).not.toThrow();
   });
 
   it("bound enemy cannot perform actions", () => {
@@ -37,8 +36,8 @@ describe("Bind", () => {
     floor.add(sludge, 1, 0, "west");
     sludge.bind();
     // prepareTurn records action, performTurn should skip due to bound
-    (sludge as any).prepareTurn();
-    (sludge as any).performTurn();
+    sludge.prepareTurn();
+    sludge.performTurn();
     // warrior should not take damage
     const warrior = floor.units.find((u) => u.isWarrior())!;
     expect(warrior.health).toBe(20);
@@ -46,7 +45,7 @@ describe("Bind", () => {
 
   it("throws on invalid direction", () => {
     const { ability } = setup();
-    expect(() => ability.perform("diagonal" as any)).toThrow(
+    expect(() => ability.perform("diagonal" as unknown as "forward")).toThrow(
       "Unknown direction"
     );
   });

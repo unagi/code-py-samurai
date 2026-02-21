@@ -6,6 +6,87 @@ import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
 import { level009 } from "../../../src/levels/intermediate";
 
+type AdjacentScan = {
+  enemies: RelativeDirection[];
+  bound: RelativeDirection[];
+  tickingCaptive: RelativeDirection | null;
+  nonTickingCaptive: RelativeDirection | null;
+};
+
+const ALL_DIRS: RelativeDirection[] = [
+  "forward",
+  "left",
+  "right",
+  "backward",
+];
+
+function scanAdjacent(t: Turn): AdjacentScan {
+  const scan: AdjacentScan = {
+    enemies: [],
+    bound: [],
+    tickingCaptive: null,
+    nonTickingCaptive: null,
+  };
+  for (const dir of ALL_DIRS) {
+    const space = t.doSense("feel", dir) as Space;
+    if (space.isEnemy()) {
+      scan.enemies.push(dir);
+    } else if (space.isCaptive() && space.isTicking()) {
+      scan.tickingCaptive = dir;
+    } else if (space.isCaptive()) {
+      scan.nonTickingCaptive = dir;
+      scan.bound.push(dir);
+    }
+  }
+  return scan;
+}
+
+/** Bind or attack adjacent enemies. Returns true if an action was taken. */
+function handleEnemies(t: Turn, scan: AdjacentScan): boolean {
+  if (scan.enemies.length >= 2) {
+    t.doAction("bind!", scan.enemies[0]);
+    return true;
+  }
+  if (scan.enemies.length === 1) {
+    const action = scan.bound.length > 0 ? "bind!" : "attack!";
+    t.doAction(action, scan.enemies[0]);
+    return true;
+  }
+  return false;
+}
+
+/** Rush toward a ticking captive, resting only if critically low. */
+function rushTowardTicking(
+  t: Turn,
+  target: Space,
+  health: number,
+): void {
+  const dist = t.doSense("distance_of", target) as number;
+  if (health < 5 && dist > 2) {
+    t.doAction("rest!");
+    return;
+  }
+  const dir = t.doSense("direction_of", target) as RelativeDirection;
+  const space = t.doSense("feel", dir) as Space;
+  if (space.isEmpty() || space.isStairs()) {
+    t.doAction("walk!", dir);
+    return;
+  }
+  for (const d of ALL_DIRS) {
+    const s = t.doSense("feel", d) as Space;
+    if (s.isEmpty()) {
+      t.doAction("walk!", d);
+      return;
+    }
+  }
+  t.doAction("rest!");
+}
+
+function walkToward(t: Turn, target: Space): void {
+  const dir = t.doSense("direction_of", target) as RelativeDirection;
+  t.doAction("walk!", dir);
+}
+
 describe("Intermediate Level 9", () => {
   const inherited = [
     "walk!",
@@ -24,13 +105,6 @@ describe("Intermediate Level 9", () => {
   ];
 
   it("passes with solving strategy", () => {
-    const directions: RelativeDirection[] = [
-      "forward",
-      "left",
-      "right",
-      "backward",
-    ];
-
     // Strategy: bind adjacent enemies, rescue bound ones to clear
     // quickly, rest minimally, rush toward ticking captive.
     // Uses bind+rescue as primary clearing method (2 turns per enemy,
@@ -41,92 +115,29 @@ describe("Intermediate Level 9", () => {
         const t = turn as Turn;
         const health = t.doSense("health") as number;
         const units = t.doSense("listen") as Space[];
-
-        // Scan adjacent spaces
-        const adjacentEnemies: RelativeDirection[] = [];
-        const adjacentBound: RelativeDirection[] = [];
-        let adjacentTickingCaptive: RelativeDirection | null = null;
-        let adjacentNonTickingCaptive: RelativeDirection | null = null;
-
-        for (const dir of directions) {
-          const space = t.doSense("feel", dir) as Space;
-          if (space.isEnemy()) {
-            adjacentEnemies.push(dir);
-          } else if (space.isCaptive() && space.isTicking()) {
-            adjacentTickingCaptive = dir;
-          } else if (space.isCaptive() && !space.isTicking()) {
-            adjacentNonTickingCaptive = dir;
-            adjacentBound.push(dir);
-          }
-        }
+        const scan = scanAdjacent(t);
 
         // Priority 1: rescue ticking captive immediately
-        if (adjacentTickingCaptive) {
-          t.doAction("rescue!", adjacentTickingCaptive);
+        if (scan.tickingCaptive) {
+          t.doAction("rescue!", scan.tickingCaptive);
           return;
         }
 
-        // Priority 2: bind enemies to reduce damage (bind+rescue
-        // is more efficient than attacking)
-        if (adjacentEnemies.length >= 2) {
-          t.doAction("bind!", adjacentEnemies[0]);
-          return;
-        }
-
-        if (adjacentEnemies.length === 1) {
-          // If there are also bound units, bind this one too
-          // so we can rescue them all safely
-          if (adjacentBound.length > 0) {
-            t.doAction("bind!", adjacentEnemies[0]);
-            return;
-          }
-          // Otherwise attack the lone enemy
-          t.doAction("attack!", adjacentEnemies[0]);
-          return;
-        }
+        // Priority 2: bind/attack adjacent enemies
+        if (handleEnemies(t, scan)) return;
 
         // Priority 3: rescue bound units (removes them, earns points)
-        if (adjacentBound.length > 0) {
-          t.doAction("rescue!", adjacentBound[0]);
+        if (scan.bound.length > 0) {
+          t.doAction("rescue!", scan.bound[0]);
           return;
         }
 
-        // Priority 4: if there's a ticking captive, rush toward it
-        // even at low health
-        const tickingCaptive = units.find(
+        // Priority 4: rush toward ticking captive even at low health
+        const ticking = units.find(
           (u) => u.isCaptive() && u.isTicking(),
         );
-        if (tickingCaptive) {
-          // Rest only if critically low and not too urgent
-          const dist = t.doSense(
-            "distance_of",
-            tickingCaptive,
-          ) as number;
-          if (health < 5 && dist > 2) {
-            t.doAction("rest!");
-            return;
-          }
-          const dir = t.doSense(
-            "direction_of",
-            tickingCaptive,
-          ) as RelativeDirection;
-          // If we can't walk that direction, try another empty dir
-          const space = t.doSense("feel", dir) as Space;
-          if (space.isEmpty() || space.isStairs()) {
-            t.doAction("walk!", dir);
-            return;
-          }
-          // Blocked by something; try other empty directions
-          // that move us closer
-          for (const d of directions) {
-            const s = t.doSense("feel", d) as Space;
-            if (s.isEmpty()) {
-              t.doAction("walk!", d);
-              return;
-            }
-          }
-          // All blocked, rest
-          t.doAction("rest!");
+        if (ticking) {
+          rushTowardTicking(t, ticking, health);
           return;
         }
 
@@ -137,29 +148,21 @@ describe("Intermediate Level 9", () => {
         }
 
         // Priority 6: rescue non-ticking captive
-        if (adjacentNonTickingCaptive) {
-          t.doAction("rescue!", adjacentNonTickingCaptive);
+        if (scan.nonTickingCaptive) {
+          t.doAction("rescue!", scan.nonTickingCaptive);
           return;
         }
 
         const captive = units.find((u) => u.isCaptive());
         if (captive) {
-          const dir = t.doSense(
-            "direction_of",
-            captive,
-          ) as RelativeDirection;
-          t.doAction("walk!", dir);
+          walkToward(t, captive);
           return;
         }
 
         // Priority 7: walk toward enemies
         const enemy = units.find((u) => u.isEnemy());
         if (enemy) {
-          const dir = t.doSense(
-            "direction_of",
-            enemy,
-          ) as RelativeDirection;
-          t.doAction("walk!", dir);
+          walkToward(t, enemy);
           return;
         }
 

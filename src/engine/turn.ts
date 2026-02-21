@@ -8,8 +8,8 @@ import type { BaseAbility } from "./abilities/base";
  */
 export class Turn implements ITurn {
   private _action: [string, ...unknown[]] | null = null;
-  private _senses: Map<string, BaseAbility> = new Map();
-  private _actions: Set<string> = new Set();
+  private readonly _senses: Map<string, BaseAbility> = new Map();
+  private readonly _actions: Set<string> = new Set();
 
   constructor(abilities: Map<string, BaseAbility>) {
     for (const [name, ability] of abilities) {

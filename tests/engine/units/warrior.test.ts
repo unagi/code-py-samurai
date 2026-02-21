@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { Warrior } from "@engine/units/warrior";
 import { Floor } from "@engine/floor";
-import type { IPlayer, ITurn } from "@engine/types";
+import type { IPlayer } from "@engine/types";
 import { Turn } from "@engine/turn";
 
 function setup(abilities: string[] = []) {

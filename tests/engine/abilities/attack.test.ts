@@ -62,6 +62,6 @@ describe("Attack", () => {
   it("throws on invalid direction", () => {
     const { warrior } = setup();
     const attack = warrior.abilities.get("attack!") as Attack;
-    expect(() => attack.perform("diagonal" as any)).toThrow("Unknown direction");
+    expect(() => attack.perform("diagonal" as unknown as "forward")).toThrow("Unknown direction");
   });
 });

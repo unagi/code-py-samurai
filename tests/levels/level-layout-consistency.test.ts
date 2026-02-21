@@ -7,7 +7,7 @@ function listLevelJsonFiles(): string[] {
   const roots = ["src/levels/beginner", "src/levels/intermediate"];
   const files: string[] = [];
   for (const root of roots) {
-    for (const name of fs.readdirSync(root).sort()) {
+    for (const name of fs.readdirSync(root).sort((a, b) => a.localeCompare(b))) {
       if (name.endsWith(".json")) {
         files.push(path.join(root, name));
       }

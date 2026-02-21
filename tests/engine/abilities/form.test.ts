@@ -28,7 +28,7 @@ describe("Form", () => {
     const { floor, warrior, ability } = setup();
     expect(warrior.health).toBe(20);
     ability.perform("forward");
-    const golem = floor.get(4, 0) as any;
+    const golem = floor.get(4, 0)!;
     expect(golem.health).toBe(10); // floor(20/2)
     expect(warrior.health).toBe(10);
   });
@@ -52,7 +52,7 @@ describe("Form", () => {
       turn.doAction("walk!", "forward");
     });
     const golem = floor.get(4, 0)!;
-    (golem as any).prepareTurn();
+    golem.prepareTurn();
     expect(actions).toEqual(["called"]);
   });
 

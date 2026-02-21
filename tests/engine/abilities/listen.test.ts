@@ -30,7 +30,7 @@ describe("Listen", () => {
   });
 
   it("does not include self", () => {
-    const { floor, warrior, ability } = setup();
+    const { floor, ability } = setup();
     floor.add(new Sludge(), 1, 0, "west");
     const spaces = ability.perform();
     expect(spaces).toHaveLength(1);

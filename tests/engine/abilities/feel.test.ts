@@ -55,6 +55,6 @@ describe("Feel", () => {
   it("throws on invalid direction", () => {
     const { warrior } = setup();
     const feel = warrior.abilities.get("feel") as Feel;
-    expect(() => feel.perform("diagonal" as any)).toThrow("Unknown direction");
+    expect(() => feel.perform("diagonal" as unknown as "forward")).toThrow("Unknown direction");
   });
 });

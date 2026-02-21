@@ -14,7 +14,7 @@ const VALID_DIRECTIONS: RelativeDirection[] = [
  * Ported from RubyWarrior::Abilities::Base
  */
 export abstract class BaseAbility {
-  protected _unit: IUnit;
+  protected readonly _unit: IUnit;
 
   constructor(unit: IUnit) {
     this._unit = unit;
