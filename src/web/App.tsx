@@ -255,141 +255,145 @@ export default function App() {
 
   return (
     <main className="layout">
-      <section className="panel game-panel">
-        <header className="game-header">
-          <h1>Py Samurai</h1>
-          <div className="controls">
-            <div className="course-tabs" role="tablist" aria-label="Course">
-              {towers.map((tower) => (
-                <button
-                  key={tower.name}
-                  type="button"
-                  role="tab"
-                  aria-selected={towerName === tower.name}
-                  className={towerName === tower.name ? "tab-button active" : "tab-button"}
-                  disabled={isPlaying}
-                  onClick={() => setTowerName(tower.name)}
-                >
-                  {tower.name}
-                </button>
-              ))}
-            </div>
-            <button onClick={startLevel}>Start Lv.{levelNumber}</button>
-          </div>
-        </header>
-        <nav className="level-progress" aria-label="Level Progress">
-          {levelSteps.map((step, index) => (
-            <span
-              key={step}
-              className={step === levelNumber ? "progress-step active" : "progress-step"}
-            >
-              Lv.{step}
-              {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
-            </span>
-          ))}
-        </nav>
-        <p className="description">{level.description}</p>
-
-        <div className="controls runtime-controls">
-          <button onClick={handlePlay} disabled={isPlaying}>
-            Play
-          </button>
-          <button onClick={handlePause} disabled={!isPlaying}>
-            {isPlaying ? "Pause" : "Paused"}
-          </button>
-          <label className="speed-label">
-            Speed
-            <select
-              value={speedMs}
-              disabled={isPlaying}
-              onChange={(e) => setSpeedMs(Number(e.target.value))}
-            >
-              <option value={700}>Slow</option>
-              <option value={450}>Normal</option>
-              <option value={220}>Fast</option>
-            </select>
-          </label>
-          <button onClick={startLevel}>Reset</button>
-        </div>
-
-        <article className="panel-sub full-width-panel">
-          <h3>Board (ASCII)</h3>
-          <pre id="board">{board}</pre>
-        </article>
-
-        <article className="panel-sub full-width-panel">
-          <h3>Logs</h3>
-          <pre id="logs">{logs}</pre>
-        </article>
-
-        <article className="panel-sub">
-          <div className="player-code-header">
-            <h3>Player Code (CodeMirror)</h3>
-            <button type="button" onClick={() => setShowTips((prev) => !prev)}>
-              {showTips ? "Hide Tips" : "Show Tips"}
-            </button>
-          </div>
-          <div className="editor-layout">
-            <div className="editor-main">
-              <div ref={editorHostRef} className="editor-host" />
-              <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
-            </div>
-            <aside className="api-panel">
-              <h4>Available API</h4>
-              <ul className="api-list">
-                {availableApi.length > 0 ? (
-                  availableApi.map((item) => <li key={item}>{item}</li>)
-                ) : (
-                  <li>(none)</li>
-                )}
-              </ul>
-            </aside>
-          </div>
-          {showTips ? (
-            <aside className="tips-panel">
-              <h4>Tip</h4>
-              <p>{level.tip}</p>
-              {level.clue ? (
-                <>
-                  <h4>Clue</h4>
-                  <p>{level.clue}</p>
-                </>
-              ) : null}
-            </aside>
-          ) : null}
-        </article>
-
-        {showResultModal && result ? (
-          <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Result">
-            <article className="modal-card">
-              <h3>Result</h3>
-              <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
-              <ul>
-                <li>Turns: {result.turns}</li>
-                <li>Total Score: {result.totalScore}</li>
-                <li>Time Bonus: {result.timeBonus}</li>
-                <li>Grade: {result.grade ?? "-"}</li>
-              </ul>
-              {!result.passed && level.clue ? (
-                <p className="clue-box">
-                  <strong>Clue:</strong> {level.clue}
-                </p>
-              ) : null}
-              <div className="controls">
-                <button
-                  onClick={() => {
-                    setShowResultModal(false);
-                    startLevel();
-                  }}
-                >
-                  Retry
-                </button>
-                <button onClick={() => setShowResultModal(false)}>Close</button>
-              </div>
-            </article>
-          </div>
-        ) : null}
+      <section className="hero">
+        <div className="hero-line" />
+        <h1>Py Samurai</h1>
+        <div className="hero-line" />
       </section>
+
+      <nav className="level-progress" aria-label="Level Progress">
+        {levelSteps.map((step, index) => (
+          <button
+            key={step}
+            type="button"
+            className={step === levelNumber ? "progress-step active" : "progress-step"}
+          >
+            Lv.{step}
+            {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
+          </button>
+        ))}
+      </nav>
+
+      <div className="course-tabs" role="tablist" aria-label="Course">
+        {towers.map((tower) => (
+          <button
+            key={tower.name}
+            type="button"
+            role="tab"
+            aria-selected={towerName === tower.name}
+            className={towerName === tower.name ? "tab-button active" : "tab-button"}
+            disabled={isPlaying}
+            onClick={() => setTowerName(tower.name)}
+          >
+            {tower.name}
+          </button>
+        ))}
+      </div>
+
+      <section className="workspace">
+        <article className="console-panel">
+          <h2>Board</h2>
+          <pre id="board">{board}</pre>
+          <div className="console-controls">
+            <button onClick={startLevel}>Start Lv.{levelNumber}</button>
+            <button onClick={handlePlay} disabled={isPlaying}>
+              Play
+            </button>
+            <button onClick={handlePause} disabled={!isPlaying}>
+              {isPlaying ? "Pause" : "Paused"}
+            </button>
+            <button onClick={startLevel}>Reset</button>
+            <label className="speed-label">
+              Speed
+              <select
+                value={speedMs}
+                disabled={isPlaying}
+                onChange={(e) => setSpeedMs(Number(e.target.value))}
+              >
+                <option value={700}>Slow</option>
+                <option value={450}>Normal</option>
+                <option value={220}>Fast</option>
+              </select>
+            </label>
+          </div>
+        </article>
+
+        <section className="right-column">
+          <article className="logs-panel">
+            <h2>System Logs</h2>
+            <p className="description">{level.description}</p>
+            <pre id="logs">{logs}</pre>
+          </article>
+
+          <article className="editor-panel">
+            <div className="player-code-header">
+              <h3>Player Code</h3>
+              <button type="button" onClick={() => setShowTips((prev) => !prev)}>
+                {showTips ? "Hide Tips" : "Show Tips"}
+              </button>
+            </div>
+            <div className="editor-layout">
+              <div className="editor-main">
+                <div ref={editorHostRef} className="editor-host" />
+                <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
+              </div>
+              <aside className="api-panel">
+                <h4>Available API</h4>
+                <ul className="api-list">
+                  {availableApi.length > 0 ? (
+                    availableApi.map((item) => <li key={item}>{item}</li>)
+                  ) : (
+                    <li>(none)</li>
+                  )}
+                </ul>
+              </aside>
+            </div>
+            {showTips ? (
+              <aside className="tips-panel">
+                <h4>Tip</h4>
+                <p>{level.tip}</p>
+                {level.clue ? (
+                  <>
+                    <h4>Clue</h4>
+                    <p>{level.clue}</p>
+                  </>
+                ) : null}
+              </aside>
+            ) : null}
+          </article>
+        </section>
+      </section>
+
+      {showResultModal && result ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Result">
+          <article className="modal-card">
+            <h3>Result</h3>
+            <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
+            <ul>
+              <li>Turns: {result.turns}</li>
+              <li>Total Score: {result.totalScore}</li>
+              <li>Time Bonus: {result.timeBonus}</li>
+              <li>Grade: {result.grade ?? "-"}</li>
+            </ul>
+            {!result.passed && level.clue ? (
+              <p className="clue-box">
+                <strong>Clue:</strong> {level.clue}
+              </p>
+            ) : null}
+            <div className="controls">
+              <button
+                onClick={() => {
+                  setShowResultModal(false);
+                  startLevel();
+                }}
+              >
+                Retry
+              </button>
+              <button onClick={() => setShowResultModal(false)}>Close</button>
+            </div>
+          </article>
+        </div>
+      ) : null}
     </main>
   );
 }
