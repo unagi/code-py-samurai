@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { basicSetup, EditorView } from "codemirror";
 import { indentWithTab } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
@@ -19,37 +20,39 @@ import { formatPythonError } from "../runtime/errors";
 import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
 
-const STARTER_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        # ここに1ターン分の処理を書く\n        pass`;
+function buildStarterPlayerCode(comment: string): string {
+  return `class Player:\n    def play_turn(self, warrior):\n        ${comment}\n        pass`;
+}
 
 interface TileMeta {
   kind: string;
-  alt: string;
+  altKey: string;
   assetPath?: string;
 }
 
 const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
-  " ": { kind: "empty", alt: "empty floor" },
-  "-": { kind: "frame", alt: "frame wall" },
-  "|": { kind: "frame", alt: "frame wall" },
-  ">": { kind: "stairs", alt: "stairs" },
+  " ": { kind: "empty", altKey: "tiles.empty" },
+  "-": { kind: "frame", altKey: "tiles.frame" },
+  "|": { kind: "frame", altKey: "tiles.frame" },
+  ">": { kind: "stairs", altKey: "tiles.stairs" },
   "@": {
     kind: "warrior",
-    alt: "warrior",
+    altKey: "tiles.warrior",
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
-  s: { kind: "sludge", alt: "sludge" },
-  S: { kind: "thick-sludge", alt: "thick sludge" },
-  a: { kind: "archer", alt: "archer" },
-  w: { kind: "wizard", alt: "wizard" },
-  C: { kind: "captive", alt: "captive" },
-  G: { kind: "golem", alt: "golem" },
-  "?": { kind: "unknown", alt: "unknown unit" },
+  s: { kind: "sludge", altKey: "tiles.sludge" },
+  S: { kind: "thick-sludge", altKey: "tiles.thickSludge" },
+  a: { kind: "archer", altKey: "tiles.archer" },
+  w: { kind: "wizard", altKey: "tiles.wizard" },
+  C: { kind: "captive", altKey: "tiles.captive" },
+  G: { kind: "golem", altKey: "tiles.golem" },
+  "?": { kind: "unknown", altKey: "tiles.unknown" },
 };
 
 interface BoardTile {
   symbol: string;
   kind: string;
-  alt: string;
+  altKey: string;
   assetPath?: string;
 }
 
@@ -179,11 +182,11 @@ function buildBoardGrid(board: string): BoardGridData {
   const tiles: BoardTile[] = [];
   for (const line of normalizedLines) {
     for (const symbol of line) {
-      const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", alt: `unknown(${symbol})` };
+      const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", altKey: "tiles.unknown" };
       tiles.push({
         symbol,
         kind: meta.kind,
-        alt: meta.alt,
+        altKey: meta.altKey,
         assetPath: meta.assetPath,
       });
     }
@@ -299,20 +302,24 @@ function createDamagePopupsFromLogs(
   return popups;
 }
 
+interface StatsFormatter {
+  hp(current: number | string, max: number | string): string;
+  atk(value: number | string): string;
+}
+
 function buildTileStatsText(
   tileKind: string,
   warriorHealth: number | null,
   warriorMaxHealth: number | null,
+  fmt: StatsFormatter,
 ): string | null {
   if (tileKind === "warrior") {
-    const hpNow = warriorHealth ?? "--";
-    const hpMax = warriorMaxHealth ?? "--";
-    return `HP ${hpNow}/${hpMax}  ATK 5`;
+    return `${fmt.hp(warriorHealth ?? "--", warriorMaxHealth ?? "--")}  ${fmt.atk(5)}`;
   }
   const stats = TILE_BASE_STATS[tileKind];
   if (!stats) return null;
-  const hpText = stats.hp === null ? "HP --/--" : `HP ${stats.hp}/${stats.hp}`;
-  const atkText = stats.atk === null ? "ATK --" : `ATK ${stats.atk}`;
+  const hpText = stats.hp === null ? fmt.hp("--", "--") : fmt.hp(stats.hp, stats.hp);
+  const atkText = stats.atk === null ? fmt.atk("--") : fmt.atk(stats.atk);
   return `${hpText}  ${atkText}`;
 }
 
@@ -339,6 +346,7 @@ class LevelSession {
   private _runtimeError: string | null = null;
   private _fallbackBoard = "";
   private _lastValidPlayer: IPlayer | null = null;
+  private _fallbackMessage = "[system] Using last valid player code. Fix syntax and retry to apply new code.";
 
   private buildFallbackBoard(levelDef: LevelDefinition): string {
     const previewPlayer: IPlayer = {
@@ -349,11 +357,12 @@ class LevelSession {
     return previewLevel.floor.character();
   }
 
-  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = []): void {
+  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = [], fallbackMessage?: string): void {
     this._logger.clear();
     this._setupError = null;
     this._runtimeError = null;
     this._fallbackBoard = this.buildFallbackBoard(levelDef);
+    if (fallbackMessage) this._fallbackMessage = fallbackMessage;
     try {
       const { player } = runPythonPlayerSource(playerCode);
       this._lastValidPlayer = player;
@@ -363,7 +372,7 @@ class LevelSession {
       this._setupError = formatPythonError(error);
       this._logger.log(this._setupError);
       if (this._lastValidPlayer) {
-        this._logger.log("[system] Using last valid player code. Fix syntax and retry to apply new code.");
+        this._logger.log(this._fallbackMessage);
         this._level = new Level(levelDef, this._logger);
         this._level.setup(this._lastValidPlayer, []);
       } else {
@@ -529,6 +538,7 @@ function createCodeEditor(
 }
 
 export default function App() {
+  const { t, i18n } = useTranslation();
   const initialProgress = readProgressStorage();
   const [towerName, setTowerName] = useState(() => {
     const exists = towers.some((tower) => tower.name === initialProgress.towerName);
@@ -542,6 +552,7 @@ export default function App() {
     return buildWarriorLevel(initialProgress);
   });
   const [speedMs, setSpeedMs] = useState(450);
+  const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => {
     try {
       const saved = globalThis.localStorage.getItem(STORAGE_KEY_PLAYER_CODE);
@@ -551,12 +562,12 @@ export default function App() {
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
-    return STARTER_PLAYER_CODE;
+    return starterCode;
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [canPlay, setCanPlay] = useState(true);
   const [board, setBoard] = useState("");
-  const [logs, setLogs] = useState("(ログなし)");
+  const [logs, setLogs] = useState("");
   const [result, setResult] = useState<LevelResult | null>(null);
   const [warriorHealth, setWarriorHealth] = useState<number | null>(null);
   const [warriorMaxHealth, setWarriorMaxHealth] = useState<number | null>(null);
@@ -597,6 +608,10 @@ export default function App() {
     () => unlockedWarriorAbilities.stats.map((item) => `warrior.${item}`),
     [unlockedWarriorAbilities.stats],
   );
+  const statsFmt: StatsFormatter = useMemo(() => ({
+    hp: (current, max) => t("board.hp", { current, max }),
+    atk: (value) => t("board.atk", { value }),
+  }), [t]);
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
   const levelSteps = useMemo(() => {
     return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
@@ -646,8 +661,9 @@ export default function App() {
   const refreshGameState = (): void => {
     const session = sessionRef.current;
     const nextBoard = session.board;
-    const nextLogs = session.logs || "(ログなし)";
-    const allLogLines = nextLogs === "(ログなし)" ? [] : nextLogs.split("\n");
+    const rawLogs = session.logs;
+    const nextLogs = rawLogs || "";
+    const allLogLines = nextLogs.length === 0 ? [] : nextLogs.split("\n");
     const prevLineCount = allLogLines.length < logLineCountRef.current ? 0 : logLineCountRef.current;
     const newLines = allLogLines.slice(prevLineCount);
     logLineCountRef.current = allLogLines.length;
@@ -688,7 +704,7 @@ export default function App() {
     logLineCountRef.current = 0;
     unitTileIndexMapRef.current = new Map<string, number>();
     setDamagePopups([]);
-    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
+    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities, t("logs.systemFallback"));
     refreshGameState();
     setIsCodeDirty(false);
     return sessionRef.current.canPlay;
@@ -700,7 +716,7 @@ export default function App() {
     refreshGameState();
     if (canContinue && currentResult && currentResult.turns >= UI_MAX_TURNS) {
       stopTimer();
-      setLogs((prev) => `${prev}\n[system] Stopped at ${UI_MAX_TURNS} turns (timeout).`);
+      setLogs((prev) => `${prev}\n${t("logs.systemTimeout", { maxTurns: UI_MAX_TURNS })}`);
       setShowResultModal(true);
       return;
     }
@@ -772,7 +788,7 @@ export default function App() {
   };
 
   const handleClearData = (): void => {
-    const ok = globalThis.confirm("保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？");
+    const ok = globalThis.confirm(t("app.clearDataConfirm"));
     if (!ok) return;
 
     stopTimer();
@@ -788,8 +804,8 @@ export default function App() {
     setTowerName("beginner");
     setLevelNumber(1);
     setWarriorLevel(1);
-    setPlayerCode(STARTER_PLAYER_CODE);
-    applyCodeToEditor(STARTER_PLAYER_CODE);
+    setPlayerCode(starterCode);
+    applyCodeToEditor(starterCode);
     setIsCodeDirty(true);
   };
 
@@ -850,17 +866,35 @@ export default function App() {
     }
   }, [playerCode]);
 
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  const levelDescKey = `levels.${towerName}.${levelNumber}.description`;
+  const levelTipKey = `levels.${towerName}.${levelNumber}.tip`;
+  const levelClueKey = `levels.${towerName}.${levelNumber}.clue`;
+  const hasClue = i18n.exists(levelClueKey);
+
   return (
     <main className="layout">
       <section className="hero">
         <div className="hero-line" />
-        <h1>Py Samurai ⚔️🐱</h1>
+        <h1>{t("app.title")} ⚔️🐱</h1>
         <div className="hero-line" />
+        <select
+          className="lang-selector"
+          value={i18n.language}
+          onChange={(e) => i18n.changeLanguage(e.target.value)}
+          aria-label={t("nav.language")}
+        >
+          <option value="en">EN</option>
+          <option value="ja">JA</option>
+        </select>
       </section>
 
       <div className="top-controls">
         <div className="top-controls-main">
-          <nav className="level-progress" aria-label="Level Progress">
+          <nav className="level-progress" aria-label={t("nav.levelProgress")}>
             {levelSteps.map((step, index) => (
               <button
                 key={step}
@@ -869,13 +903,13 @@ export default function App() {
                 disabled={isPlaying}
                 onClick={() => goToLevel(step)}
               >
-                Lv.{getGlobalLevelFromTowerLevel(towerName, step)}
+                {t("board.lv", { level: getGlobalLevelFromTowerLevel(towerName, step) })}
                 {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
               </button>
             ))}
           </nav>
 
-          <div className="course-tabs" role="tablist" aria-label="Course">
+          <div className="course-tabs" role="tablist" aria-label={t("nav.course")}>
             {towers.map((tower) => (
               <button
                 key={tower.name}
@@ -886,14 +920,14 @@ export default function App() {
                 disabled={isPlaying}
                 onClick={() => handleTowerChange(tower.name)}
               >
-                {tower.name}
+                {t(`towers.${tower.name}`)}
               </button>
             ))}
           </div>
         </div>
         <div className="top-controls-side">
           <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
-            <span className="icon-label"><i className="bi bi-trash3" />データ消去</span>
+            <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
           </button>
         </div>
       </div>
@@ -901,18 +935,18 @@ export default function App() {
       <section className="workspace">
         <section className="left-column">
           <article className="console-panel">
-            <h2>🗺️ Board</h2>
+            <h2>🗺️ {t("board.heading")}</h2>
             <div id="board" className="board-viewport" ref={boardViewportRef}>
               <div className="board-status">
                 <span className="status-chip">
-                  WARRIOR Lv.{warriorLevel}  HP {warriorHealth ?? "--"}/{warriorMaxHealth ?? "--"}  ATK 5
+                  {t("board.warrior")} {t("board.lv", { level: warriorLevel })}  {t("board.hp", { current: warriorHealth ?? "--", max: warriorMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
               <div
                 className="board-grid"
                 role="img"
-                aria-label={`Board ${boardGrid.rows}x${boardGrid.columns}`}
+                aria-label={t("board.ariaLabel", { rows: boardGrid.rows, columns: boardGrid.columns })}
                 style={boardGridStyle}
               >
                 {boardGrid.tiles.map((tile, index) => {
@@ -920,28 +954,29 @@ export default function App() {
                   const tileImageSrc =
                     tile.kind === "warrior" ? getWarriorIdleFramePath(warriorFrame) : tile.assetPath;
                   const tilePopups = damagePopupsByTile.get(index) ?? [];
-                  const tileStats = buildTileStatsText(tile.kind, warriorHealth, warriorMaxHealth);
+                  const tileStats = buildTileStatsText(tile.kind, warriorHealth, warriorMaxHealth, statsFmt);
+                  const tileAlt = t(tile.altKey);
                   return (
                     <div
                       key={`${index}-${tile.kind}-${tile.symbol}`}
                       className={`board-tile tile-${tile.kind}`}
-                      title={tile.alt}
-                      aria-label={tile.alt}
+                      title={tileAlt}
+                      aria-label={tileAlt}
                       onMouseEnter={() => {
                         if (!tileStats) return;
                         if (tile.kind === "warrior") return;
-                        setHoveredEnemyStats(`${tile.alt.toUpperCase()}  ${tileStats}`);
+                        setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
                       }}
                       onMouseLeave={() => setHoveredEnemyStats(null)}
                       onFocus={() => {
                         if (!tileStats) return;
                         if (tile.kind === "warrior") return;
-                        setHoveredEnemyStats(`${tile.alt.toUpperCase()}  ${tileStats}`);
+                        setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
                       }}
                       onBlur={() => setHoveredEnemyStats(null)}
                     >
                       {tileImageSrc ? (
-                        <img src={tileImageSrc} alt={tile.alt} className="tile-image" />
+                        <img src={tileImageSrc} alt={tileAlt} className="tile-image" />
                       ) : (
                         <span className="tile-fallback" aria-hidden="true">{displaySymbol}</span>
                       )}
@@ -957,42 +992,42 @@ export default function App() {
             </div>
             <div className="console-controls">
               <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
-                <span className="icon-label"><i className="bi bi-play-fill" />Play</span>
+                <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
               </button>
               <button onClick={handlePause} disabled={!isPlaying}>
-                <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? "Pause" : "Paused"}</span>
+                <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
               </button>
               <button onClick={handleReset}>
-                <span className="icon-label"><i className="bi bi-arrow-repeat" />Reset</span>
+                <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
               </button>
               <label className="speed-label">
-                <span className="icon-label"><i className="bi bi-lightning-charge-fill" />Speed</span>
+                <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t("controls.speed")}</span>
                 <select
                   value={speedMs}
                   disabled={isPlaying}
                   onChange={(e) => setSpeedMs(Number(e.target.value))}
                 >
-                  <option value={700}>Slow</option>
-                  <option value={450}>Normal</option>
-                  <option value={220}>Fast</option>
+                  <option value={700}>{t("controls.slow")}</option>
+                  <option value={450}>{t("controls.normal")}</option>
+                  <option value={220}>{t("controls.fast")}</option>
                 </select>
               </label>
             </div>
           </article>
           <article className="editor-panel">
             <div className="player-code-header">
-              <h3>👨‍💻 Player Code</h3>
+              <h3>👨‍💻 {t("editor.heading")}</h3>
               <div className="tip-anchor">
                 <button type="button" className="tip-trigger" aria-describedby="tips-popover">
-                  <span className="icon-label"><i className="bi bi-lightbulb-fill" />Tips</span>
+                  <span className="icon-label"><i className="bi bi-lightbulb-fill" />{t("editor.tips")}</span>
                 </button>
                 <aside id="tips-popover" className="tips-popover" role="tooltip">
-                  <h4>💡 Tip</h4>
-                  <p>{level.tip}</p>
-                  {level.clue ? (
+                  <h4>💡 {t("editor.tip")}</h4>
+                  <p>{t(levelTipKey)}</p>
+                  {hasClue ? (
                     <>
-                      <h4>🧭 Clue</h4>
-                      <p>{level.clue}</p>
+                      <h4>🧭 {t("editor.clue")}</h4>
+                      <p>{t(levelClueKey)}</p>
                     </>
                   ) : null}
                 </aside>
@@ -1001,24 +1036,24 @@ export default function App() {
             <div className="editor-layout">
               <div className="editor-main">
                 <div ref={editorHostRef} className="editor-host" />
-                <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
+                <p className="code-note">{t("editor.codeNote")}</p>
               </div>
               <aside className="api-panel">
-                <h4>📚 Methods / Properties</h4>
-                <h4>Methods</h4>
+                <h4>📚 {t("editor.apiHeading")}</h4>
+                <h4>{t("editor.methods")}</h4>
                 <ul className="api-list">
                   {availableMethods.length > 0 ? (
                     availableMethods.map((item) => <li key={item}>{item}</li>)
                   ) : (
-                    <li>(none)</li>
+                    <li>{t("editor.none")}</li>
                   )}
                 </ul>
-                <h4>Properties</h4>
+                <h4>{t("editor.properties")}</h4>
                 <ul className="api-list">
                   {availableProperties.length > 0 ? (
                     availableProperties.map((item) => <li key={item}>{item}</li>)
                   ) : (
-                    <li>(none)</li>
+                    <li>{t("editor.none")}</li>
                   )}
                 </ul>
               </aside>
@@ -1027,26 +1062,26 @@ export default function App() {
         </section>
 
         <article className="logs-panel">
-          <h2>🖥️ System Logs</h2>
-          <p className="description">{level.description}</p>
-          <pre id="logs">{logs}</pre>
+          <h2>🖥️ {t("logs.heading")}</h2>
+          <p className="description">{t(levelDescKey)}</p>
+          <pre id="logs">{logs || t("logs.empty")}</pre>
         </article>
       </section>
 
       {showResultModal && result ? (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Result">
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t("result.heading")}>
           <article className="modal-card">
-            <h3>🏁 Result</h3>
-            <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
+            <h3>🏁 {t("result.heading")}</h3>
+            <p className="result-status">{result.passed ? t("result.clear") : t("result.failed")}</p>
             <ul>
-              <li>Turns: {result.turns}</li>
-              <li>Total Score: {result.totalScore}</li>
-              <li>Time Bonus: {result.timeBonus}</li>
-              <li>Grade: {result.grade ?? "-"}</li>
+              <li>{t("result.turns")}: {result.turns}</li>
+              <li>{t("result.totalScore")}: {result.totalScore}</li>
+              <li>{t("result.timeBonus")}: {result.timeBonus}</li>
+              <li>{t("result.grade")}: {result.grade ?? "-"}</li>
             </ul>
-            {!result.passed && level.clue ? (
+            {!result.passed && hasClue ? (
               <p className="clue-box">
-                <strong>Clue:</strong> {level.clue}
+                <strong>{t("result.clue")}</strong> {t(levelClueKey)}
               </p>
             ) : null}
             <div className="controls">
@@ -1056,15 +1091,15 @@ export default function App() {
                   startLevel();
                 }}
               >
-                <span className="icon-label"><i className="bi bi-arrow-repeat" />Retry</span>
+                <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("result.retry")}</span>
               </button>
               {result.passed && hasNextLevel ? (
                 <button onClick={() => goToLevel(levelNumber + 1)}>
-                  <span className="icon-label"><i className="bi bi-skip-forward-fill" />Next</span>
+                  <span className="icon-label"><i className="bi bi-skip-forward-fill" />{t("result.next")}</span>
                 </button>
               ) : (
                 <button onClick={() => setShowResultModal(false)}>
-                  <span className="icon-label"><i className="bi bi-check2-circle" />Close</span>
+                  <span className="icon-label"><i className="bi bi-check2-circle" />{t("result.close")}</span>
                 </button>
               )}
             </div>
