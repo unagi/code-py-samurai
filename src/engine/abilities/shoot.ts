@@ -17,10 +17,10 @@ export class Shoot extends BaseAbility {
       if (receiver) break;
     }
     if (receiver) {
-      this._unit.say(`shoots ${direction} and hits ${receiver}`);
+      this._unit.say({ key: "engine.shootHit", params: { direction, target: receiver.nameKey } });
       this.damage(receiver, this._unit.shootPower);
     } else {
-      this._unit.say("shoots and hits nothing");
+      this._unit.say({ key: "engine.shootMiss", params: {} });
     }
   }
 }

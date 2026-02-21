@@ -69,6 +69,13 @@ export class Space {
     return u.isGolem();
   }
 
+  get nameKey(): string {
+    const u = this.unit;
+    if (u) return u.nameKey;
+    if (this.isWall()) return "wall";
+    return "nothing";
+  }
+
   toString(): string {
     const u = this.unit;
     if (u) return u.toString();

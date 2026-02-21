@@ -1,7 +1,21 @@
+import type { LogEntry } from "../log-entry";
 import type { Position } from "../position";
 import type { IUnit, ILogger } from "../types";
 import type { BaseAbility } from "../abilities/base";
 import { Turn } from "../turn";
+
+/**
+ * Mapping from unit display name to i18n nameKey (matching tiles.* keys).
+ */
+const NAME_TO_KEY: Record<string, string> = {
+  Warrior: "warrior",
+  Sludge: "sludge",
+  "Thick Sludge": "thickSludge",
+  Archer: "archer",
+  Wizard: "wizard",
+  Captive: "captive",
+  Golem: "golem",
+};
 
 /**
  * Base class for all units (warrior, enemies, captives).
@@ -42,6 +56,10 @@ export abstract class BaseUnit implements IUnit {
     return this._unitId;
   }
 
+  get nameKey(): string {
+    return NAME_TO_KEY[this.name] ?? this.name.toLowerCase().replaceAll(/\s+/g, "");
+  }
+
   setUnitId(id: string): void {
     const normalized = id.toLowerCase().replaceAll(/[^a-z0-9#_-]+/g, "");
     this._unitId = normalized.length > 0 ? normalized : this._unitId;
@@ -73,7 +91,7 @@ export abstract class BaseUnit implements IUnit {
   }
 
   unbind(): void {
-    this.say("released from bonds");
+    this.say({ key: "engine.released", params: {} });
     this._bound = false;
   }
 
@@ -94,10 +112,10 @@ export abstract class BaseUnit implements IUnit {
       this.unbind();
     }
     this.health -= amount;
-    this.say(`takes ${amount} damage, ${this.health} health power left`);
+    this.say({ key: "engine.takeDamage", params: { amount, health: this.health } });
     if (this.health <= 0) {
       this.position = null;
-      this.say("dies");
+      this.say({ key: "engine.dies", params: {} });
     }
   }
 
@@ -105,8 +123,8 @@ export abstract class BaseUnit implements IUnit {
     // Override in Warrior
   }
 
-  say(msg: string): void {
-    this._logger.log(`${this._unitId} ${msg}`);
+  say(entry: LogEntry): void {
+    this._logger.log({ ...entry, unitId: entry.unitId ?? this._unitId });
   }
 
   addAbilities(...abilityNames: string[]): void {

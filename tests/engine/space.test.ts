@@ -44,6 +44,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     isWarrior: () => false,
     isGolem: () => false,
     hasAbility: () => false,
+    nameKey: "unit",
     toString: () => "unit",
     takeDamage: () => {},
     earnPoints: () => {},

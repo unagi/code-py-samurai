@@ -16,6 +16,6 @@ export class Pivot extends BaseAbility {
   perform(direction: RelativeDirection = "backward"): void {
     this.verifyDirection(direction);
     this._unit.position!.rotate(ROTATION_MAP[direction]);
-    this._unit.say(`pivots ${direction}`);
+    this._unit.say({ key: "engine.pivot", params: { direction } });
   }
 }

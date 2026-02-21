@@ -5,7 +5,7 @@ export class Explode extends BaseAbility {
 
   perform(): void {
     if (this._unit.position) {
-      this._unit.say("explodes, dealing 100 damage to every unit on the floor");
+      this._unit.say({ key: "engine.explode", params: {} });
       const floor = this._unit.position.floor;
       // Copy array since units may die during iteration
       const allUnits = [...floor.units];
@@ -18,7 +18,7 @@ export class Explode extends BaseAbility {
   passTurn(): void {
     if (this.time !== null && this._unit.position) {
       this.time -= 1;
-      this._unit.say("is ticking");
+      this._unit.say({ key: "engine.ticking", params: {} });
       if (this.time <= 0) {
         this.perform();
       }

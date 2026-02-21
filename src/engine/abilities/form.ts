@@ -27,13 +27,9 @@ export class Form extends BaseAbility {
       this._unit.health -= golemHealth;
       pos.floor.add(golem, x, y, pos.direction);
 
-      this._unit.say(
-        `forms a golem ${direction} and gives half of health (${golemHealth})`
-      );
+      this._unit.say({ key: "engine.formSuccess", params: { direction, amount: golemHealth } });
     } else {
-      this._unit.say(
-        `fails to form golem because something is blocking the way`
-      );
+      this._unit.say({ key: "engine.formBlocked", params: {} });
     }
   }
 }

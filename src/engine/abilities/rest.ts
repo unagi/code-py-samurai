@@ -8,11 +8,9 @@ export class Rest extends BaseAbility {
         amount = this._unit.maxHealth - this._unit.health;
       }
       this._unit.health += amount;
-      this._unit.say(
-        `receives ${amount} health from resting, up to ${this._unit.health} health`
-      );
+      this._unit.say({ key: "engine.restHeal", params: { amount, health: this._unit.health } });
     } else {
-      this._unit.say("is already fit as a fiddle");
+      this._unit.say({ key: "engine.restFull", params: {} });
     }
   }
 }

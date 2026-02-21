@@ -9,11 +9,14 @@ import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
+import type { LogEntry } from "../engine/log-entry";
 import type { ILogger, IPlayer, LevelDefinition, WarriorAbilitySet } from "../engine/types";
 import {
   getGlobalLevelFromTowerLevel,
   getMaxWarriorLevel,
+  getTowerAndLocalFromGlobal,
   getWarriorAbilitiesAtGlobalLevel,
+  getWarriorRank,
   warriorAbilitiesToEngineAbilities,
 } from "../engine/warrior-abilities";
 import { formatPythonError } from "../runtime/errors";
@@ -102,15 +105,19 @@ const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }>
 };
 
 interface ProgressStorageData {
+  // new format
+  globalLevel?: number;
+  // legacy fields
   towerName?: string;
   levelNumber?: number;
   warriorLevel?: number;
   warriorLevelByTower?: Record<string, number>;
 }
 
-function clampLevel(value: unknown, levelCount: number): number {
-  const n = typeof value === "number" ? Math.floor(value) : 1;
-  return Math.min(Math.max(1, n), levelCount);
+const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
+
+function clampGlobalLevel(value: number): number {
+  return Math.min(Math.max(1, Math.floor(value)), TOTAL_LEVELS);
 }
 
 function readProgressStorage(): ProgressStorageData {
@@ -138,6 +145,16 @@ function buildWarriorLevel(data: ProgressStorageData): number {
   }
 
   return Math.min(Math.max(1, migrated), maxLv);
+}
+
+function migrateToGlobalLevel(data: ProgressStorageData): number {
+  if (typeof data.globalLevel === "number") {
+    return clampGlobalLevel(data.globalLevel);
+  }
+  if (data.towerName && typeof data.levelNumber === "number") {
+    return clampGlobalLevel(getGlobalLevelFromTowerLevel(data.towerName, data.levelNumber));
+  }
+  return 1;
 }
 
 function getWarriorIdleFramePath(frameIndex: number): string {
@@ -193,7 +210,7 @@ function buildBoardGrid(board: string): BoardGridData {
     assetPath: "/assets/tiles/cave-wall-top.png",
   };
 
-  const pushBoardRow = (line: string, isTopWallRow: boolean, isBottomWallRow: boolean) => {
+  const pushBoardRow = (line: string, isTopWallRow: boolean, _isBottomWallRow: boolean) => {
     const filled = line.padEnd(sourceColumns, " ");
     const isWallRow = filled.includes("-");
     // Left padding
@@ -233,10 +250,38 @@ function normalizeIdPrefix(value: string): string {
   return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "");
 }
 
-function parseDamageLine(line: string): { unitId: string; amount: number } | null {
-  const m = /^([a-z0-9#_-]+)\s+takes\s+(\d+)\s+damage/i.exec(line);
-  if (!m) return null;
-  return { unitId: m[1].toLowerCase(), amount: Number(m[2]) };
+/** Direction values that need i18n translation in log messages. */
+const DIRECTION_KEYS: Record<string, string> = {
+  forward: "directions.forward",
+  backward: "directions.backward",
+  left: "directions.left",
+  right: "directions.right",
+};
+
+/**
+ * Format a structured LogEntry into a translated display string.
+ */
+function formatLogEntry(entry: LogEntry, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  const params: Record<string, string | number> = {};
+  for (const [k, v] of Object.entries(entry.params)) {
+    if (k === "direction" && typeof v === "string" && DIRECTION_KEYS[v]) {
+      params[k] = t(DIRECTION_KEYS[v]);
+    } else if (k === "target" && typeof v === "string") {
+      params[k] = t(`tiles.${v}`, { defaultValue: v });
+    } else {
+      params[k] = v;
+    }
+  }
+  const msg = t(entry.key, params as Record<string, unknown>);
+  if (entry.unitId) {
+    const base = entry.unitId.includes("#")
+      ? entry.unitId.split("#")[0]
+      : stripTrailingDigits(entry.unitId);
+    const suffix = entry.unitId.slice(base.length);
+    const name = t(`tiles.${normalizeIdPrefix(base)}`, { defaultValue: entry.unitId });
+    return `${name}${suffix} ${msg}`;
+  }
+  return msg;
 }
 
 function stripTrailingDigits(s: string): string {
@@ -307,23 +352,23 @@ function buildTileIndexResolver(
   };
 }
 
-function createDamagePopupsFromLogs(
-  lines: string[],
+function createDamagePopupsFromEntries(
+  entries: LogEntry[],
   board: string,
   idSeed: number,
   unitTileIndexByLabel: Map<string, number>,
 ): DamagePopup[] {
-  if (lines.length === 0) return [];
+  if (entries.length === 0) return [];
 
   const resolver = buildTileIndexResolver(unitTileIndexByLabel, buildBoardGrid(board));
   const popups: DamagePopup[] = [];
   let nextId = idSeed;
   const now = Date.now();
 
-  for (const line of lines) {
-    const parsed = parseDamageLine(line);
-    if (!parsed) continue;
-    const { unitId, amount } = parsed;
+  for (const entry of entries) {
+    if (entry.key !== "engine.takeDamage" || !entry.unitId) continue;
+    const unitId = entry.unitId.toLowerCase();
+    const amount = entry.params.amount as number;
     const tileIndex = resolver.directLookup(unitId) ?? resolver.kindLookup(unitId);
     if (tileIndex === undefined) continue;
     popups.push({ id: nextId++, tileIndex, text: `-${amount}`, expiresAt: now + DAMAGE_POPUP_MS });
@@ -354,18 +399,14 @@ function buildTileStatsText(
 }
 
 class MemoryLogger implements ILogger {
-  lines: string[] = [];
+  entries: LogEntry[] = [];
 
-  log(msg: string): void {
-    this.lines.push(msg);
+  log(entry: LogEntry): void {
+    this.entries.push(entry);
   }
 
   clear(): void {
-    this.lines = [];
-  }
-
-  dump(): string {
-    return this.lines.join("\n");
+    this.entries = [];
   }
 }
 
@@ -376,7 +417,7 @@ class LevelSession {
   private _runtimeError: string | null = null;
   private _fallbackBoard = "";
   private _lastValidPlayer: IPlayer | null = null;
-  private _fallbackMessage = "[system] Using last valid player code. Fix syntax and retry to apply new code.";
+  private _fallbackMessageKey = "logs.systemFallback";
 
   private buildFallbackBoard(levelDef: LevelDefinition): string {
     const previewPlayer: IPlayer = {
@@ -387,12 +428,11 @@ class LevelSession {
     return previewLevel.floor.character();
   }
 
-  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = [], fallbackMessage?: string): void {
+  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = []): void {
     this._logger.clear();
     this._setupError = null;
     this._runtimeError = null;
     this._fallbackBoard = this.buildFallbackBoard(levelDef);
-    if (fallbackMessage) this._fallbackMessage = fallbackMessage;
     try {
       const { player } = runPythonPlayerSource(playerCode);
       this._lastValidPlayer = player;
@@ -400,9 +440,9 @@ class LevelSession {
       this._level.setup(player, existingAbilities);
     } catch (error) {
       this._setupError = formatPythonError(error);
-      this._logger.log(this._setupError);
+      this._logger.log({ key: "logs.pythonError", params: { message: this._setupError } });
       if (this._lastValidPlayer) {
-        this._logger.log(this._fallbackMessage);
+        this._logger.log({ key: this._fallbackMessageKey, params: {} });
         this._level = new Level(levelDef, this._logger);
         this._level.setup(this._lastValidPlayer, []);
       } else {
@@ -428,7 +468,7 @@ class LevelSession {
       return this._level.step();
     } catch (error) {
       this._runtimeError = formatPythonError(error);
-      this._logger.log(this._runtimeError);
+      this._logger.log({ key: "logs.pythonError", params: { message: this._runtimeError } });
       return false;
     }
   }
@@ -438,8 +478,8 @@ class LevelSession {
     return this._level.floor.character();
   }
 
-  get logs(): string {
-    return this._logger.dump();
+  get entries(): readonly LogEntry[] {
+    return this._logger.entries;
   }
 
   get result(): LevelResult | null {
@@ -570,17 +610,18 @@ function createCodeEditor(
 export default function App() {
   const { t, i18n } = useTranslation();
   const initialProgress = readProgressStorage();
-  const [towerName, setTowerName] = useState(() => {
-    const exists = towers.some((tower) => tower.name === initialProgress.towerName);
-    return exists && initialProgress.towerName ? initialProgress.towerName : "beginner";
-  });
-  const [levelNumber, setLevelNumber] = useState(() => {
-    const tower = towers.find((item) => item.name === initialProgress.towerName) ?? towers[0];
-    return clampLevel(initialProgress.levelNumber, tower.levelCount);
+  const [currentGlobalLevel, setCurrentGlobalLevel] = useState(() => {
+    return migrateToGlobalLevel(initialProgress);
   });
   const [warriorLevel, setWarriorLevel] = useState<number>(() => {
     return buildWarriorLevel(initialProgress);
   });
+
+  const { towerName, localLevel } = useMemo(
+    () => getTowerAndLocalFromGlobal(currentGlobalLevel),
+    [currentGlobalLevel],
+  );
+  const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= warriorLevel;
   const [speedMs, setSpeedMs] = useState(450);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => {
@@ -597,7 +638,7 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [canPlay, setCanPlay] = useState(true);
   const [board, setBoard] = useState("");
-  const [logs, setLogs] = useState("");
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [result, setResult] = useState<LevelResult | null>(null);
   const [warriorHealth, setWarriorHealth] = useState<number | null>(null);
   const [warriorMaxHealth, setWarriorMaxHealth] = useState<number | null>(null);
@@ -621,8 +662,8 @@ export default function App() {
     return towers.find((item) => item.name === towerName) ?? towers[0];
   }, [towerName]);
   const level = useMemo(() => {
-    return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
-  }, [selectedTower, levelNumber]);
+    return selectedTower.getLevel(localLevel) ?? selectedTower.levels[0];
+  }, [selectedTower, localLevel]);
   const unlockedWarriorAbilities = useMemo<WarriorAbilitySet>(() => {
     return getWarriorAbilitiesAtGlobalLevel(warriorLevel);
   }, [warriorLevel]);
@@ -643,10 +684,15 @@ export default function App() {
     atk: (value) => t("board.atk", { value }),
   }), [t]);
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
-  const levelSteps = useMemo(() => {
-    return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
-  }, [selectedTower]);
-  const hasNextLevel = levelNumber < selectedTower.levelCount;
+  const formattedLogs = useMemo(() => {
+    if (logEntries.length === 0) return "";
+    return logEntries.map((entry) => formatLogEntry(entry, t)).join("\n");
+  }, [logEntries, t]);
+  const allLevelSteps = useMemo(() => {
+    return Array.from({ length: TOTAL_LEVELS }, (_, i) => i + 1);
+  }, []);
+  const hasNextLevel = currentGlobalLevel < TOTAL_LEVELS;
+  const warriorRank = useMemo(() => getWarriorRank(warriorLevel), [warriorLevel]);
   useLayoutEffect(() => {
     const viewport = boardViewportRef.current;
     if (!viewport) return;
@@ -691,27 +737,23 @@ export default function App() {
   const refreshGameState = (): void => {
     const session = sessionRef.current;
     const nextBoard = session.board;
-    const rawLogs = session.logs;
-    const nextLogs = rawLogs || "";
-    const allLogLines = nextLogs.length === 0 ? [] : nextLogs.split("\n");
-    const prevLineCount = allLogLines.length < logLineCountRef.current ? 0 : logLineCountRef.current;
-    const newLines = allLogLines.slice(prevLineCount);
-    logLineCountRef.current = allLogLines.length;
+    const allEntries = session.entries;
+    const prevCount = allEntries.length < logLineCountRef.current ? 0 : logLineCountRef.current;
+    const newEntries = allEntries.slice(prevCount);
+    logLineCountRef.current = allEntries.length;
 
     const boardForDamage = board.trim().length > 0 ? board : nextBoard;
-    const popups = createDamagePopupsFromLogs(
-      newLines,
+    const popups = createDamagePopupsFromEntries(
+      newEntries,
       boardForDamage,
       damagePopupIdRef.current,
       unitTileIndexMapRef.current,
     );
-    if (popups.length > 0) {
-      damagePopupIdRef.current += popups.length;
-      setDamagePopups((prev) => [...prev, ...popups].slice(-40));
-    }
+    damagePopupIdRef.current += popups.length;
+    setDamagePopups(popups);
 
     setBoard(nextBoard);
-    setLogs(nextLogs);
+    setLogEntries([...allEntries]);
     setResult(session.result);
     setWarriorHealth(session.warriorHealth);
     setWarriorMaxHealth(session.warriorMaxHealth);
@@ -734,7 +776,7 @@ export default function App() {
     logLineCountRef.current = 0;
     unitTileIndexMapRef.current = new Map<string, number>();
     setDamagePopups([]);
-    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities, t("logs.systemFallback"));
+    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
     refreshGameState();
     setIsCodeDirty(false);
     return sessionRef.current.canPlay;
@@ -746,15 +788,14 @@ export default function App() {
     refreshGameState();
     if (canContinue && currentResult && currentResult.turns >= UI_MAX_TURNS) {
       stopTimer();
-      setLogs((prev) => `${prev}\n${t("logs.systemTimeout", { maxTurns: UI_MAX_TURNS })}`);
+      setLogEntries((prev) => [...prev, { key: "logs.systemTimeout", params: { maxTurns: UI_MAX_TURNS } }]);
       setShowResultModal(true);
       return;
     }
     if (!canContinue) {
       stopTimer();
       if (currentResult?.passed) {
-        const clearedGlobalLevel = getGlobalLevelFromTowerLevel(towerName, levelNumber);
-        setWarriorLevel((prev) => Math.max(prev, clearedGlobalLevel));
+        setWarriorLevel((prev) => Math.max(prev, Math.min(currentGlobalLevel + 1, TOTAL_LEVELS)));
       }
       setShowResultModal(true);
     }
@@ -786,21 +827,12 @@ export default function App() {
     startLevel();
   };
 
-  const goToLevel = (nextLevelNumber: number): void => {
-    if (!selectedTower.hasLevel(nextLevelNumber)) return;
+  const goToLevel = (globalLvl: number): void => {
+    if (globalLvl < 1 || globalLvl > TOTAL_LEVELS) return;
+    if (!isLevelAccessible(globalLvl)) return;
     stopTimer();
     setShowResultModal(false);
-    setLevelNumber(nextLevelNumber);
-  };
-
-  const handleTowerChange = (nextTowerName: string): void => {
-    if (nextTowerName === towerName) return;
-    const nextTower = towers.find((tower) => tower.name === nextTowerName);
-    if (!nextTower) return;
-    stopTimer();
-    setShowResultModal(false);
-    setTowerName(nextTowerName);
-    setLevelNumber((prev) => Math.min(prev, nextTower.levelCount));
+    setCurrentGlobalLevel(globalLvl);
   };
 
   const applyCodeToEditor = (code: string): void => {
@@ -831,8 +863,7 @@ export default function App() {
       // ignore storage errors
     }
 
-    setTowerName("beginner");
-    setLevelNumber(1);
+    setCurrentGlobalLevel(1);
     setWarriorLevel(1);
     setPlayerCode(starterCode);
     applyCodeToEditor(starterCode);
@@ -881,12 +912,12 @@ export default function App() {
     try {
       globalThis.localStorage.setItem(
         STORAGE_KEY_PROGRESS,
-        JSON.stringify({ towerName, levelNumber, warriorLevel }),
+        JSON.stringify({ globalLevel: currentGlobalLevel, warriorLevel }),
       );
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [towerName, levelNumber, warriorLevel]);
+  }, [currentGlobalLevel, warriorLevel]);
 
   useEffect(() => {
     try {
@@ -900,9 +931,9 @@ export default function App() {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  const levelDescKey = `levels.${towerName}.${levelNumber}.description`;
-  const levelTipKey = `levels.${towerName}.${levelNumber}.tip`;
-  const levelClueKey = `levels.${towerName}.${levelNumber}.clue`;
+  const levelDescKey = `levels.${towerName}.${localLevel}.description`;
+  const levelTipKey = `levels.${towerName}.${localLevel}.tip`;
+  const levelClueKey = `levels.${towerName}.${localLevel}.clue`;
   const hasClue = i18n.exists(levelClueKey);
 
   return (
@@ -925,35 +956,32 @@ export default function App() {
       <div className="top-controls">
         <div className="top-controls-main">
           <nav className="level-progress" aria-label={t("nav.levelProgress")}>
-            {levelSteps.map((step, index) => (
-              <button
-                key={step}
-                type="button"
-                className={step === levelNumber ? "progress-step active" : "progress-step"}
-                disabled={isPlaying}
-                onClick={() => goToLevel(step)}
-              >
-                {t("board.lv", { level: getGlobalLevelFromTowerLevel(towerName, step) })}
-                {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
-              </button>
-            ))}
-          </nav>
+            {allLevelSteps.map((globalLvl) => {
+              const isActive = globalLvl === currentGlobalLevel;
+              const isCleared = globalLvl <= warriorLevel && !isActive;
+              const isLocked = !isLevelAccessible(globalLvl);
 
-          <div className="course-tabs" role="tablist" aria-label={t("nav.course")}>
-            {towers.map((tower) => (
-              <button
-                key={tower.name}
-                type="button"
-                role="tab"
-                aria-selected={towerName === tower.name}
-                className={towerName === tower.name ? "tab-button active" : "tab-button"}
-                disabled={isPlaying}
-                onClick={() => handleTowerChange(tower.name)}
-              >
-                {t(`towers.${tower.name}`)}
-              </button>
-            ))}
-          </div>
+              let className = "progress-step";
+              if (isActive) className += " active";
+              else if (isCleared) className += " cleared";
+              if (isLocked) className += " locked";
+
+              return (
+                <button
+                  key={globalLvl}
+                  type="button"
+                  className={className}
+                  disabled={isPlaying || isLocked}
+                  onClick={() => goToLevel(globalLvl)}
+                  aria-label={isLocked
+                    ? t("nav.levelLocked", { level: globalLvl })
+                    : t("board.lv", { level: globalLvl })}
+                >
+                  {t("board.lv", { level: globalLvl })}
+                </button>
+              );
+            })}
+          </nav>
         </div>
         <div className="top-controls-side">
           <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
@@ -963,13 +991,15 @@ export default function App() {
       </div>
 
       <section className="workspace">
-        <section className="left-column">
           <article className="console-panel">
-            <h2>🗺️ {t("board.heading")}</h2>
-            <div id="board" className="board-viewport" ref={boardViewportRef}>
+            <div className="console-header">
+              <h2>🗺️ {t("board.heading")}</h2>
+              <p className="description">{t(levelDescKey)}</p>
+            </div>
+            <div id="board" className="board-viewport" ref={boardViewportRef} style={{ aspectRatio: `${boardGrid.columns} / ${boardGrid.rows}` }}>
               <div className="board-status">
                 <span className="status-chip">
-                  {t("board.warrior")} {t("board.lv", { level: warriorLevel })}  {t("board.hp", { current: warriorHealth ?? "--", max: warriorMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
+                  {t("board.warrior")} {t(warriorRank.key)} {t("board.lv", { level: warriorLevel })}  {t("board.hp", { current: warriorHealth ?? "--", max: warriorMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
@@ -1044,6 +1074,7 @@ export default function App() {
               </label>
             </div>
           </article>
+        <div className="bottom-columns">
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>👨‍💻 {t("editor.heading")}</h3>
@@ -1089,13 +1120,11 @@ export default function App() {
               </aside>
             </div>
           </article>
-        </section>
-
-        <article className="logs-panel">
-          <h2>🖥️ {t("logs.heading")}</h2>
-          <p className="description">{t(levelDescKey)}</p>
-          <pre id="logs">{logs || t("logs.empty")}</pre>
-        </article>
+          <article className="logs-panel">
+            <h2>🖥️ {t("logs.heading")}</h2>
+            <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
+          </article>
+        </div>
       </section>
 
       {showResultModal && result ? (
@@ -1124,7 +1153,7 @@ export default function App() {
                 <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("result.retry")}</span>
               </button>
               {result.passed && hasNextLevel ? (
-                <button onClick={() => goToLevel(levelNumber + 1)}>
+                <button onClick={() => goToLevel(currentGlobalLevel + 1)}>
                   <span className="icon-label"><i className="bi bi-skip-forward-fill" />{t("result.next")}</span>
                 </button>
               ) : (

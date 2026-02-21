@@ -51,7 +51,7 @@ export class Warrior extends BaseUnit {
 
   earnPoints(points: number): void {
     this._score += points;
-    this.say(`earns ${points} points`);
+    this.say({ key: "engine.earnPoints", params: { points } });
   }
 
   playTurn(turn: Turn): void {
@@ -62,7 +62,7 @@ export class Warrior extends BaseUnit {
 
   performTurn(): void {
     if (this._currentTurn?.action === null) {
-      this.say("does nothing");
+      this.say({ key: "engine.idle", params: {} });
     }
     super.performTurn();
   }

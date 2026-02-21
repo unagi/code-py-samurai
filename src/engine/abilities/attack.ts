@@ -6,14 +6,14 @@ export class Attack extends BaseAbility {
     this.verifyDirection(direction);
     const receiver = this.unitAt(direction);
     if (receiver) {
-      this._unit.say(`attacks ${direction} and hits ${receiver}`);
+      this._unit.say({ key: "engine.attackHit", params: { direction, target: receiver.nameKey } });
       const power =
         direction === "backward"
           ? Math.ceil(this._unit.attackPower / 2)
           : this._unit.attackPower;
       this.damage(receiver, power);
     } else {
-      this._unit.say(`attacks ${direction} and hits nothing`);
+      this._unit.say({ key: "engine.attackMiss", params: { direction } });
     }
   }
 }

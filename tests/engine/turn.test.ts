@@ -23,6 +23,7 @@ function createMockUnit(): IUnit {
     isWarrior: () => true,
     isGolem: () => false,
     hasAbility: () => false,
+    nameKey: "warrior",
     toString: () => "Warrior",
     takeDamage: () => {},
     earnPoints: () => {},
