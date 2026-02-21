@@ -284,6 +284,47 @@ button:disabled {
   white-space: nowrap;
 }
 
+.tip-anchor {
+  position: relative;
+}
+
+.tips-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  width: min(360px, 72vw);
+  z-index: 20;
+  background: linear-gradient(180deg, #f5e8d0, #ecd7b1);
+  border: 1px solid #a98355;
+  border-radius: 10px;
+  padding: 0.65rem 0.72rem;
+  color: #2d1c12;
+  box-shadow: 0 12px 22px rgba(23, 14, 8, 0.35);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.tips-popover h4 {
+  margin: 0 0 0.3rem;
+}
+
+.tips-popover p {
+  margin: 0 0 0.5rem;
+  font-size: 0.86rem;
+}
+
+.tips-popover p:last-child {
+  margin-bottom: 0;
+}
+
+.tip-anchor:hover .tips-popover,
+.tip-anchor:focus-within .tips-popover {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .code-note {
   margin: 0.48rem 0 0;
   color: #ceb89d;

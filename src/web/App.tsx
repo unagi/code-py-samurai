@@ -191,11 +191,6 @@ export default function App() {
   }, [selectedTower]);
 
   const availableApi = useMemo(() => getAvailableApiList(level), [level]);
-  const tipsText = useMemo(() => {
-    return level.clue
-      ? `Tip: ${level.tip}\nClue: ${level.clue}`
-      : `Tip: ${level.tip}`;
-  }, [level]);
   const levelSteps = useMemo(() => {
     return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
   }, [selectedTower]);
@@ -330,9 +325,21 @@ export default function App() {
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>👨‍💻 Player Code</h3>
-              <button type="button" className="tip-trigger" title={tipsText} aria-label={tipsText}>
-                <span className="icon-label"><i className="bi bi-lightbulb-fill" />Tips</span>
-              </button>
+              <div className="tip-anchor">
+                <button type="button" className="tip-trigger" aria-describedby="tips-popover">
+                  <span className="icon-label"><i className="bi bi-lightbulb-fill" />Tips</span>
+                </button>
+                <aside id="tips-popover" className="tips-popover" role="tooltip">
+                  <h4>💡 Tip</h4>
+                  <p>{level.tip}</p>
+                  {level.clue ? (
+                    <>
+                      <h4>🧭 Clue</h4>
+                      <p>{level.clue}</p>
+                    </>
+                  ) : null}
+                </aside>
+              </div>
             </div>
             <div className="editor-layout">
               <div className="editor-main">
