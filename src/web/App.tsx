@@ -291,40 +291,33 @@ export default function App() {
       </div>
 
       <section className="workspace">
-        <article className="console-panel">
-          <h2>Board</h2>
-          <pre id="board">{board}</pre>
-          <div className="console-controls">
-            <button onClick={startLevel}>Start Lv.{levelNumber}</button>
-            <button onClick={handlePlay} disabled={isPlaying}>
-              Play
-            </button>
-            <button onClick={handlePause} disabled={!isPlaying}>
-              {isPlaying ? "Pause" : "Paused"}
-            </button>
-            <button onClick={startLevel}>Reset</button>
-            <label className="speed-label">
-              Speed
-              <select
-                value={speedMs}
-                disabled={isPlaying}
-                onChange={(e) => setSpeedMs(Number(e.target.value))}
-              >
-                <option value={700}>Slow</option>
-                <option value={450}>Normal</option>
-                <option value={220}>Fast</option>
-              </select>
-            </label>
-          </div>
-        </article>
-
-        <section className="right-column">
-          <article className="logs-panel">
-            <h2>System Logs</h2>
-            <p className="description">{level.description}</p>
-            <pre id="logs">{logs}</pre>
+        <section className="left-column">
+          <article className="console-panel">
+            <h2>Board</h2>
+            <pre id="board">{board}</pre>
+            <div className="console-controls">
+              <button onClick={startLevel}>Start Lv.{levelNumber}</button>
+              <button onClick={handlePlay} disabled={isPlaying}>
+                Play
+              </button>
+              <button onClick={handlePause} disabled={!isPlaying}>
+                {isPlaying ? "Pause" : "Paused"}
+              </button>
+              <button onClick={startLevel}>Reset</button>
+              <label className="speed-label">
+                Speed
+                <select
+                  value={speedMs}
+                  disabled={isPlaying}
+                  onChange={(e) => setSpeedMs(Number(e.target.value))}
+                >
+                  <option value={700}>Slow</option>
+                  <option value={450}>Normal</option>
+                  <option value={220}>Fast</option>
+                </select>
+              </label>
+            </div>
           </article>
-
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>Player Code</h3>
@@ -362,6 +355,12 @@ export default function App() {
             ) : null}
           </article>
         </section>
+
+        <article className="logs-panel">
+          <h2>System Logs</h2>
+          <p className="description">{level.description}</p>
+          <pre id="logs">{logs}</pre>
+        </article>
       </section>
 
       {showResultModal && result ? (

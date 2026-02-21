@@ -99,7 +99,7 @@ body {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 1.06fr) minmax(420px, 1.34fr);
+  grid-template-columns: minmax(520px, 7fr) minmax(260px, 3fr);
   gap: 1rem;
 }
 
@@ -181,7 +181,7 @@ button:disabled {
   padding: 0.34rem 0.46rem;
 }
 
-.right-column {
+.left-column {
   display: grid;
   grid-template-rows: auto auto;
   gap: 0.9rem;
@@ -189,6 +189,7 @@ button:disabled {
 
 .logs-panel {
   padding: 0.75rem 0.85rem;
+  min-height: 100%;
 }
 
 .description {
@@ -199,8 +200,8 @@ button:disabled {
 
 #logs {
   margin: 0;
-  min-height: 8.5rem;
-  max-height: 14rem;
+  min-height: 43rem;
+  max-height: 70vh;
   overflow: auto;
   padding: 0.75rem;
   border-radius: 10px;
