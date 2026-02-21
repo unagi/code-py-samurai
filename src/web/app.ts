@@ -71,6 +71,7 @@ interface AppState {
   levelNumber: number;
   speedMs: number;
   playerCode: string;
+  isPlaying: boolean;
 }
 
 function createScriptedPlayer(source: string): IPlayer {
@@ -177,6 +178,7 @@ export function mountApp(): void {
     levelNumber: 1,
     speedMs: 450,
     playerCode: FIXED_PLAYER_CODE,
+    isPlaying: false,
   };
 
   const session = new LevelSession();
@@ -188,6 +190,8 @@ export function mountApp(): void {
       clearInterval(timer);
       timer = null;
     }
+    state.isPlaying = false;
+    updateControlState();
   };
 
   const refreshGameState = (): void => {
@@ -216,6 +220,28 @@ export function mountApp(): void {
     const level = getLevelDefinition(state);
     session.setup(level, state.playerCode);
     refreshGameState();
+    updateControlState();
+  };
+
+  const updateControlState = (): void => {
+    const play = root.querySelector<HTMLButtonElement>("#play");
+    const pause = root.querySelector<HTMLButtonElement>("#pause");
+    const speed = root.querySelector<HTMLSelectElement>("#speed");
+    const runState = root.querySelector<HTMLSpanElement>("#run-state");
+
+    if (play) {
+      play.disabled = state.isPlaying;
+    }
+    if (pause) {
+      pause.disabled = !state.isPlaying;
+      pause.textContent = state.isPlaying ? "Pause" : "Paused";
+    }
+    if (speed) {
+      speed.disabled = state.isPlaying;
+    }
+    if (runState) {
+      runState.textContent = state.isPlaying ? "Running" : "Ready";
+    }
   };
 
   const renderTitle = (): void => {
@@ -268,10 +294,19 @@ export function mountApp(): void {
             <div class="controls">
               <button id="play">Play</button>
               <button id="pause">Pause</button>
+              <label class="speed-label">
+                Speed
+                <select id="speed">
+                  <option value="700" ${state.speedMs === 700 ? "selected" : ""}>Slow</option>
+                  <option value="450" ${state.speedMs === 450 ? "selected" : ""}>Normal</option>
+                  <option value="220" ${state.speedMs === 220 ? "selected" : ""}>Fast</option>
+                </select>
+              </label>
               <button id="reset">Reset</button>
               <button id="to-title">Title</button>
             </div>
           </header>
+          <p class="run-state">State: <span id="run-state">Ready</span></p>
           <p class="description">${escapeHtml(level.description)}</p>
           <div class="grid">
             <article class="panel-sub">
@@ -293,6 +328,7 @@ export function mountApp(): void {
 
     const play = root.querySelector<HTMLButtonElement>("#play");
     const pause = root.querySelector<HTMLButtonElement>("#pause");
+    const speed = root.querySelector<HTMLSelectElement>("#speed");
     const reset = root.querySelector<HTMLButtonElement>("#reset");
     const toTitle = root.querySelector<HTMLButtonElement>("#to-title");
     const editorHost = root.querySelector<HTMLDivElement>("#editor-host");
@@ -309,11 +345,21 @@ export function mountApp(): void {
 
     play?.addEventListener("click", () => {
       if (timer) return;
+      state.isPlaying = true;
       timer = setInterval(tick, state.speedMs);
+      updateControlState();
     });
 
     pause?.addEventListener("click", () => {
       stopTimer();
+    });
+
+    speed?.addEventListener("change", () => {
+      const nextSpeed = Number(speed.value);
+      if (!Number.isNaN(nextSpeed)) {
+        state.speedMs = nextSpeed;
+      }
+      updateControlState();
     });
 
     reset?.addEventListener("click", () => {
@@ -331,6 +377,7 @@ export function mountApp(): void {
     });
 
     refreshGameState();
+    updateControlState();
   };
 
   const renderResult = (): void => {
