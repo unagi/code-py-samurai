@@ -1,5 +1,6 @@
 import type { RelativeDirection } from "../direction";
 import type { ILogger } from "../types";
+import type { Space } from "../space";
 import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
@@ -36,7 +37,7 @@ export class Sludge extends BaseUnit {
 
   playTurn(turn: Turn): void {
     for (const direction of SEARCH_DIRECTIONS) {
-      const space = turn.doSense("feel", direction) as any;
+      const space = turn.doSense("feel", direction) as Space;
       if (space.isPlayer()) {
         turn.doAction("attack!", direction);
         return;

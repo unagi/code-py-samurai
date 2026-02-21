@@ -28,7 +28,7 @@ export class Detonate extends BaseAbility {
     if (receiver) {
       if (receiver.hasAbility("explode!")) {
         receiver.say("caught in bomb's flames which detonates ticking explosive");
-        const explodeAbility = (receiver as any).abilities?.get("explode!");
+        const explodeAbility = receiver.abilities.get("explode!");
         if (explodeAbility) {
           explodeAbility.perform();
         }

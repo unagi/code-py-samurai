@@ -10,6 +10,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     maxHealth: 20,
     attackPower: 5,
     shootPower: 3,
+    abilities: new Map(),
     isBound: () => false,
     isWarrior: () => true,
     isGolem: () => false,
@@ -20,6 +21,11 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     say: () => {},
     unbind: () => {},
     bind: () => {},
+    setUnitId: () => {},
+    addAbilities: () => {},
+    prepareTurn: () => {},
+    performTurn: () => {},
+    playTurn: () => {},
     ...overrides,
   };
 }

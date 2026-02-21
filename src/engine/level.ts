@@ -58,28 +58,7 @@ export class Level {
 
     // Create and place enemy/captive units
     for (const unitDef of units) {
-      const unit = createUnit(unitDef.type, this._logger);
-      if (unit) {
-        if (unitDef.unitId && typeof (unit as { setUnitId?: (id: string) => void }).setUnitId === "function") {
-          (unit as { setUnitId: (id: string) => void }).setUnitId(unitDef.unitId);
-        }
-        // Add per-unit abilities if specified (e.g., explode! for ticking captives)
-        if (unitDef.abilities && unitDef.abilities.length > 0) {
-          (unit as any).addAbilities(...unitDef.abilities);
-        }
-        this.floor.add(unit, unitDef.x, unitDef.y, unitDef.direction);
-        // Apply ability configuration after placement (e.g., explode!.time = 7)
-        if (unitDef.abilityConfig) {
-          for (const [abilityName, config] of Object.entries(
-            unitDef.abilityConfig
-          )) {
-            const ability = (unit as any).abilities.get(abilityName);
-            if (ability) {
-              Object.assign(ability, config);
-            }
-          }
-        }
-      }
+      this.placeUnit(unitDef);
     }
 
     this._timeBonus = this.definition.timeBonus;
@@ -109,12 +88,12 @@ export class Level {
     // Prepare all units' turns (calls playTurn which records actions)
     const aliveUnits = this.floor.units;
     for (const unit of aliveUnits) {
-      (unit as any).prepareTurn();
+      unit.prepareTurn();
     }
 
     // Perform all units' turns (executes recorded actions)
     for (const unit of this.floor.units) {
-      (unit as any).performTurn();
+      unit.performTurn();
     }
 
     if (this._timeBonus > 0) {
@@ -138,6 +117,28 @@ export class Level {
 
   failed(): boolean {
     return !this.warrior.isAlive();
+  }
+
+  private placeUnit(unitDef: LevelDefinition["units"][number]): void {
+    const unit = createUnit(unitDef.type, this._logger);
+    if (!unit) return;
+
+    if (unitDef.unitId) {
+      unit.setUnitId(unitDef.unitId);
+    }
+    if (unitDef.abilities && unitDef.abilities.length > 0) {
+      unit.addAbilities(...unitDef.abilities);
+    }
+    this.floor.add(unit, unitDef.x, unitDef.y, unitDef.direction);
+
+    if (unitDef.abilityConfig) {
+      for (const [abilityName, config] of Object.entries(unitDef.abilityConfig)) {
+        const ability = unit.abilities.get(abilityName);
+        if (ability) {
+          Object.assign(ability, config);
+        }
+      }
+    }
   }
 
   private getResult(turns: number): LevelResult {

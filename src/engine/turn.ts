@@ -1,4 +1,3 @@
-import type { RelativeDirection } from "./direction";
 import type { ITurn } from "./types";
 import type { BaseAbility } from "./abilities/base";
 

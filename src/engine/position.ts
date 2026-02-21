@@ -1,7 +1,6 @@
 import {
   AbsoluteDirection,
   RelativeDirection,
-  rotateDirection,
   absoluteToRelative,
 } from "./direction";
 import type { Space } from "./space";
@@ -96,13 +95,13 @@ export class Position {
    */
   relativeSpace(forward: number, right: number = 0): Space {
     const [x, y] = this.translateOffset(forward, right);
-    return (this.floor as any).space(x, y);
+    return this.floor.space(x, y);
   }
 
   /**
    * Get the Space at this position.
    */
   space(): Space {
-    return (this.floor as any).space(this._x, this._y);
+    return this.floor.space(this._x, this._y);
   }
 }

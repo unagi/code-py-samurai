@@ -196,29 +196,41 @@ function buildBoardGrid(board: string): BoardGridData {
   };
 }
 
-function createDamagePopupsFromLogs(
-  lines: string[],
-  board: string,
-  idSeed: number,
-  unitTileIndexByLabel: Map<string, number>,
-): DamagePopup[] {
-  if (lines.length === 0) return [];
+function normalizeIdPrefix(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
 
-  const grid = buildBoardGrid(board);
+function parseDamageLine(line: string): { unitId: string; amount: number } | null {
+  const m = /^([a-z0-9#_-]+)\s+takes\s+(\d+)\s+damage/i.exec(line);
+  if (!m) return null;
+  return { unitId: m[1].toLowerCase(), amount: Number(m[2]) };
+}
+
+function stripTrailingDigits(s: string): string {
+  let end = s.length;
+  while (end > 0 && s[end - 1] >= "0" && s[end - 1] <= "9") end--;
+  return s.slice(0, end);
+}
+
+function resolveUnitKind(unitId: string): string | undefined {
+  const prefixRaw = unitId.includes("#") ? unitId.split("#")[0] : stripTrailingDigits(unitId);
+  return UNIT_ID_PREFIX_TO_KIND[normalizeIdPrefix(prefixRaw)];
+}
+
+interface TileIndexResolver {
+  directLookup(unitId: string): number | undefined;
+  kindLookup(unitId: string): number | undefined;
+}
+
+function buildTileIndexResolver(
+  unitTileIndexByLabel: Map<string, number>,
+  grid: ReturnType<typeof buildBoardGrid>,
+): TileIndexResolver {
   const indicesByKind = new Map<string, number[]>();
   const useCountByKind = new Map<string, number>();
   const tiles = grid.tiles;
   const warriorIndex = tiles.findIndex((tile) => tile.kind === "warrior");
   const cols = Math.max(grid.columns, 1);
-
-  const distanceToWarrior = (index: number): number => {
-    if (warriorIndex < 0) return 0;
-    const x1 = index % cols;
-    const y1 = Math.floor(index / cols);
-    const x2 = warriorIndex % cols;
-    const y2 = Math.floor(warriorIndex / cols);
-    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-  };
 
   for (let i = 0; i < tiles.length; i++) {
     const kind = tiles[i].kind;
@@ -230,50 +242,58 @@ function createDamagePopupsFromLogs(
     }
   }
 
+  const distanceToWarrior = (index: number): number => {
+    if (warriorIndex < 0) return 0;
+    const x1 = index % cols;
+    const y1 = Math.floor(index / cols);
+    const x2 = warriorIndex % cols;
+    const y2 = Math.floor(warriorIndex / cols);
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+  };
+
+  return {
+    directLookup(unitId: string) {
+      return unitTileIndexByLabel.get(unitId);
+    },
+    kindLookup(unitId: string) {
+      const kind = resolveUnitKind(unitId);
+      if (!kind) return undefined;
+      const indices = indicesByKind.get(kind);
+      if (!indices || indices.length === 0) return undefined;
+      const used = useCountByKind.get(kind) ?? 0;
+      if (kind !== "warrior" && warriorIndex >= 0) {
+        indices.sort((a, b) => {
+          const d = distanceToWarrior(a) - distanceToWarrior(b);
+          return d !== 0 ? d : a - b;
+        });
+      }
+      const tileIndex = indices[used % indices.length];
+      useCountByKind.set(kind, used + 1);
+      return tileIndex;
+    },
+  };
+}
+
+function createDamagePopupsFromLogs(
+  lines: string[],
+  board: string,
+  idSeed: number,
+  unitTileIndexByLabel: Map<string, number>,
+): DamagePopup[] {
+  if (lines.length === 0) return [];
+
+  const resolver = buildTileIndexResolver(unitTileIndexByLabel, buildBoardGrid(board));
   const popups: DamagePopup[] = [];
   let nextId = idSeed;
   const now = Date.now();
-  const normalizeIdPrefix = (value: string): string =>
-    value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
   for (const line of lines) {
-    const m = line.match(/^([a-z0-9#_-]+)\s+takes\s+(\d+)\s+damage/i);
-    if (!m) continue;
-    const unitId = m[1].toLowerCase();
-    const amount = Number(m[2]);
-    const directIndex = unitTileIndexByLabel.get(unitId);
-    if (typeof directIndex === "number") {
-      popups.push({
-        id: nextId++,
-        tileIndex: directIndex,
-        text: `-${amount}`,
-        expiresAt: now + DAMAGE_POPUP_MS,
-      });
-      continue;
-    }
-
-    const prefixRaw = unitId.includes("#") ? unitId.split("#")[0] : unitId.replace(/\d+$/g, "");
-    const kind = UNIT_ID_PREFIX_TO_KIND[normalizeIdPrefix(prefixRaw)];
-    if (!kind) continue;
-
-    const indices = indicesByKind.get(kind);
-    if (!indices || indices.length === 0) continue;
-    const used = useCountByKind.get(kind) ?? 0;
-    if (kind !== "warrior" && warriorIndex >= 0) {
-      indices.sort((a, b) => {
-        const d = distanceToWarrior(a) - distanceToWarrior(b);
-        return d !== 0 ? d : a - b;
-      });
-    }
-    const tileIndex = indices[used % indices.length];
-    useCountByKind.set(kind, used + 1);
-
-    popups.push({
-      id: nextId++,
-      tileIndex,
-      text: `-${amount}`,
-      expiresAt: now + DAMAGE_POPUP_MS,
-    });
+    const parsed = parseDamageLine(line);
+    if (!parsed) continue;
+    const { unitId, amount } = parsed;
+    const tileIndex = resolver.directLookup(unitId) ?? resolver.kindLookup(unitId);
+    if (tileIndex === undefined) continue;
+    popups.push({ id: nextId++, tileIndex, text: `-${amount}`, expiresAt: now + DAMAGE_POPUP_MS });
   }
 
   return popups;
@@ -797,11 +817,13 @@ export default function App() {
     return () => window.clearInterval(animationTimer);
   }, []);
 
+  function expireDamagePopups() {
+    const now = Date.now();
+    setDamagePopups((prev) => prev.filter((p) => p.expiresAt > now));
+  }
+
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      const now = Date.now();
-      setDamagePopups((prev) => prev.filter((item) => item.expiresAt > now));
-    }, 120);
+    const timer = window.setInterval(expireDamagePopups, 120);
     return () => window.clearInterval(timer);
   }, []);
 

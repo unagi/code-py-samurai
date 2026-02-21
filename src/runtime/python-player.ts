@@ -34,10 +34,13 @@ type Expr =
   | { kind: "compare"; left: Expr; op: CompareOp; right: Expr }
   | { kind: "not"; expr: Expr };
 
+type ActionStmt = { kind: "action"; name: string; args: Expr[] };
+type IfStmt = { kind: "if"; branches: Array<{ cond: Expr; body: Stmt[] }>; elseBody: Stmt[] };
+
 type Stmt =
   | { kind: "assign"; name: string; expr: Expr }
-  | { kind: "action"; name: string; args: Expr[] }
-  | { kind: "if"; branches: Array<{ cond: Expr; body: Stmt[] }>; elseBody: Stmt[] }
+  | ActionStmt
+  | IfStmt
   | { kind: "pass" };
 
 interface TokenLine {
@@ -142,7 +145,8 @@ function parseStatements(tokens: TokenLine[], start: number, indent: number): { 
       break;
     }
 
-    const assign = token.text.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+    // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
+    const assign = /^([A-Za-z_]\w*) *= *(.+)$/.exec(token.text);
     if (assign) {
       body.push({
         kind: "assign",
@@ -219,7 +223,7 @@ function parseArgs(raw: string, lineNo: number): Expr[] {
 }
 
 function parseWarriorAction(text: string, lineNo: number): Stmt | null {
-  const m = text.match(/^warrior\.([A-Za-z_][A-Za-z0-9_]*)\((.*)\)$/);
+  const m = /^warrior\.([A-Za-z_]\w*)\((.*)\)$/.exec(text);
   if (!m) return null;
 
   const pythonName = m[1];
@@ -246,7 +250,7 @@ function parseExpr(raw: string, lineNo: number): Expr {
     return { kind: "number", value: Number(text) };
   }
 
-  const stringMatch = text.match(/^(["'])(.*)\1$/);
+  const stringMatch = /^(["'])(.*)\1$/.exec(text);
   if (stringMatch) {
     return { kind: "string", value: stringMatch[2] };
   }
@@ -258,7 +262,8 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  const isNotNone = text.match(/^(.+)\s+is\s+not\s+None$/);
+  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
+  const isNotNone = /^(.+?) +is +not +None$/.exec(text);
   if (isNotNone) {
     return {
       kind: "is_none",
@@ -267,7 +272,8 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  const isNone = text.match(/^(.+)\s+is\s+None$/);
+  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
+  const isNone = /^(.+?) +is +None$/.exec(text);
   if (isNone) {
     return {
       kind: "is_none",
@@ -276,7 +282,8 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  const cmp = text.match(/(.+)\s*(<=|>=|==|!=|<|>)\s*(.+)/);
+  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
+  const cmp = /(.+?) *(<=|>=|==|!=|<|>) *(.+)/.exec(text);
   if (cmp) {
     return {
       kind: "compare",
@@ -286,7 +293,7 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  const predicate = text.match(/^([A-Za-z_][A-Za-z0-9_]*)\.(is_[A-Za-z_][A-Za-z0-9_]*)\(\)$/);
+  const predicate = /^([A-Za-z_]\w*)\.(is_[A-Za-z_]\w*)\(\)$/.exec(text);
   if (predicate) {
     if (!SPACE_PREDICATES.has(predicate[2])) {
       throw new ParseError(`Unsupported predicate '${predicate[2]}' at line ${lineNo}.`);
@@ -298,7 +305,7 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  const sense = text.match(/^warrior\.([A-Za-z_][A-Za-z0-9_]*)\((.*)\)$/);
+  const sense = /^warrior\.([A-Za-z_]\w*)\((.*)\)$/.exec(text);
   if (sense) {
     return {
       kind: "sense",
@@ -307,11 +314,11 @@ function parseExpr(raw: string, lineNo: number): Expr {
     };
   }
 
-  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
+  if (/^[A-Za-z_]\w*$/.test(text)) {
     return { kind: "var", name: text };
   }
 
-  const warriorProperty = text.match(/^warrior\.([A-Za-z_][A-Za-z0-9_]*)$/);
+  const warriorProperty = /^warrior\.([A-Za-z_]\w*)$/.exec(text);
   if (warriorProperty) {
     if (warriorProperty[1] !== "hp") {
       throw new ParseError(`Unsupported warrior property '${warriorProperty[1]}' at line ${lineNo}.`);
@@ -355,7 +362,7 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
       return expr.negated ? !result : result;
     }
     case "not":
-      return !Boolean(evalExpr(expr.expr, turn, env));
+      return !evalExpr(expr.expr, turn, env);
     case "compare": {
       const left = evalExpr(expr.left, turn, env);
       const right = evalExpr(expr.right, turn, env);
@@ -377,45 +384,46 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
   }
 }
 
+function runAction(stmt: ActionStmt, turn: RuntimeTurn, env: Map<string, unknown>): void {
+  const args = stmt.args.map((arg) => evalExpr(arg, turn, env));
+  if (stmt.name === "rest!") {
+    if (turn.hasAction(stmt.name)) {
+      turn.doAction(stmt.name);
+    }
+    return;
+  }
+  const direction = normalizeDirection(args[0]);
+  if (turn.hasAction(stmt.name)) {
+    turn.doAction(stmt.name, direction);
+  }
+}
+
+function runIf(stmt: IfStmt, turn: RuntimeTurn, env: Map<string, unknown>): void {
+  for (const branch of stmt.branches) {
+    if (evalExpr(branch.cond, turn, env)) {
+      runStatements(branch.body, turn, env);
+      return;
+    }
+  }
+  if (stmt.elseBody.length > 0) {
+    runStatements(stmt.elseBody, turn, env);
+  }
+}
+
 function runStatements(stmts: Stmt[], turn: RuntimeTurn, env: Map<string, unknown>): void {
   for (const stmt of stmts) {
-    if (stmt.kind === "pass") {
-      continue;
-    }
-
-    if (stmt.kind === "assign") {
-      env.set(stmt.name, evalExpr(stmt.expr, turn, env));
-      continue;
-    }
-
-    if (stmt.kind === "action") {
-      const args = stmt.args.map((arg) => evalExpr(arg, turn, env));
-      if (stmt.name === "rest!") {
-        if (turn.hasAction(stmt.name)) {
-          turn.doAction(stmt.name);
-        }
-        continue;
-      }
-      const direction = normalizeDirection(args[0]);
-      if (turn.hasAction(stmt.name)) {
-        turn.doAction(stmt.name, direction);
-      }
-      continue;
-    }
-
-    if (stmt.kind === "if") {
-      let matched = false;
-      for (const branch of stmt.branches) {
-        if (Boolean(evalExpr(branch.cond, turn, env))) {
-          runStatements(branch.body, turn, env);
-          matched = true;
-          break;
-        }
-      }
-      if (!matched && stmt.elseBody.length > 0) {
-        runStatements(stmt.elseBody, turn, env);
-      }
-      continue;
+    switch (stmt.kind) {
+      case "pass":
+        break;
+      case "assign":
+        env.set(stmt.name, evalExpr(stmt.expr, turn, env));
+        break;
+      case "action":
+        runAction(stmt, turn, env);
+        break;
+      case "if":
+        runIf(stmt, turn, env);
+        break;
     }
   }
 }

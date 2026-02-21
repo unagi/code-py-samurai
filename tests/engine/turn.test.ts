@@ -18,6 +18,7 @@ function createMockUnit(): IUnit {
     maxHealth: 20,
     attackPower: 5,
     shootPower: 0,
+    abilities: new Map(),
     isBound: () => false,
     isWarrior: () => true,
     isGolem: () => false,
@@ -28,6 +29,11 @@ function createMockUnit(): IUnit {
     say: () => {},
     unbind: () => {},
     bind: () => {},
+    setUnitId: () => {},
+    addAbilities: () => {},
+    prepareTurn: () => {},
+    performTurn: () => {},
+    playTurn: () => {},
   };
 }
 
