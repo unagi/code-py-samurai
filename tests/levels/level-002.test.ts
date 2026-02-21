@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
 import type { Space } from "@engine/space";
-import level002 from "../../src/levels/beginner/level-002";
+import { level002 } from "../../src/levels/beginner";
 
 describe("Beginner Level 2", () => {
   it("is passed by feel+attack/walk strategy", () => {
@@ -20,7 +20,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -41,7 +41,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
     expect(result.warriorScore).toBe(12); // Sludge maxHealth = 12
@@ -61,7 +61,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     level.play();
 
     // Warrior should have taken some damage from Sludge (attack=3)

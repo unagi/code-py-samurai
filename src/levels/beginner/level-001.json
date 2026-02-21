@@ -1,0 +1,21 @@
+{
+  "description": "You see before yourself a long hallway with stairs at the end. There is nothing in the way.",
+  "tip": "Call warrior.walk() to walk forward in the Player 'play_turn' method.",
+  "timeBonus": 15,
+  "aceScore": 10,
+  "floor": {
+    "width": 8,
+    "height": 1
+  },
+  "stairs": {
+    "x": 7,
+    "y": 0
+  },
+  "warrior": {
+    "x": 0,
+    "y": 0,
+    "direction": "east",
+    "unitId": "warrior"
+  },
+  "units": []
+}

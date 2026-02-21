@@ -3,11 +3,11 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
-import level008 from "../../src/levels/beginner/level-008";
+import { level008 } from "../../src/levels/beginner";
 
 describe("Beginner Level 8", () => {
   const inherited = [
-    "walk!", "feel", "attack!", "health", "rest!", "rescue!", "pivot!",
+    "walk!", "feel", "attack!", "health", "rest!", "rescue!", "pivot!", "look", "shoot!",
   ];
 
   it("is passed with look+shoot+rescue strategy", () => {

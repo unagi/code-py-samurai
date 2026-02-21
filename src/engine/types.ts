@@ -70,14 +70,16 @@ export interface LevelDefinition {
     width: number;
     height: number;
   };
-  stairs: [number, number];
+  stairs: MapPoint;
   warrior: {
+    unitId?: string;
     x: number;
     y: number;
     direction: AbsoluteDirection;
-    abilities: string[];
+    abilities?: WarriorAbilitySet;
   };
   units: Array<{
+    unitId?: string;
     type: string;
     x: number;
     y: number;
@@ -85,4 +87,44 @@ export interface LevelDefinition {
     abilities?: string[];
     abilityConfig?: Record<string, Record<string, unknown>>;
   }>;
+}
+
+/**
+ * Target JSON schema for map/layout migration.
+ * Existing LevelDefinition can be converted into this shape.
+ */
+export interface MapPoint {
+  x: number;
+  y: number;
+}
+
+export interface MapWarriorDefinition {
+  unitId?: string;
+  position: MapPoint;
+  direction: AbsoluteDirection;
+  abilities?: WarriorAbilitySet;
+}
+
+export interface MapUnitDefinition {
+  unitId?: string;
+  type: string;
+  position: MapPoint;
+  direction: AbsoluteDirection;
+  abilities?: string[];
+  abilityConfig?: Record<string, Record<string, unknown>>;
+}
+
+export interface MapLayoutDefinition {
+  floor: {
+    width: number;
+    height: number;
+  };
+  stairs: MapPoint;
+  warrior: MapWarriorDefinition;
+  units: MapUnitDefinition[];
+}
+
+export interface WarriorAbilitySet {
+  skills: string[];
+  stats: string[];
 }

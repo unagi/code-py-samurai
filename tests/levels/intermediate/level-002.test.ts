@@ -4,10 +4,10 @@ import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
-import level002 from "../../../src/levels/intermediate/level-002";
+import { level002 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 2", () => {
-  const inherited = ["walk!", "feel", "direction_of_stairs"];
+  const inherited = ["walk!", "feel", "direction_of_stairs", "attack!", "health", "rest!"];
 
   it("passes with solving strategy", () => {
     const directions: RelativeDirection[] = [

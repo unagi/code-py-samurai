@@ -4,7 +4,7 @@ import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
-import level006 from "../../../src/levels/intermediate/level-006";
+import { level006 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 6", () => {
   const inherited = [

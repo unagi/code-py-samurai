@@ -1,42 +1,300 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { basicSetup, EditorView } from "codemirror";
+import { indentWithTab } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
-import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { EditorState } from "@codemirror/state";
+import { HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/language";
+import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
-import type { RelativeDirection } from "../engine/direction";
-import type { Space } from "../engine/space";
-import { Turn } from "../engine/turn";
-import type { IPlayer, ITurn, ILogger, LevelDefinition } from "../engine/types";
+import type { ILogger, IPlayer, LevelDefinition, WarriorAbilitySet } from "../engine/types";
+import {
+  getGlobalLevelFromTowerLevel,
+  getMaxWarriorLevel,
+  getWarriorAbilitiesAtGlobalLevel,
+  warriorAbilitiesToEngineAbilities,
+} from "../engine/warrior-abilities";
+import { formatPythonError } from "../runtime/errors";
+import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
 
-const FIXED_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.attack()\n        elif warrior.health() < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
+const STARTER_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        # ここに1ターン分の処理を書く\n        pass`;
 
-const RELATIVE_DIRECTIONS: RelativeDirection[] = [
-  "forward",
-  "left",
-  "right",
-  "backward",
-];
+interface TileMeta {
+  kind: string;
+  alt: string;
+  assetPath?: string;
+}
 
-const ABILITY_TO_API: Record<string, string[]> = {
-  "walk!": ["warrior.walk()", "warrior.walk('backward')"],
-  "attack!": ["warrior.attack()", "warrior.attack('left')"],
-  "rest!": ["warrior.rest()"],
-  "rescue!": ["warrior.rescue()", "warrior.rescue('right')"],
-  "shoot!": ["warrior.shoot()", "warrior.shoot('forward')"],
-  "pivot!": ["warrior.pivot()", "warrior.pivot('backward')"],
-  "bind!": ["warrior.bind()", "warrior.bind('left')"],
-  "detonate!": ["warrior.detonate()", "warrior.detonate('forward')"],
-  feel: ["warrior.feel()", "warrior.feel('left')"],
-  health: ["warrior.health()"],
-  look: ["warrior.look()", "warrior.look('backward')"],
-  listen: ["warrior.listen()"],
-  direction_of_stairs: ["warrior.direction_of_stairs()"],
-  direction_of: ["warrior.direction_of(space)"],
-  distance_of: ["warrior.distance_of(space)"],
+const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
+  " ": { kind: "empty", alt: "empty floor" },
+  "-": { kind: "frame", alt: "frame wall" },
+  "|": { kind: "frame", alt: "frame wall" },
+  ">": { kind: "stairs", alt: "stairs" },
+  "@": {
+    kind: "warrior",
+    alt: "warrior",
+    assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
+  },
+  s: { kind: "sludge", alt: "sludge" },
+  S: { kind: "thick-sludge", alt: "thick sludge" },
+  a: { kind: "archer", alt: "archer" },
+  w: { kind: "wizard", alt: "wizard" },
+  C: { kind: "captive", alt: "captive" },
+  G: { kind: "golem", alt: "golem" },
+  "?": { kind: "unknown", alt: "unknown unit" },
 };
+
+interface BoardTile {
+  symbol: string;
+  kind: string;
+  alt: string;
+  assetPath?: string;
+}
+
+interface BoardGridData {
+  columns: number;
+  rows: number;
+  tiles: BoardTile[];
+}
+
+interface DamagePopup {
+  id: number;
+  tileIndex: number;
+  text: string;
+  expiresAt: number;
+}
+
+const BOARD_TILE_GAP_PX = 2;
+const UI_MAX_TURNS = 1000;
+const WARRIOR_IDLE_FRAME_COUNT = 16;
+const WARRIOR_IDLE_FRAME_MS = 140;
+const DAMAGE_POPUP_MS = 820;
+const STORAGE_KEY_PROGRESS = "py-samurai:progress";
+const STORAGE_KEY_PLAYER_CODE = "py-samurai:player-code";
+
+const UNIT_ID_PREFIX_TO_KIND: Record<string, string> = {
+  warrior: "warrior",
+  golem: "golem",
+  sludge: "sludge",
+  thicksludge: "thick-sludge",
+  archer: "archer",
+  wizard: "wizard",
+  captive: "captive",
+};
+
+const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }> = {
+  warrior: { hp: 20, atk: 5 },
+  golem: { hp: null, atk: 3 },
+  sludge: { hp: 12, atk: 3 },
+  "thick-sludge": { hp: 24, atk: 3 },
+  archer: { hp: 7, atk: 3 },
+  wizard: { hp: 3, atk: 11 },
+  captive: { hp: 1, atk: 0 },
+};
+
+interface ProgressStorageData {
+  towerName?: string;
+  levelNumber?: number;
+  warriorLevel?: number;
+  warriorLevelByTower?: Record<string, number>;
+}
+
+function clampLevel(value: unknown, levelCount: number): number {
+  const n = typeof value === "number" ? Math.floor(value) : 1;
+  return Math.min(Math.max(1, n), levelCount);
+}
+
+function readProgressStorage(): ProgressStorageData {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
+    if (!raw) return {};
+    return JSON.parse(raw) as ProgressStorageData;
+  } catch {
+    return {};
+  }
+}
+
+function buildWarriorLevel(data: ProgressStorageData): number {
+  const maxLv = getMaxWarriorLevel();
+  if (typeof data.warriorLevel === "number") {
+    return Math.min(Math.max(1, Math.floor(data.warriorLevel)), maxLv);
+  }
+
+  let migrated = 1;
+  if (data.warriorLevelByTower && typeof data.warriorLevelByTower === "object") {
+    for (const [towerName, local] of Object.entries(data.warriorLevelByTower)) {
+      if (typeof local !== "number") continue;
+      migrated = Math.max(migrated, getGlobalLevelFromTowerLevel(towerName, Math.floor(local)));
+    }
+  }
+
+  return Math.min(Math.max(1, migrated), maxLv);
+}
+
+function getWarriorIdleFramePath(frameIndex: number): string {
+  const frame = String((frameIndex % WARRIOR_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
+  return `/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`;
+}
+
+function getMaxBoardSize(): { columns: number; rows: number } {
+  let maxColumns = 1;
+  let maxRows = 1;
+  for (const tower of towers) {
+    for (const level of tower.levels) {
+      const columns = level.floor.width + 2;
+      const rows = level.floor.height + 2;
+      if (columns > maxColumns) maxColumns = columns;
+      if (rows > maxRows) maxRows = rows;
+    }
+  }
+  return { columns: maxColumns, rows: maxRows };
+}
+
+const MAX_BOARD_SIZE = getMaxBoardSize();
+
+function buildBoardGrid(board: string): BoardGridData {
+  const raw = board.trimEnd();
+  const sourceLines = raw.length > 0 ? raw.split("\n") : [];
+  const sourceColumns = sourceLines.reduce((max, line) => Math.max(max, line.length), 0);
+  const sourceRows = sourceLines.length;
+
+  const columns = Math.max(MAX_BOARD_SIZE.columns, sourceColumns);
+  const rows = Math.max(MAX_BOARD_SIZE.rows, sourceRows);
+
+  const leftPad = Math.floor((columns - sourceColumns) / 2);
+  const rightPad = columns - sourceColumns - leftPad;
+  const topPad = Math.floor((rows - sourceRows) / 2);
+  const bottomPad = rows - sourceRows - topPad;
+
+  const normalizedLines: string[] = [];
+  for (let y = 0; y < topPad; y++) normalizedLines.push(" ".repeat(columns));
+  for (const line of sourceLines) {
+    const filled = line.padEnd(sourceColumns, " ");
+    normalizedLines.push(`${" ".repeat(leftPad)}${filled}${" ".repeat(rightPad)}`);
+  }
+  for (let y = 0; y < bottomPad; y++) normalizedLines.push(" ".repeat(columns));
+
+  const tiles: BoardTile[] = [];
+  for (const line of normalizedLines) {
+    for (const symbol of line) {
+      const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", alt: `unknown(${symbol})` };
+      tiles.push({
+        symbol,
+        kind: meta.kind,
+        alt: meta.alt,
+        assetPath: meta.assetPath,
+      });
+    }
+  }
+
+  return {
+    columns,
+    rows: normalizedLines.length,
+    tiles,
+  };
+}
+
+function createDamagePopupsFromLogs(
+  lines: string[],
+  board: string,
+  idSeed: number,
+  unitTileIndexByLabel: Map<string, number>,
+): DamagePopup[] {
+  if (lines.length === 0) return [];
+
+  const grid = buildBoardGrid(board);
+  const indicesByKind = new Map<string, number[]>();
+  const useCountByKind = new Map<string, number>();
+  const tiles = grid.tiles;
+  const warriorIndex = tiles.findIndex((tile) => tile.kind === "warrior");
+  const cols = Math.max(grid.columns, 1);
+
+  const distanceToWarrior = (index: number): number => {
+    if (warriorIndex < 0) return 0;
+    const x1 = index % cols;
+    const y1 = Math.floor(index / cols);
+    const x2 = warriorIndex % cols;
+    const y2 = Math.floor(warriorIndex / cols);
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+  };
+
+  for (let i = 0; i < tiles.length; i++) {
+    const kind = tiles[i].kind;
+    const list = indicesByKind.get(kind);
+    if (list) {
+      list.push(i);
+    } else {
+      indicesByKind.set(kind, [i]);
+    }
+  }
+
+  const popups: DamagePopup[] = [];
+  let nextId = idSeed;
+  const now = Date.now();
+  const normalizeIdPrefix = (value: string): string =>
+    value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+  for (const line of lines) {
+    const m = line.match(/^([a-z0-9#_-]+)\s+takes\s+(\d+)\s+damage/i);
+    if (!m) continue;
+    const unitId = m[1].toLowerCase();
+    const amount = Number(m[2]);
+    const directIndex = unitTileIndexByLabel.get(unitId);
+    if (typeof directIndex === "number") {
+      popups.push({
+        id: nextId++,
+        tileIndex: directIndex,
+        text: `-${amount}`,
+        expiresAt: now + DAMAGE_POPUP_MS,
+      });
+      continue;
+    }
+
+    const prefixRaw = unitId.includes("#") ? unitId.split("#")[0] : unitId.replace(/\d+$/g, "");
+    const kind = UNIT_ID_PREFIX_TO_KIND[normalizeIdPrefix(prefixRaw)];
+    if (!kind) continue;
+
+    const indices = indicesByKind.get(kind);
+    if (!indices || indices.length === 0) continue;
+    const used = useCountByKind.get(kind) ?? 0;
+    if (kind !== "warrior" && warriorIndex >= 0) {
+      indices.sort((a, b) => {
+        const d = distanceToWarrior(a) - distanceToWarrior(b);
+        return d !== 0 ? d : a - b;
+      });
+    }
+    const tileIndex = indices[used % indices.length];
+    useCountByKind.set(kind, used + 1);
+
+    popups.push({
+      id: nextId++,
+      tileIndex,
+      text: `-${amount}`,
+      expiresAt: now + DAMAGE_POPUP_MS,
+    });
+  }
+
+  return popups;
+}
+
+function buildTileStatsText(
+  tileKind: string,
+  warriorHealth: number | null,
+  warriorMaxHealth: number | null,
+): string | null {
+  if (tileKind === "warrior") {
+    const hpNow = warriorHealth ?? "--";
+    const hpMax = warriorMaxHealth ?? "--";
+    return `HP ${hpNow}/${hpMax}  ATK 5`;
+  }
+  const stats = TILE_BASE_STATS[tileKind];
+  if (!stats) return null;
+  const hpText = stats.hp === null ? "HP --/--" : `HP ${stats.hp}/${stats.hp}`;
+  const atkText = stats.atk === null ? "ATK --" : `ATK ${stats.atk}`;
+  return `${hpText}  ${atkText}`;
+}
 
 class MemoryLogger implements ILogger {
   lines: string[] = [];
@@ -57,20 +315,67 @@ class MemoryLogger implements ILogger {
 class LevelSession {
   private _logger = new MemoryLogger();
   private _level: Level | null = null;
+  private _setupError: string | null = null;
+  private _runtimeError: string | null = null;
+  private _fallbackBoard = "";
+  private _lastValidPlayer: IPlayer | null = null;
 
-  setup(levelDef: LevelDefinition, playerCode: string): void {
+  private buildFallbackBoard(levelDef: LevelDefinition): string {
+    const previewPlayer: IPlayer = {
+      playTurn: () => {},
+    };
+    const previewLevel = new Level(levelDef);
+    previewLevel.setup(previewPlayer, []);
+    return previewLevel.floor.character();
+  }
+
+  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = []): void {
     this._logger.clear();
+    this._setupError = null;
+    this._runtimeError = null;
+    this._fallbackBoard = this.buildFallbackBoard(levelDef);
+    try {
+      const { player } = runPythonPlayerSource(playerCode);
+      this._lastValidPlayer = player;
+      this._level = new Level(levelDef, this._logger);
+      this._level.setup(player, existingAbilities);
+    } catch (error) {
+      this._setupError = formatPythonError(error);
+      this._logger.log(this._setupError);
+      if (this._lastValidPlayer) {
+        this._logger.log("[system] Using last valid player code. Fix syntax and retry to apply new code.");
+        this._level = new Level(levelDef, this._logger);
+        this._level.setup(this._lastValidPlayer, []);
+      } else {
+        this._level = null;
+      }
+    }
+  }
+
+  resetWithLastValid(levelDef: LevelDefinition): boolean {
+    if (!this._lastValidPlayer) return false;
+    this._logger.clear();
+    this._setupError = null;
+    this._runtimeError = null;
+    this._fallbackBoard = this.buildFallbackBoard(levelDef);
     this._level = new Level(levelDef, this._logger);
-    this._level.setup(createScriptedPlayer(playerCode), []);
+    this._level.setup(this._lastValidPlayer, []);
+    return true;
   }
 
   step(): boolean {
     if (!this._level) return false;
-    return this._level.step();
+    try {
+      return this._level.step();
+    } catch (error) {
+      this._runtimeError = formatPythonError(error);
+      this._logger.log(this._runtimeError);
+      return false;
+    }
   }
 
   get board(): string {
-    if (!this._level) return "";
+    if (!this._level) return this._fallbackBoard;
     return this._level.floor.character();
   }
 
@@ -82,60 +387,55 @@ class LevelSession {
     if (!this._level) return null;
     return this._level.result();
   }
-}
 
-function createScriptedPlayer(source: string): IPlayer {
-  const canFeel = /\bfeel\s*\(/.test(source);
-  const canHealth = /\bhealth\s*\(/.test(source);
-  const canWalk = /\bwalk\s*\(/.test(source);
-  const canAttack = /\battack\s*\(/.test(source);
-  const canRescue = /\brescue\s*\(/.test(source);
-  const canRest = /\brest\s*\(/.test(source);
-  const canPivot = /\bpivot\s*\(/.test(source);
+  get warriorHealth(): number | null {
+    if (!this._level) return null;
+    return this._level.warrior.health;
+  }
 
-  return {
-    playTurn(turn: ITurn): void {
-      const t = turn as Turn;
+  get warriorMaxHealth(): number | null {
+    if (!this._level) return null;
+    return this._level.warrior.maxHealth;
+  }
 
-      if (canFeel && t.hasSense("feel")) {
-        for (const direction of RELATIVE_DIRECTIONS) {
-          const space = t.doSense("feel", direction) as Space;
-          if (canAttack && space.isEnemy() && t.hasAction("attack!")) {
-            t.doAction("attack!", direction);
-            return;
-          }
-          if (canRescue && space.isCaptive() && t.hasAction("rescue!")) {
-            t.doAction("rescue!", direction);
-            return;
-          }
-        }
-      }
+  getUnitTileIndexMap(board: string): Map<string, number> {
+    const map = new Map<string, number>();
+    if (!this._level) return map;
+    const raw = board.trimEnd();
+    const sourceLines = raw.length > 0 ? raw.split("\n") : [];
+    const sourceColumns = sourceLines.reduce((max, line) => Math.max(max, line.length), 0);
+    const sourceRows = sourceLines.length;
+    const columns = Math.max(MAX_BOARD_SIZE.columns, sourceColumns);
+    const rows = Math.max(MAX_BOARD_SIZE.rows, sourceRows);
+    const leftPad = Math.floor((columns - sourceColumns) / 2);
+    const topPad = Math.floor((rows - sourceRows) / 2);
 
-      if (canHealth && canRest && t.hasSense("health") && t.hasAction("rest!")) {
-        const health = t.doSense("health") as number;
-        if (health <= 8) {
-          t.doAction("rest!");
-          return;
-        }
-      }
+    for (const unit of this._level.floor.units) {
+      const candidate = unit as unknown as {
+        unitId?: string;
+        position: { x: number; y: number } | null;
+      };
+      if (typeof candidate.unitId !== "string" || !candidate.position) continue;
+      const boardX = leftPad + candidate.position.x + 1;
+      const boardY = topPad + candidate.position.y + 1;
+      const tileIndex = boardY * columns + boardX;
+      map.set(candidate.unitId.toLowerCase(), tileIndex);
+    }
 
-      if (canWalk && t.hasAction("walk!")) {
-        t.doAction("walk!", "forward");
-        return;
-      }
+    return map;
+  }
 
-      if (canPivot && t.hasAction("pivot!")) {
-        t.doAction("pivot!", "backward");
-      }
-    },
-  };
-}
+  get canPlay(): boolean {
+    return this._level !== null && this._setupError === null && this._runtimeError === null;
+  }
 
-function getAvailableApiList(level: LevelDefinition): string[] {
-  const mapped = level.warrior.abilities.flatMap((ability) => {
-    return ABILITY_TO_API[ability] ?? [];
-  });
-  return [...new Set(mapped)];
+  get hasSetupError(): boolean {
+    return this._setupError !== null;
+  }
+
+  get hasLastValidPlayer(): boolean {
+    return this._lastValidPlayer !== null;
+  }
 }
 
 function createCodeEditor(
@@ -158,6 +458,9 @@ function createCodeEditor(
     parent,
     extensions: [
       basicSetup,
+      keymap.of([indentWithTab]),
+      EditorState.tabSize.of(4),
+      indentUnit.of("    "),
       python(),
       syntaxHighlighting(readableHighlight),
       EditorView.theme({
@@ -206,39 +509,148 @@ function createCodeEditor(
 }
 
 export default function App() {
-  const [towerName, setTowerName] = useState("beginner");
+  const initialProgress = readProgressStorage();
+  const [towerName, setTowerName] = useState(() => {
+    const exists = towers.some((tower) => tower.name === initialProgress.towerName);
+    return exists && initialProgress.towerName ? initialProgress.towerName : "beginner";
+  });
+  const [levelNumber, setLevelNumber] = useState(() => {
+    const tower = towers.find((item) => item.name === initialProgress.towerName) ?? towers[0];
+    return clampLevel(initialProgress.levelNumber, tower.levelCount);
+  });
+  const [warriorLevel, setWarriorLevel] = useState<number>(() => {
+    return buildWarriorLevel(initialProgress);
+  });
   const [speedMs, setSpeedMs] = useState(450);
-  const [playerCode, setPlayerCode] = useState(FIXED_PLAYER_CODE);
+  const [playerCode, setPlayerCode] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY_PLAYER_CODE);
+      if (typeof saved === "string" && saved.length > 0) {
+        return saved;
+      }
+    } catch {
+      // ignore storage errors (private mode, quota, etc.)
+    }
+    return STARTER_PLAYER_CODE;
+  });
   const [isPlaying, setIsPlaying] = useState(false);
+  const [canPlay, setCanPlay] = useState(true);
   const [board, setBoard] = useState("");
   const [logs, setLogs] = useState("(ログなし)");
   const [result, setResult] = useState<LevelResult | null>(null);
+  const [warriorHealth, setWarriorHealth] = useState<number | null>(null);
+  const [warriorMaxHealth, setWarriorMaxHealth] = useState<number | null>(null);
+  const [damagePopups, setDamagePopups] = useState<DamagePopup[]>([]);
+  const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [tileSizePx, setTileSizePx] = useState(20);
+  const [warriorFrame, setWarriorFrame] = useState(0);
+  const [isCodeDirty, setIsCodeDirty] = useState(false);
 
   const sessionRef = useRef(new LevelSession());
   const timerRef = useRef<number | null>(null);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
-  const levelNumber = 1;
+  const boardViewportRef = useRef<HTMLDivElement | null>(null);
+  const logLineCountRef = useRef(0);
+  const damagePopupIdRef = useRef(1);
+  const unitTileIndexMapRef = useRef(new Map<string, number>());
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
   }, [towerName]);
-
   const level = useMemo(() => {
     return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
-  }, [selectedTower]);
-
-  const availableApi = useMemo(() => getAvailableApiList(level), [level]);
+  }, [selectedTower, levelNumber]);
+  const unlockedWarriorAbilities = useMemo<WarriorAbilitySet>(() => {
+    return getWarriorAbilitiesAtGlobalLevel(warriorLevel);
+  }, [warriorLevel]);
+  const unlockedEngineAbilities = useMemo(
+    () => warriorAbilitiesToEngineAbilities(unlockedWarriorAbilities),
+    [unlockedWarriorAbilities],
+  );
+  const availableMethods = useMemo(
+    () => unlockedWarriorAbilities.skills.map((item) => `warrior.${item}`),
+    [unlockedWarriorAbilities.skills],
+  );
+  const availableProperties = useMemo(
+    () => unlockedWarriorAbilities.stats.map((item) => `warrior.${item}`),
+    [unlockedWarriorAbilities.stats],
+  );
+  const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
   const levelSteps = useMemo(() => {
     return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
   }, [selectedTower]);
+  const hasNextLevel = levelNumber < selectedTower.levelCount;
+  useLayoutEffect(() => {
+    const viewport = boardViewportRef.current;
+    if (!viewport) return;
+
+    const computeTileSize = (): void => {
+      const cols = Math.max(boardGrid.columns, 1);
+      const rows = Math.max(boardGrid.rows, 1);
+      const availableWidth = Math.max(0, viewport.clientWidth);
+      const availableHeight = Math.max(0, viewport.clientHeight);
+      const tileByWidth = (availableWidth - BOARD_TILE_GAP_PX * (cols - 1)) / cols;
+      const tileByHeight = (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows;
+      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight)));
+      setTileSizePx(computed);
+    };
+
+    computeTileSize();
+    const observer = new ResizeObserver(computeTileSize);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [boardGrid.columns, boardGrid.rows]);
+
+  const boardGridStyle = useMemo(() => {
+    return {
+      gridTemplateColumns: `repeat(${Math.max(boardGrid.columns, 1)}, ${tileSizePx}px)`,
+      gridTemplateRows: `repeat(${Math.max(boardGrid.rows, 1)}, ${tileSizePx}px)`,
+      gap: `${BOARD_TILE_GAP_PX}px`,
+    } as CSSProperties;
+  }, [boardGrid.columns, boardGrid.rows, tileSizePx]);
+  const damagePopupsByTile = useMemo(() => {
+    const grouped = new Map<number, DamagePopup[]>();
+    for (const popup of damagePopups) {
+      const list = grouped.get(popup.tileIndex);
+      if (list) {
+        list.push(popup);
+      } else {
+        grouped.set(popup.tileIndex, [popup]);
+      }
+    }
+    return grouped;
+  }, [damagePopups]);
 
   const refreshGameState = (): void => {
     const session = sessionRef.current;
-    setBoard(session.board);
-    setLogs(session.logs || "(ログなし)");
+    const nextBoard = session.board;
+    const nextLogs = session.logs || "(ログなし)";
+    const allLogLines = nextLogs === "(ログなし)" ? [] : nextLogs.split("\n");
+    const prevLineCount = allLogLines.length < logLineCountRef.current ? 0 : logLineCountRef.current;
+    const newLines = allLogLines.slice(prevLineCount);
+    logLineCountRef.current = allLogLines.length;
+
+    const boardForDamage = board.trim().length > 0 ? board : nextBoard;
+    const popups = createDamagePopupsFromLogs(
+      newLines,
+      boardForDamage,
+      damagePopupIdRef.current,
+      unitTileIndexMapRef.current,
+    );
+    if (popups.length > 0) {
+      damagePopupIdRef.current += popups.length;
+      setDamagePopups((prev) => [...prev, ...popups].slice(-40));
+    }
+
+    setBoard(nextBoard);
+    setLogs(nextLogs);
     setResult(session.result);
+    setWarriorHealth(session.warriorHealth);
+    setWarriorMaxHealth(session.warriorMaxHealth);
+    setCanPlay(session.canPlay);
+    unitTileIndexMapRef.current = session.getUnitTileIndexMap(nextBoard);
   };
 
   const stopTimer = (): void => {
@@ -249,24 +661,43 @@ export default function App() {
     setIsPlaying(false);
   };
 
-  const startLevel = (): void => {
+  const startLevel = (): boolean => {
     stopTimer();
     setShowResultModal(false);
-    sessionRef.current.setup(level, playerCode);
+    setHoveredEnemyStats(null);
+    logLineCountRef.current = 0;
+    unitTileIndexMapRef.current = new Map<string, number>();
+    setDamagePopups([]);
+    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
     refreshGameState();
+    setIsCodeDirty(false);
+    return sessionRef.current.canPlay;
   };
 
   const handleTick = (): void => {
     const canContinue = sessionRef.current.step();
+    const currentResult = sessionRef.current.result;
     refreshGameState();
+    if (canContinue && currentResult && currentResult.turns >= UI_MAX_TURNS) {
+      stopTimer();
+      setLogs((prev) => `${prev}\n[system] Stopped at ${UI_MAX_TURNS} turns (timeout).`);
+      setShowResultModal(true);
+      return;
+    }
     if (!canContinue) {
       stopTimer();
+      if (currentResult?.passed) {
+        const clearedGlobalLevel = getGlobalLevelFromTowerLevel(towerName, levelNumber);
+        setWarriorLevel((prev) => Math.max(prev, clearedGlobalLevel));
+      }
       setShowResultModal(true);
     }
   };
 
   const handlePlay = (): void => {
     if (timerRef.current !== null) return;
+    const playable = isCodeDirty ? startLevel() : canPlay;
+    if (!playable) return;
     setIsPlaying(true);
     timerRef.current = window.setInterval(handleTick, speedMs);
   };
@@ -275,11 +706,79 @@ export default function App() {
     stopTimer();
   };
 
+  const handleReset = (): void => {
+    stopTimer();
+    setShowResultModal(false);
+    setHoveredEnemyStats(null);
+    const session = sessionRef.current;
+    if (session.hasSetupError && session.hasLastValidPlayer) {
+      session.resetWithLastValid(level);
+      refreshGameState();
+      setIsCodeDirty(false);
+      return;
+    }
+    startLevel();
+  };
+
+  const goToLevel = (nextLevelNumber: number): void => {
+    if (!selectedTower.hasLevel(nextLevelNumber)) return;
+    stopTimer();
+    setShowResultModal(false);
+    setLevelNumber(nextLevelNumber);
+  };
+
+  const handleTowerChange = (nextTowerName: string): void => {
+    if (nextTowerName === towerName) return;
+    const nextTower = towers.find((tower) => tower.name === nextTowerName);
+    if (!nextTower) return;
+    stopTimer();
+    setShowResultModal(false);
+    setTowerName(nextTowerName);
+    setLevelNumber((prev) => Math.min(prev, nextTower.levelCount));
+  };
+
+  const applyCodeToEditor = (code: string): void => {
+    const view = editorViewRef.current;
+    if (!view) return;
+    const current = view.state.doc.toString();
+    if (current === code) return;
+    view.dispatch({
+      changes: {
+        from: 0,
+        to: view.state.doc.length,
+        insert: code,
+      },
+    });
+  };
+
+  const handleClearData = (): void => {
+    const ok = window.confirm("保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？");
+    if (!ok) return;
+
+    stopTimer();
+    setShowResultModal(false);
+    setHoveredEnemyStats(null);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY_PROGRESS);
+      window.localStorage.removeItem(STORAGE_KEY_PLAYER_CODE);
+    } catch {
+      // ignore storage errors
+    }
+
+    setTowerName("beginner");
+    setLevelNumber(1);
+    setWarriorLevel(1);
+    setPlayerCode(STARTER_PLAYER_CODE);
+    applyCodeToEditor(STARTER_PLAYER_CODE);
+    setIsCodeDirty(true);
+  };
+
   useEffect(() => {
     if (!editorHostRef.current) return;
 
     editorViewRef.current = createCodeEditor(editorHostRef.current, playerCode, (code) => {
       setPlayerCode(code);
+      setIsCodeDirty(true);
     });
 
     return () => {
@@ -292,8 +791,42 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const animationTimer = window.setInterval(() => {
+      setWarriorFrame((prev) => (prev + 1) % WARRIOR_IDLE_FRAME_COUNT);
+    }, WARRIOR_IDLE_FRAME_MS);
+    return () => window.clearInterval(animationTimer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      setDamagePopups((prev) => prev.filter((item) => item.expiresAt > now));
+    }, 120);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     startLevel();
   }, [level]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY_PROGRESS,
+        JSON.stringify({ towerName, levelNumber, warriorLevel }),
+      );
+    } catch {
+      // ignore storage errors (private mode, quota, etc.)
+    }
+  }, [towerName, levelNumber, warriorLevel]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_PLAYER_CODE, playerCode);
+    } catch {
+      // ignore storage errors (private mode, quota, etc.)
+    }
+  }, [playerCode]);
 
   return (
     <main className="layout">
@@ -303,48 +836,105 @@ export default function App() {
         <div className="hero-line" />
       </section>
 
-      <nav className="level-progress" aria-label="Level Progress">
-        {levelSteps.map((step, index) => (
-          <button
-            key={step}
-            type="button"
-            className={step === levelNumber ? "progress-step active" : "progress-step"}
-          >
-            Lv.{step}
-            {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
-          </button>
-        ))}
-      </nav>
+      <div className="top-controls">
+        <div className="top-controls-main">
+          <nav className="level-progress" aria-label="Level Progress">
+            {levelSteps.map((step, index) => (
+              <button
+                key={step}
+                type="button"
+                className={step === levelNumber ? "progress-step active" : "progress-step"}
+                disabled={isPlaying}
+                onClick={() => goToLevel(step)}
+              >
+                Lv.{getGlobalLevelFromTowerLevel(towerName, step)}
+                {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
+              </button>
+            ))}
+          </nav>
 
-      <div className="course-tabs" role="tablist" aria-label="Course">
-        {towers.map((tower) => (
-          <button
-            key={tower.name}
-            type="button"
-            role="tab"
-            aria-selected={towerName === tower.name}
-            className={towerName === tower.name ? "tab-button active" : "tab-button"}
-            disabled={isPlaying}
-            onClick={() => setTowerName(tower.name)}
-          >
-            {tower.name}
+          <div className="course-tabs" role="tablist" aria-label="Course">
+            {towers.map((tower) => (
+              <button
+                key={tower.name}
+                type="button"
+                role="tab"
+                aria-selected={towerName === tower.name}
+                className={towerName === tower.name ? "tab-button active" : "tab-button"}
+                disabled={isPlaying}
+                onClick={() => handleTowerChange(tower.name)}
+              >
+                {tower.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="top-controls-side">
+          <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
+            <span className="icon-label"><i className="bi bi-trash3" />データ消去</span>
           </button>
-        ))}
+        </div>
       </div>
 
       <section className="workspace">
         <section className="left-column">
           <article className="console-panel">
             <h2>🗺️ Board</h2>
-            <pre id="board">{board}</pre>
+            <div id="board" className="board-viewport" ref={boardViewportRef}>
+              <div className="board-status">
+                <span className="status-chip">
+                  WARRIOR Lv.{warriorLevel}  HP {warriorHealth ?? "--"}/{warriorMaxHealth ?? "--"}  ATK 5
+                </span>
+                {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
+              </div>
+              <div
+                className="board-grid"
+                role="img"
+                aria-label={`Board ${boardGrid.rows}x${boardGrid.columns}`}
+                style={boardGridStyle}
+              >
+                {boardGrid.tiles.map((tile, index) => {
+                  const displaySymbol = tile.symbol === " " ? "\u00a0" : tile.symbol;
+                  const tileImageSrc =
+                    tile.kind === "warrior" ? getWarriorIdleFramePath(warriorFrame) : tile.assetPath;
+                  const tilePopups = damagePopupsByTile.get(index) ?? [];
+                  const tileStats = buildTileStatsText(tile.kind, warriorHealth, warriorMaxHealth);
+                  return (
+                    <div
+                      key={`${index}-${tile.kind}-${tile.symbol}`}
+                      className={`board-tile tile-${tile.kind}`}
+                      title={tile.alt}
+                      aria-label={tile.alt}
+                      onMouseEnter={() => {
+                        if (!tileStats) return;
+                        if (tile.kind === "warrior") return;
+                        setHoveredEnemyStats(`${tile.alt.toUpperCase()}  ${tileStats}`);
+                      }}
+                      onMouseLeave={() => setHoveredEnemyStats(null)}
+                    >
+                      {tileImageSrc ? (
+                        <img src={tileImageSrc} alt={tile.alt} className="tile-image" />
+                      ) : (
+                        <span className="tile-fallback" aria-hidden="true">{displaySymbol}</span>
+                      )}
+                      {tilePopups.map((popup) => (
+                        <span key={popup.id} className="damage-popup" aria-hidden="true">
+                          {popup.text}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div className="console-controls">
-              <button onClick={handlePlay} disabled={isPlaying}>
+              <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
                 <span className="icon-label"><i className="bi bi-play-fill" />Play</span>
               </button>
               <button onClick={handlePause} disabled={!isPlaying}>
                 <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? "Pause" : "Paused"}</span>
               </button>
-              <button onClick={startLevel}>
+              <button onClick={handleReset}>
                 <span className="icon-label"><i className="bi bi-arrow-repeat" />Reset</span>
               </button>
               <label className="speed-label">
@@ -386,10 +976,19 @@ export default function App() {
                 <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
               </div>
               <aside className="api-panel">
-                <h4>📚 Available API</h4>
+                <h4>📚 Methods / Properties</h4>
+                <h4>Methods</h4>
                 <ul className="api-list">
-                  {availableApi.length > 0 ? (
-                    availableApi.map((item) => <li key={item}>{item}</li>)
+                  {availableMethods.length > 0 ? (
+                    availableMethods.map((item) => <li key={item}>{item}</li>)
+                  ) : (
+                    <li>(none)</li>
+                  )}
+                </ul>
+                <h4>Properties</h4>
+                <ul className="api-list">
+                  {availableProperties.length > 0 ? (
+                    availableProperties.map((item) => <li key={item}>{item}</li>)
                   ) : (
                     <li>(none)</li>
                   )}
@@ -431,9 +1030,15 @@ export default function App() {
               >
                 <span className="icon-label"><i className="bi bi-arrow-repeat" />Retry</span>
               </button>
-              <button onClick={() => setShowResultModal(false)}>
-                <span className="icon-label"><i className="bi bi-check2-circle" />Close</span>
-              </button>
+              {result.passed && hasNextLevel ? (
+                <button onClick={() => goToLevel(levelNumber + 1)}>
+                  <span className="icon-label"><i className="bi bi-skip-forward-fill" />Next</span>
+                </button>
+              ) : (
+                <button onClick={() => setShowResultModal(false)}>
+                  <span className="icon-label"><i className="bi bi-check2-circle" />Close</span>
+                </button>
+              )}
             </div>
           </article>
         </div>

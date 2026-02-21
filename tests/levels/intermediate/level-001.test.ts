@@ -3,9 +3,11 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { RelativeDirection } from "@engine/direction";
-import level001 from "../../../src/levels/intermediate/level-001";
+import { level001 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 1", () => {
+  const inherited = ["walk!", "feel", "attack!", "health", "rest!", "rescue!", "pivot!", "look", "shoot!", "direction_of_stairs"];
+
   it("passes with solving strategy", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
@@ -16,7 +18,7 @@ describe("Intermediate Level 1", () => {
     };
 
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, inherited);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -26,7 +28,7 @@ describe("Intermediate Level 1", () => {
   it("has correct floor layout", () => {
     const player: IPlayer = { playTurn() {} };
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, inherited);
     // No units on this level
     expect(level.floor.otherUnits).toHaveLength(0);
     // Floor is 6x4

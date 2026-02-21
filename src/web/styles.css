@@ -63,7 +63,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.55rem;
 }
 
 .progress-step {
@@ -87,7 +87,25 @@ body {
 .course-tabs {
   display: flex;
   gap: 0.6rem;
+  margin-bottom: 0;
+}
+
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.9rem;
   margin-bottom: 0.8rem;
+}
+
+.top-controls-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.top-controls-side {
+  display: flex;
+  align-items: flex-start;
 }
 
 .tab-button {
@@ -132,15 +150,177 @@ body {
 
 #board {
   margin: 0;
-  min-height: 19rem;
-  padding: 0.85rem;
+  padding: 0;
+  position: relative;
   border-radius: 10px;
   border: 1px solid #8b603d;
   background: radial-gradient(circle at 50% 10%, #111822 0%, #0c1117 60%, #07090d 100%);
-  color: #8df8a8;
+  min-height: 19rem;
+  height: min(56vh, 29rem);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-status {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: 0.1rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid rgba(222, 245, 255, 0.34);
+  background: rgba(8, 18, 31, 0.78);
+  color: #d7ecff;
+  font-size: 0.79rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.board-grid {
+  display: grid;
+  flex: 0 0 auto;
+}
+
+.board-tile {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  user-select: none;
+  overflow: hidden;
+}
+
+.tile-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  font-size: 0.92rem;
-  overflow: auto;
+  font-size: 11px;
+}
+
+.tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.damage-popup {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 0.22rem;
+  border-radius: 6px;
+  background: rgba(32, 6, 8, 0.82);
+  color: #ffd0d5;
+  border: 1px solid rgba(255, 178, 187, 0.42);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  pointer-events: none;
+  animation: damage-rise 0.82s ease-out forwards;
+  z-index: 3;
+}
+
+.status-chip-sub {
+  margin-left: auto;
+  border-color: rgba(255, 215, 159, 0.4);
+  background: rgba(35, 20, 8, 0.8);
+  color: #ffe5bf;
+}
+
+@keyframes damage-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 4px) scale(0.9);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -16px) scale(0.96);
+  }
+}
+
+.tile-frame {
+  background: linear-gradient(180deg, #506884, #243647);
+  color: #cde2f5;
+}
+
+.tile-empty {
+  background: #15202b;
+}
+
+.tile-stairs {
+  background: linear-gradient(180deg, #d9c67d, #9f8342);
+  color: #2a1f09;
+}
+
+.tile-warrior {
+  background: linear-gradient(180deg, #6ccaff, #2f6ea0);
+  color: #0f2030;
+  font-weight: 700;
+}
+
+.tile-golem {
+  background: linear-gradient(180deg, #b7c1cc, #6e7a87);
+  color: #1d2329;
+  font-weight: 700;
+}
+
+.tile-sludge {
+  background: linear-gradient(180deg, #87cb77, #3b7a31);
+  color: #10250d;
+}
+
+.tile-thick-sludge {
+  background: linear-gradient(180deg, #5ab24e, #245d1d);
+  color: #e2f7de;
+  font-weight: 700;
+}
+
+.tile-archer {
+  background: linear-gradient(180deg, #f2c989, #b77d3b);
+  color: #2d1e0f;
+}
+
+.tile-wizard {
+  background: linear-gradient(180deg, #d5b3ff, #8450b6);
+  color: #251336;
+}
+
+.tile-captive {
+  background: linear-gradient(180deg, #ffe8ad, #d0a64e);
+  color: #422f11;
+}
+
+.tile-unknown {
+  background: #61311f;
+  color: #ffd8c8;
 }
 
 .console-controls {
@@ -196,6 +376,12 @@ button:disabled {
 .logs-panel {
   padding: 0.75rem 0.85rem;
   min-height: 100%;
+}
+
+.danger-button {
+  border-color: #7f3e3e;
+  background: linear-gradient(180deg, #d99f9f, #a25a5a);
+  color: #2a1010;
 }
 
 .description {
@@ -370,6 +556,15 @@ button:disabled {
 }
 
 @media (max-width: 980px) {
+  .top-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .top-controls-side {
+    justify-content: flex-end;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
   }

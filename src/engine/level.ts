@@ -42,15 +42,17 @@ export class Level {
 
     // Create floor
     this.floor = new Floor(floorDef.width, floorDef.height);
-    this.floor.placeStairs(stairs[0], stairs[1]);
+    this.floor.placeStairs(stairs.x, stairs.y);
 
     // Create and place warrior
     this.warrior = new Warrior(this._logger);
+    if (warDef.unitId) {
+      this.warrior.setUnitId(warDef.unitId);
+    }
     this.warrior.player = player;
 
-    // Add existing abilities from profile + level-defined abilities
-    const allAbilities = [...new Set([...existingAbilities, ...warDef.abilities])];
-    this.warrior.addAbilities(...allAbilities);
+    // Ability injection is runtime-driven from progression state.
+    this.warrior.addAbilities(...new Set(existingAbilities));
 
     this.floor.add(this.warrior, warDef.x, warDef.y, warDef.direction);
 
@@ -58,6 +60,9 @@ export class Level {
     for (const unitDef of units) {
       const unit = createUnit(unitDef.type, this._logger);
       if (unit) {
+        if (unitDef.unitId && typeof (unit as { setUnitId?: (id: string) => void }).setUnitId === "function") {
+          (unit as { setUnitId: (id: string) => void }).setUnitId(unitDef.unitId);
+        }
         // Add per-unit abilities if specified (e.g., explode! for ticking captives)
         if (unitDef.abilities && unitDef.abilities.length > 0) {
           (unit as any).addAbilities(...unitDef.abilities);
@@ -100,7 +105,6 @@ export class Level {
 
     this._turnCount += 1;
     this._logger.log(`- turn ${this._turnCount} -`);
-    this._logger.log(this.floor.character());
 
     // Prepare all units' turns (calls playTurn which records actions)
     const aliveUnits = this.floor.units;

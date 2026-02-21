@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
 import type { Space } from "@engine/space";
-import level003 from "../../src/levels/beginner/level-003";
+import { level003 } from "../../src/levels/beginner";
 
 describe("Beginner Level 3", () => {
   it("is passed with rest+feel+attack+walk strategy", () => {
@@ -25,7 +25,7 @@ describe("Beginner Level 3", () => {
 
     const level = new Level(level003);
     // Level 3 inherits abilities from previous levels
-    level.setup(player, ["feel", "attack!", "walk!"]);
+    level.setup(player, ["feel", "attack!", "walk!", "health", "rest!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -48,7 +48,7 @@ describe("Beginner Level 3", () => {
     };
 
     const level = new Level(level003);
-    level.setup(player, ["feel", "attack!", "walk!"]);
+    level.setup(player, ["feel", "attack!", "walk!", "health", "rest!"]);
     const result = level.play();
 
     expect(result.warriorScore).toBe(48); // 4 * 12 = 48

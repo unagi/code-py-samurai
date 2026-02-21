@@ -4,7 +4,7 @@ import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
-import level003 from "../../../src/levels/intermediate/level-003";
+import { level003 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 3", () => {
   const inherited = [
@@ -14,6 +14,8 @@ describe("Intermediate Level 3", () => {
     "attack!",
     "health",
     "rest!",
+    "rescue!",
+    "bind!",
   ];
 
   it("passes with solving strategy", () => {

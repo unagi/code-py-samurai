@@ -1,0 +1,30 @@
+{
+  "description": "It is too dark to see anything, but you smell sludge nearby.",
+  "tip": "Use warrior.feel() to see what is in front. If it is None, walk; otherwise attack. Remember, you can only do one action per turn.",
+  "clue": "Add an if/else condition with `space = warrior.feel()` and `if space is None:` to decide whether to warrior.attack() or warrior.walk().",
+  "timeBonus": 20,
+  "aceScore": 26,
+  "floor": {
+    "width": 8,
+    "height": 1
+  },
+  "stairs": {
+    "x": 7,
+    "y": 0
+  },
+  "warrior": {
+    "x": 0,
+    "y": 0,
+    "direction": "east",
+    "unitId": "warrior"
+  },
+  "units": [
+    {
+      "type": "sludge",
+      "x": 4,
+      "y": 0,
+      "direction": "west",
+      "unitId": "sludge#1"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
-import level006 from "../../src/levels/beginner/level-006";
+import { level006 } from "../../src/levels/beginner";
 
 describe("Beginner Level 6", () => {
   const inherited = ["walk!", "feel", "attack!", "health", "rest!", "rescue!"];
