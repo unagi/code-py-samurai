@@ -1,5 +1,6 @@
 import type { ITurn, IPlayer } from "@engine/types";
 import { asRuntimeTurn, callSense, type RuntimeTurn } from "./bridge";
+import { PythonRuntimeError, PythonSyntaxError } from "./errors";
 
 const ACTION_MAP: Record<string, string> = {
   walk: "walk!",
@@ -43,7 +44,7 @@ interface TokenLine {
   lineNo: number;
 }
 
-class ParseError extends Error {}
+class ParseError extends PythonSyntaxError {}
 
 function normalizeDirection(value: unknown): string {
   if (typeof value !== "string") return "forward";
@@ -372,9 +373,19 @@ export function compilePythonPlayer(source: string): IPlayer {
 
   return {
     playTurn(turnInput: ITurn): void {
-      const turn = asRuntimeTurn(turnInput);
-      const env = new Map<string, unknown>();
-      runStatements(ast, turn, env);
+      try {
+        const turn = asRuntimeTurn(turnInput);
+        const env = new Map<string, unknown>();
+        runStatements(ast, turn, env);
+      } catch (error) {
+        if (error instanceof PythonSyntaxError || error instanceof PythonRuntimeError) {
+          throw error;
+        }
+        if (error instanceof Error) {
+          throw new PythonRuntimeError(error.message);
+        }
+        throw new PythonRuntimeError(String(error));
+      }
     },
   };
 }

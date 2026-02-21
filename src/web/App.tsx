@@ -7,6 +7,7 @@ import { tags } from "@lezer/highlight";
 import { Level, type LevelResult } from "../engine/level";
 import type { ILogger, LevelDefinition } from "../engine/types";
 import { compilePythonPlayer } from "../runtime/python-player";
+import { formatPythonError } from "../runtime/errors";
 import { towers } from "../levels";
 
 const STARTER_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        # ここに1ターン分の処理を書く\n        pass`;
@@ -143,25 +144,32 @@ class LevelSession {
   private _logger = new MemoryLogger();
   private _level: Level | null = null;
   private _setupError: string | null = null;
+  private _runtimeError: string | null = null;
 
   setup(levelDef: LevelDefinition, playerCode: string): void {
     this._logger.clear();
     this._setupError = null;
+    this._runtimeError = null;
     try {
       const player = compilePythonPlayer(playerCode);
       this._level = new Level(levelDef, this._logger);
       this._level.setup(player, []);
     } catch (error) {
       this._level = null;
-      const message = error instanceof Error ? error.message : String(error);
-      this._setupError = `Player code error: ${message}`;
+      this._setupError = formatPythonError(error);
       this._logger.log(this._setupError);
     }
   }
 
   step(): boolean {
     if (!this._level) return false;
-    return this._level.step();
+    try {
+      return this._level.step();
+    } catch (error) {
+      this._runtimeError = formatPythonError(error);
+      this._logger.log(this._runtimeError);
+      return false;
+    }
   }
 
   get board(): string {
@@ -179,7 +187,7 @@ class LevelSession {
   }
 
   get canPlay(): boolean {
-    return this._level !== null && this._setupError === null;
+    return this._level !== null && this._setupError === null && this._runtimeError === null;
   }
 }
 
