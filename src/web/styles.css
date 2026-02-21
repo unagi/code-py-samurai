@@ -132,15 +132,108 @@ body {
 
 #board {
   margin: 0;
-  min-height: 19rem;
-  padding: 0.85rem;
+  padding: 0;
   border-radius: 10px;
   border: 1px solid #8b603d;
   background: radial-gradient(circle at 50% 10%, #111822 0%, #0c1117 60%, #07090d 100%);
-  color: #8df8a8;
+  min-height: 19rem;
+  height: min(56vh, 29rem);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-grid {
+  display: grid;
+  flex: 0 0 auto;
+}
+
+.board-tile {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  user-select: none;
+  overflow: hidden;
+}
+
+.tile-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  font-size: 0.92rem;
-  overflow: auto;
+  font-size: 11px;
+}
+
+.tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tile-frame {
+  background: linear-gradient(180deg, #506884, #243647);
+  color: #cde2f5;
+}
+
+.tile-empty {
+  background: #15202b;
+}
+
+.tile-stairs {
+  background: linear-gradient(180deg, #d9c67d, #9f8342);
+  color: #2a1f09;
+}
+
+.tile-warrior {
+  background: linear-gradient(180deg, #6ccaff, #2f6ea0);
+  color: #0f2030;
+  font-weight: 700;
+}
+
+.tile-golem {
+  background: linear-gradient(180deg, #b7c1cc, #6e7a87);
+  color: #1d2329;
+  font-weight: 700;
+}
+
+.tile-sludge {
+  background: linear-gradient(180deg, #87cb77, #3b7a31);
+  color: #10250d;
+}
+
+.tile-thick-sludge {
+  background: linear-gradient(180deg, #5ab24e, #245d1d);
+  color: #e2f7de;
+  font-weight: 700;
+}
+
+.tile-archer {
+  background: linear-gradient(180deg, #f2c989, #b77d3b);
+  color: #2d1e0f;
+}
+
+.tile-wizard {
+  background: linear-gradient(180deg, #d5b3ff, #8450b6);
+  color: #251336;
+}
+
+.tile-captive {
+  background: linear-gradient(180deg, #ffe8ad, #d0a64e);
+  color: #422f11;
+}
+
+.tile-unknown {
+  background: #61311f;
+  color: #ffd8c8;
 }
 
 .console-controls {

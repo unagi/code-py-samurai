@@ -17,7 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@engine/*": ["src/engine/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@runtime/*": ["src/runtime/*"]
     }
   },
   "include": ["src/**/*", "tests/**/*"],

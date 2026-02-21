@@ -1,24 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { basicSetup, EditorView } from "codemirror";
 import { python } from "@codemirror/lang-python";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
-import type { RelativeDirection } from "../engine/direction";
-import type { Space } from "../engine/space";
-import { Turn } from "../engine/turn";
-import type { IPlayer, ITurn, ILogger, LevelDefinition } from "../engine/types";
+import type { ILogger, LevelDefinition } from "../engine/types";
+import { compilePythonPlayer } from "../runtime/python-player";
 import { towers } from "../levels";
 
-const FIXED_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.attack()\n        elif warrior.health() < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
-
-const RELATIVE_DIRECTIONS: RelativeDirection[] = [
-  "forward",
-  "left",
-  "right",
-  "backward",
-];
+const STARTER_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        # ここに1ターン分の処理を書く\n        pass`;
 
 const ABILITY_TO_API: Record<string, string[]> = {
   "walk!": ["warrior.walk()", "warrior.walk('backward')"],
@@ -37,6 +28,100 @@ const ABILITY_TO_API: Record<string, string[]> = {
   direction_of: ["warrior.direction_of(space)"],
   distance_of: ["warrior.distance_of(space)"],
 };
+
+interface TileMeta {
+  kind: string;
+  alt: string;
+  assetPath?: string;
+}
+
+const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
+  " ": { kind: "empty", alt: "empty floor" },
+  "-": { kind: "frame", alt: "frame wall" },
+  "|": { kind: "frame", alt: "frame wall" },
+  ">": { kind: "stairs", alt: "stairs" },
+  "@": { kind: "warrior", alt: "warrior" },
+  s: { kind: "sludge", alt: "sludge" },
+  S: { kind: "thick-sludge", alt: "thick sludge" },
+  a: { kind: "archer", alt: "archer" },
+  w: { kind: "wizard", alt: "wizard" },
+  C: { kind: "captive", alt: "captive" },
+  G: { kind: "golem", alt: "golem" },
+  "?": { kind: "unknown", alt: "unknown unit" },
+};
+
+interface BoardTile {
+  symbol: string;
+  kind: string;
+  alt: string;
+  assetPath?: string;
+}
+
+interface BoardGridData {
+  columns: number;
+  rows: number;
+  tiles: BoardTile[];
+}
+
+const BOARD_TILE_GAP_PX = 2;
+
+function getMaxBoardSize(): { columns: number; rows: number } {
+  let maxColumns = 1;
+  let maxRows = 1;
+  for (const tower of towers) {
+    for (const level of tower.levels) {
+      const columns = level.floor.width + 2;
+      const rows = level.floor.height + 2;
+      if (columns > maxColumns) maxColumns = columns;
+      if (rows > maxRows) maxRows = rows;
+    }
+  }
+  return { columns: maxColumns, rows: maxRows };
+}
+
+const MAX_BOARD_SIZE = getMaxBoardSize();
+
+function buildBoardGrid(board: string): BoardGridData {
+  const raw = board.trimEnd();
+  const sourceLines = raw.length > 0 ? raw.split("\n") : [];
+  const sourceColumns = sourceLines.reduce((max, line) => Math.max(max, line.length), 0);
+  const sourceRows = sourceLines.length;
+
+  const columns = Math.max(MAX_BOARD_SIZE.columns, sourceColumns);
+  const rows = Math.max(MAX_BOARD_SIZE.rows, sourceRows);
+
+  const leftPad = Math.floor((columns - sourceColumns) / 2);
+  const rightPad = columns - sourceColumns - leftPad;
+  const topPad = Math.floor((rows - sourceRows) / 2);
+  const bottomPad = rows - sourceRows - topPad;
+
+  const normalizedLines: string[] = [];
+  for (let y = 0; y < topPad; y++) normalizedLines.push(" ".repeat(columns));
+  for (const line of sourceLines) {
+    const filled = line.padEnd(sourceColumns, " ");
+    normalizedLines.push(`${" ".repeat(leftPad)}${filled}${" ".repeat(rightPad)}`);
+  }
+  for (let y = 0; y < bottomPad; y++) normalizedLines.push(" ".repeat(columns));
+
+  const tiles: BoardTile[] = [];
+  for (const line of normalizedLines) {
+    for (const symbol of line) {
+      const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", alt: `unknown(${symbol})` };
+      tiles.push({
+        symbol,
+        kind: meta.kind,
+        alt: meta.alt,
+        assetPath: meta.assetPath,
+      });
+    }
+  }
+
+  return {
+    columns,
+    rows: normalizedLines.length,
+    tiles,
+  };
+}
 
 class MemoryLogger implements ILogger {
   lines: string[] = [];
@@ -57,11 +142,21 @@ class MemoryLogger implements ILogger {
 class LevelSession {
   private _logger = new MemoryLogger();
   private _level: Level | null = null;
+  private _setupError: string | null = null;
 
   setup(levelDef: LevelDefinition, playerCode: string): void {
     this._logger.clear();
-    this._level = new Level(levelDef, this._logger);
-    this._level.setup(createScriptedPlayer(playerCode), []);
+    this._setupError = null;
+    try {
+      const player = compilePythonPlayer(playerCode);
+      this._level = new Level(levelDef, this._logger);
+      this._level.setup(player, []);
+    } catch (error) {
+      this._level = null;
+      const message = error instanceof Error ? error.message : String(error);
+      this._setupError = `Player code error: ${message}`;
+      this._logger.log(this._setupError);
+    }
   }
 
   step(): boolean {
@@ -82,53 +177,10 @@ class LevelSession {
     if (!this._level) return null;
     return this._level.result();
   }
-}
 
-function createScriptedPlayer(source: string): IPlayer {
-  const canFeel = /\bfeel\s*\(/.test(source);
-  const canHealth = /\bhealth\s*\(/.test(source);
-  const canWalk = /\bwalk\s*\(/.test(source);
-  const canAttack = /\battack\s*\(/.test(source);
-  const canRescue = /\brescue\s*\(/.test(source);
-  const canRest = /\brest\s*\(/.test(source);
-  const canPivot = /\bpivot\s*\(/.test(source);
-
-  return {
-    playTurn(turn: ITurn): void {
-      const t = turn as Turn;
-
-      if (canFeel && t.hasSense("feel")) {
-        for (const direction of RELATIVE_DIRECTIONS) {
-          const space = t.doSense("feel", direction) as Space;
-          if (canAttack && space.isEnemy() && t.hasAction("attack!")) {
-            t.doAction("attack!", direction);
-            return;
-          }
-          if (canRescue && space.isCaptive() && t.hasAction("rescue!")) {
-            t.doAction("rescue!", direction);
-            return;
-          }
-        }
-      }
-
-      if (canHealth && canRest && t.hasSense("health") && t.hasAction("rest!")) {
-        const health = t.doSense("health") as number;
-        if (health <= 8) {
-          t.doAction("rest!");
-          return;
-        }
-      }
-
-      if (canWalk && t.hasAction("walk!")) {
-        t.doAction("walk!", "forward");
-        return;
-      }
-
-      if (canPivot && t.hasAction("pivot!")) {
-        t.doAction("pivot!", "backward");
-      }
-    },
-  };
+  get canPlay(): boolean {
+    return this._level !== null && this._setupError === null;
+  }
 }
 
 function getAvailableApiList(level: LevelDefinition): string[] {
@@ -208,17 +260,20 @@ function createCodeEditor(
 export default function App() {
   const [towerName, setTowerName] = useState("beginner");
   const [speedMs, setSpeedMs] = useState(450);
-  const [playerCode, setPlayerCode] = useState(FIXED_PLAYER_CODE);
+  const [playerCode, setPlayerCode] = useState(STARTER_PLAYER_CODE);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [canPlay, setCanPlay] = useState(true);
   const [board, setBoard] = useState("");
   const [logs, setLogs] = useState("(ログなし)");
   const [result, setResult] = useState<LevelResult | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [tileSizePx, setTileSizePx] = useState(20);
 
   const sessionRef = useRef(new LevelSession());
   const timerRef = useRef<number | null>(null);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
+  const boardViewportRef = useRef<HTMLDivElement | null>(null);
   const levelNumber = 1;
 
   const selectedTower = useMemo(() => {
@@ -230,15 +285,45 @@ export default function App() {
   }, [selectedTower]);
 
   const availableApi = useMemo(() => getAvailableApiList(level), [level]);
+  const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
   const levelSteps = useMemo(() => {
     return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
   }, [selectedTower]);
+  useLayoutEffect(() => {
+    const viewport = boardViewportRef.current;
+    if (!viewport) return;
+
+    const computeTileSize = (): void => {
+      const cols = Math.max(boardGrid.columns, 1);
+      const rows = Math.max(boardGrid.rows, 1);
+      const availableWidth = Math.max(0, viewport.clientWidth);
+      const availableHeight = Math.max(0, viewport.clientHeight);
+      const tileByWidth = (availableWidth - BOARD_TILE_GAP_PX * (cols - 1)) / cols;
+      const tileByHeight = (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows;
+      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight)));
+      setTileSizePx(computed);
+    };
+
+    computeTileSize();
+    const observer = new ResizeObserver(computeTileSize);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [boardGrid.columns, boardGrid.rows]);
+
+  const boardGridStyle = useMemo(() => {
+    return {
+      gridTemplateColumns: `repeat(${Math.max(boardGrid.columns, 1)}, ${tileSizePx}px)`,
+      gridTemplateRows: `repeat(${Math.max(boardGrid.rows, 1)}, ${tileSizePx}px)`,
+      gap: `${BOARD_TILE_GAP_PX}px`,
+    } as CSSProperties;
+  }, [boardGrid.columns, boardGrid.rows, tileSizePx]);
 
   const refreshGameState = (): void => {
     const session = sessionRef.current;
     setBoard(session.board);
     setLogs(session.logs || "(ログなし)");
     setResult(session.result);
+    setCanPlay(session.canPlay);
   };
 
   const stopTimer = (): void => {
@@ -266,7 +351,7 @@ export default function App() {
   };
 
   const handlePlay = (): void => {
-    if (timerRef.current !== null) return;
+    if (timerRef.current !== null || !canPlay) return;
     setIsPlaying(true);
     timerRef.current = window.setInterval(handleTick, speedMs);
   };
@@ -336,9 +421,34 @@ export default function App() {
         <section className="left-column">
           <article className="console-panel">
             <h2>🗺️ Board</h2>
-            <pre id="board">{board}</pre>
+            <div id="board" className="board-viewport" ref={boardViewportRef}>
+              <div
+                className="board-grid"
+                role="img"
+                aria-label={`Board ${boardGrid.rows}x${boardGrid.columns}`}
+                style={boardGridStyle}
+              >
+                {boardGrid.tiles.map((tile, index) => {
+                  const displaySymbol = tile.symbol === " " ? "\u00a0" : tile.symbol;
+                  return (
+                    <div
+                      key={`${index}-${tile.kind}-${tile.symbol}`}
+                      className={`board-tile tile-${tile.kind}`}
+                      title={tile.alt}
+                      aria-label={tile.alt}
+                    >
+                      {tile.assetPath ? (
+                        <img src={tile.assetPath} alt={tile.alt} className="tile-image" />
+                      ) : (
+                        <span className="tile-fallback" aria-hidden="true">{displaySymbol}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div className="console-controls">
-              <button onClick={handlePlay} disabled={isPlaying}>
+              <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
                 <span className="icon-label"><i className="bi bi-play-fill" />Play</span>
               </button>
               <button onClick={handlePause} disabled={!isPlaying}>

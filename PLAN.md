@@ -61,7 +61,6 @@ py-samurai/
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
-├── tailwind.config.ts
 ├── public/
 │   └── assets/
 │       ├── sprites/           # キャラクタースプライト
@@ -73,8 +72,11 @@ py-samurai/
 │       ├── tiles/             # 床、壁、階段タイル
 │       └── ui/                # UIアセット
 ├── src/
-│   ├── main.ts                # エントリポイント
-│   ├── app.ts                 # アプリケーションコントローラー
+│   ├── main.tsx               # Reactエントリポイント
+│   ├── web/
+│   │   ├── App.tsx            # 画面統合（現行）
+│   │   ├── styles.css
+│   │   └── components/        # React分割先（今後）
 │   │
 │   ├── engine/                # ゲームエンジン (ryanb移植)
 │   │   ├── game.ts            # Game管理
@@ -124,30 +126,17 @@ py-samurai/
 │   │       ├── level-001.ts
 │   │       └── ... (9 levels)
 │   │
-│   ├── python/                # Python→JS変換層
-│   │   ├── transpiler.ts      # Skulpt統合・実行管理
-│   │   ├── api-bridge.ts      # Python API → JS Engine橋渡し
-│   │   └── builtins.ts        # warrior/space等のPythonバインディング
+│   ├── runtime/               # Python実行連携（Phase 2で新設）
+│   │   ├── python-runner.ts   # Skulpt実行管理
+│   │   ├── bridge.ts          # Python API → Engine橋渡し
+│   │   └── py-builtins.ts     # warrior/space等のPythonバインディング
 │   │
 │   ├── renderer/              # ゲーム描画
-│   │   ├── game-renderer.ts   # Canvas描画メイン
-│   │   ├── sprite-manager.ts  # スプライト読み込み・管理
+│   │   ├── GameRenderer.ts    # Canvas描画メイン
+│   │   ├── SpriteManager.ts   # スプライト読み込み・管理
 │   │   ├── animation.ts       # アニメーションシステム
 │   │   ├── tile-map.ts        # タイルマップ描画
 │   │   └── effects.ts         # エフェクト(攻撃、回復等)
-│   │
-│   ├── ui/                    # Web UI
-│   │   ├── screens/
-│   │   │   ├── title-screen.ts
-│   │   │   ├── game-screen.ts
-│   │   │   └── result-screen.ts
-│   │   ├── components/
-│   │   │   ├── editor.ts      # CodeMirror Python Editor
-│   │   │   ├── controls.ts    # Play/Pause/Reset ボタン
-│   │   │   ├── level-info.ts  # レベル説明・ヒント表示
-│   │   │   ├── score-board.ts # スコア表示
-│   │   │   └── toast.ts       # 通知
-│   │   └── styles/
 │   │
 │   └── utils/
 │       ├── constants.ts
@@ -156,9 +145,13 @@ py-samurai/
 │
 └── tests/
     ├── engine/                # エンジンユニットテスト
-    ├── python/                # トランスパイラテスト
+    ├── runtime/               # Python実行連携テスト（Phase 2で新設）
+    ├── web/                   # UI挙動テスト（Phase 5で拡張）
     └── levels/                # レベル動作テスト
 ```
+
+> 注: React化に伴い、旧来の `app.ts` / `ui/screens/*.ts` 想定は廃止。  
+> 新規UIファイルは原則 `*.tsx`、非UIロジックは `*.ts` とする。
 
 ## Implementation Phases
 
@@ -175,10 +168,10 @@ py-samurai/
 5. `Floor`: 2Dグリッド管理、ユニット配置・取得・ASCII表示
 
 **完了条件** (`npm test` 全Pass):
-- [ ] `direction.test.ts`: 絶対→相対変換、回転 (east向きでforward=east, left=north等)
-- [ ] `position.test.ts`: 移動 (translate)、回転 (rotate)、方向変換
-- [ ] `space.test.ts`: isEmpty/isWall/isStairs/isEnemy/isCaptive が正しい値を返す
-- [ ] `floor.test.ts`: グリッド生成、ユニット配置、座標でのSpace取得、ASCII表示 (character())
+- [x] `direction.test.ts`: 絶対→相対変換、回転 (east向きでforward=east, left=north等)
+- [x] `position.test.ts`: 移動 (translate)、回転 (rotate)、方向変換
+- [x] `space.test.ts`: isEmpty/isWall/isStairs/isEnemy/isCaptive が正しい値を返す
+- [x] `floor.test.ts`: グリッド生成、ユニット配置、座標でのSpace取得、ASCII表示 (character())
 
 ---
 
@@ -195,18 +188,18 @@ py-samurai/
 7. Beginnerレベル1〜3のデータ定義
 
 **完了条件** (`npm test` 全Pass):
-- [ ] `turn.test.ts`: アクション1つ制限、センス複数OK、未アクションでのperform
+- [x] `turn.test.ts`: アクション1つ制限、センス複数OK、未アクションでのperform
 - [ ] `base-ability.test.ts`: offset計算、space取得
-- [ ] `walk.test.ts`: forward/backward移動で座標が正しく変化
-- [ ] `feel.test.ts`: 隣接Spaceが返る、壁/ユニット/空を正しく検出
-- [ ] `attack.test.ts`: ダメージ計算、backward半減、対象HP減少、死亡でposition=null
-- [ ] `health.test.ts`: 現在HPを返す
-- [ ] `rest.test.ts`: HP回復 (maxの10%, max超えない)
-- [ ] `warrior.test.ts`: 初期ステータス (HP=20, attack=5, shoot=3)
-- [ ] `sludge.test.ts`: 初期ステータス (HP=12, attack=3) + AI (隣接時attack)
-- [ ] `level-001.test.ts`: walkだけで7ターンでクリア (stairs到達=passed)
-- [ ] `level-002.test.ts`: feel+attackでSludge撃破→stairsでクリア
-- [ ] `level-003.test.ts`: 複数Sludge + rest回復を使ってクリア
+- [x] `walk.test.ts`: forward/backward移動で座標が正しく変化
+- [x] `feel.test.ts`: 隣接Spaceが返る、壁/ユニット/空を正しく検出
+- [x] `attack.test.ts`: ダメージ計算、backward半減、対象HP減少、死亡でposition=null
+- [x] `health.test.ts`: 現在HPを返す
+- [x] `rest.test.ts`: HP回復 (maxの10%, max超えない)
+- [x] `warrior.test.ts`: 初期ステータス (HP=20, attack=5, shoot=3)
+- [x] `sludge.test.ts`: 初期ステータス (HP=12, attack=3) + AI (隣接時attack)
+- [x] `level-001.test.ts`: walkだけで7ターンでクリア (stairs到達=passed)
+- [x] `level-002.test.ts`: feel+attackでSludge撃破→stairsでクリア
+- [x] `level-003.test.ts`: 複数Sludge + rest回復を使ってクリア
 
 ---
 
@@ -220,9 +213,9 @@ py-samurai/
 4. スコアリング完成: time_bonus, clear_bonus, ace_score, グレード計算
 
 **完了条件** (`npm test` 全Pass):
-- [ ] 追加アビリティの各ユニットテスト (rescue/shoot/look/pivot/bind/listen/direction_of_stairs)
-- [ ] 追加ユニットの各ユニットテスト (Archer/ThickSludge/Captive/Wizard + AI)
-- [ ] `level-004.test.ts` 〜 `level-009.test.ts`: 各レベルの解答コードでクリア
+- [x] 追加アビリティの各ユニットテスト (rescue/shoot/look/pivot/bind/listen/direction_of_stairs)
+- [x] 追加ユニットの各ユニットテスト (Archer/ThickSludge/Captive/Wizard + AI)
+- [x] `level-004.test.ts` 〜 `level-009.test.ts`: 各レベルの解答コードでクリア
 - [ ] `scoring.test.ts`: time_bonus計算、clear_bonus (全敵撃破時+20%)、ace_score、グレード (S/A/B/C/D/F)
 
 ---
@@ -240,18 +233,18 @@ py-samurai/
 7. Epic Mode: 全レベル連続プレイ、レベル別グレード、平均グレード
 
 **完了条件** (`npm test` 全Pass):
-- [ ] 追加アビリティの各ユニットテスト (detonate/explode/form/direction_of/distance_of)
-- [ ] `golem.test.ts`: Golem生成、プレイヤーのformブロックでAI制御
-- [ ] `intermediate-level-001.test.ts` 〜 `009.test.ts`: 各レベルの解答コードでクリア
-- [ ] `tower.test.ts`: レベル一覧取得、次レベル進行
-- [ ] `profile.test.ts`: 保存/復元、アビリティ蓄積、スコア累計
-- [ ] `game.test.ts`: Normal Mode進行 (レベル順)、Epic Mode (全レベル連続+グレード計算)
+- [x] 追加アビリティの各ユニットテスト (detonate/explode/form/direction_of/distance_of)
+- [x] `golem.test.ts`: Golem生成、プレイヤーのformブロックでAI制御
+- [x] `intermediate-level-001.test.ts` 〜 `009.test.ts`: 各レベルの解答コードでクリア
+- [x] `tower.test.ts`: レベル一覧取得、次レベル進行
+- [x] `profile.test.ts`: 保存/復元、アビリティ蓄積、スコア累計
+- [x] `game.test.ts`: Normal Mode進行 (レベル順)、Epic Mode (全レベル連続+グレード計算)
 
 ---
 
 ### Phase 2: Python→JS変換層
 
-**目的**: ユーザーのPythonコードをJS経由でゲームエンジンに接続
+**目的**: ユーザーのPythonコードをゲームエンジンに正しく接続し、既定値注入を廃止
 
 1. Skulpt統合:
    - npm経由 or CDN経由でSkulptを導入
@@ -279,17 +272,23 @@ class Player:
    - Ruby: `warrior.walk!`, `feel.empty?`, `direction_of_stairs`
    - Python: `warrior.walk()`, `feel.is_empty()`, `warrior.direction_of_stairs()`
 
-5. エラーハンドリング:
+5. 既定値注入の廃止（最優先）:
+   - UI内の固定コード/擬似AI依存を撤去
+   - 「未入力時はテンプレート表示のみ」に変更（自動実行しない）
+   - 入力コードが無効な場合は実行せず、明示エラーを返す
+
+6. エラーハンドリング:
    - Python構文エラー → ユーザーフレンドリーなメッセージ
    - 実行時エラー → スタックトレース表示
    - 複数アクション実行の検出 → 警告
 
 **完了条件** (`npm test` 全Pass):
-- [ ] `transpiler.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
-- [ ] `api-bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがエンジンのTurnに反映
-- [ ] `builtins.test.ts`: Space.is_empty()等のPythonバインディングが正しい値を返す
-- [ ] `python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
-- [ ] `python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
+- [ ] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
+- [ ] `tests/runtime/bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがTurnに反映
+- [ ] `tests/runtime/py-builtins.test.ts`: Space.is_empty()等のPythonバインディングが正しい値
+- [ ] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
+- [ ] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
+- [ ] `tests/runtime/python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
 
 ---
 
@@ -322,17 +321,22 @@ class Player:
 **完了条件** (手動確認 + スモークテスト):
 - [ ] ブラウザで `npm run dev` → タイトル画面表示
 - [ ] 名前入力 → タワー選択 → ゲーム画面遷移
-- [ ] CodeMirrorでPythonコード入力 (syntax highlight有効)
-- [ ] Play押下 → ターンごとにASCII表示が更新
-- [ ] Pause/Resume/Reset が動作
+- [x] CodeMirrorでPythonコード入力 (syntax highlight有効)
+- [x] Play押下 → ターンごとにASCII表示が更新
+- [x] Pause/Resume/Reset が動作
 - [ ] レベルクリア → スコア/グレード表示 → 次レベルへ進行
-- [ ] レベル失敗 → clue表示 → リトライ可能
+- [x] レベル失敗 → clue表示 → リトライ可能
 
 ---
 
-### Phase 4: ゲームレンダラー & アニメーション
+### Phase 4: ゲームレンダラー & アニメーション（難航中・保留）
 
 **目的**: ASCIIをビジュアルゲーム画面に置き換え
+
+方針:
+- Phase 4は新規実装を一時凍結し、インターフェース整理のみ継続
+- 実装優先度は Phase 5（レンダラー非依存項目）を先行
+- `RendererAdapter` を追加し、現状はASCII表示を継続利用
 
 1. タイルマップシステム:
    - グリッドベース描画 (Canvas 2D)
@@ -371,22 +375,22 @@ class Player:
 
 ### Phase 5: UI洗練 & ゲーム体験完成
 
-**目的**: 完成度の高いゲーム体験に仕上げ
+**目的**: Phase 4を待たずに進められるUI/運用価値を先行実装する
 
-1. UI/UXデザイン刷新:
+1. UI/UXデザイン刷新（Phase 4非依存範囲）:
    - 和風×サイバーパンク等のテーマ (要検討)
    - レスポンシブデザイン (モバイル対応)
    - ダークモード
-2. i18n対応:
+2. i18n対応（先行実施）:
    - react-i18next 導入
    - 翻訳ファイル: `public/locales/{ja,en}/translation.json`
    - UI文字列全般 (メニュー、ボタン、通知等)
    - レベル説明・ヒント・clueの多言語化
    - 言語切り替えUI
-3. チュートリアルシステム:
+3. チュートリアルシステム（ASCII表示のまま実装）:
    - レベル1の対話的チュートリアル
    - Python基礎構文のガイド
-4. 進行管理:
+4. 進行管理（先行実施）:
    - localStorage保存/読み込み
    - プロファイル管理
 5. 音声・BGM (optional):
@@ -398,6 +402,7 @@ class Player:
 - [ ] レベル説明/ヒント/clueが多言語対応
 - [ ] レスポンシブ: モバイル幅でレイアウト崩れなし
 - [ ] ダークモード切り替え動作
+- [ ] 既定コードが自動入力されず、テンプレート開始 or 空入力エラーになる
 - [ ] Beginner全9レベル通しプレイ完走
 - [ ] Epic Mode: 全レベル連続プレイ → 最終グレード表示
 

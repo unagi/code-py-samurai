@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       "@engine": path.resolve(__dirname, "src/engine"),
       "@utils": path.resolve(__dirname, "src/utils"),
+      "@runtime": path.resolve(__dirname, "src/runtime"),
     },
   },
   test: {
