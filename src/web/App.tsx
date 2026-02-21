@@ -182,13 +182,18 @@ export default function App() {
   const editorViewRef = useRef<EditorView | null>(null);
   const levelNumber = 1;
 
-  const level = useMemo(() => {
-    const tower = towers.find((item) => item.name === towerName) ?? towers[0];
-    return tower.getLevel(levelNumber) ?? tower.levels[0];
+  const selectedTower = useMemo(() => {
+    return towers.find((item) => item.name === towerName) ?? towers[0];
   }, [towerName]);
 
+  const level = useMemo(() => {
+    return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
+  }, [selectedTower]);
+
   const availableApi = useMemo(() => getAvailableApiList(level), [level]);
-  const levelSteps = useMemo(() => ["A", "B", "C", "D"], []);
+  const levelSteps = useMemo(() => {
+    return Array.from({ length: selectedTower.levelCount }, (_, index) => index + 1);
+  }, [selectedTower]);
 
   const refreshGameState = (): void => {
     const session = sessionRef.current;
@@ -268,12 +273,15 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button onClick={startLevel}>Start Level #1</button>
+            <button onClick={startLevel}>Start Level #{levelNumber}</button>
           </div>
         </header>
         <nav className="level-progress" aria-label="Level Progress">
           {levelSteps.map((step, index) => (
-            <span key={step} className={index === 0 ? "progress-step active" : "progress-step"}>
+            <span
+              key={step}
+              className={step === levelNumber ? "progress-step active" : "progress-step"}
+            >
               {step}
               {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
             </span>
