@@ -17,8 +17,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-EXTRACTED_DIR = Path(__file__).parent.parent / "from_creator" / "gemini" / "_extracted"
-AUDIT_DIR = Path(__file__).parent.parent / "from_creator" / "gemini" / "_audit"
+EXTRACTED_DIR = Path(__file__).parent.parent.parent / "from_creator" / "gemini" / "_extracted"
+AUDIT_DIR = Path(__file__).parent.parent.parent / "from_creator" / "gemini" / "_audit"
 
 SOURCES = [
     ("warrior-01", "idle", ["north", "east", "south", "west"], 4),

@@ -225,7 +225,7 @@ def assemble_sprite_sheet(
 
 # ── Main ───────────────────────────────────────────────────────────
 def main() -> None:
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     extracted_dir = project_root / "from_creator" / "gemini" / "_extracted"
     corrected_dir = project_root / "from_creator" / "gemini" / "_corrected"
     output_sprites = project_root / "public" / "assets" / "sprites" / "samurai-cat"

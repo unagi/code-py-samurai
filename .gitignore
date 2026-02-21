@@ -13,3 +13,6 @@ __pycache__/
 
 # Debug artifacts (regenerable)
 _debug/
+
+# Creator source assets (large images, local only)
+from_creator/

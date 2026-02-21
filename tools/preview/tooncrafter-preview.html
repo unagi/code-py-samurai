@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ToonCrafter Output Preview</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --accent: #e94560;
+    --accent2: #0f3460;
+    --text: #eee;
+    --muted: #888;
+    --grid: #333;
+    --good: #4ade80;
+    --warn: #fbbf24;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 20px;
+  }
+  h1 { color: var(--accent); margin-bottom: 4px; font-size: 1.4em; }
+  .subtitle { color: var(--muted); font-size: 0.85em; margin-bottom: 20px; }
+  h2 { color: var(--accent); font-size: 1.1em; margin: 24px 0 12px; border-bottom: 1px solid var(--grid); padding-bottom: 4px; }
+
+  .controls {
+    background: var(--panel);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .controls label { font-size: 0.85em; color: var(--muted); }
+  .controls input[type="range"] { width: 120px; vertical-align: middle; }
+  .controls button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+  }
+  .controls button:hover { opacity: 0.85; }
+  .controls select {
+    background: var(--accent2);
+    color: var(--text);
+    border: 1px solid var(--grid);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+  .val { color: var(--accent); font-weight: bold; min-width: 40px; display: inline-block; }
+
+  /* Input comparison */
+  .input-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .input-card {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .input-card img {
+    max-height: 200px;
+    border: 1px solid var(--grid);
+  }
+  .input-card .label {
+    font-size: 0.8em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .input-card .status {
+    font-size: 0.75em;
+    margin-top: 4px;
+    font-weight: bold;
+  }
+  .status-good { color: var(--good); }
+  .status-warn { color: var(--warn); }
+
+  /* Full 16-frame strip */
+  .frame-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .frame-cell {
+    background: var(--panel);
+    border-radius: 4px;
+    padding: 4px;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .frame-cell:hover { border-color: var(--accent); }
+  .frame-cell.selected { border-color: var(--good); }
+  .frame-cell img {
+    width: 100%;
+    border: 1px solid var(--grid);
+    background-image:
+      linear-gradient(45deg, #2a2a3e 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a3e 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a3e 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a3e 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    background-color: #222;
+  }
+  .frame-cell .label {
+    font-size: 0.65em;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Animation preview */
+  .anim-section {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .anim-box {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .anim-box .title {
+    font-size: 0.9em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+  .anim-box canvas {
+    border: 1px solid var(--grid);
+    background-image:
+      linear-gradient(45deg, #2a2a3e 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a3e 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a3e 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a3e 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    background-color: #222;
+  }
+  .anim-box .info {
+    font-size: 0.75em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .pick-info {
+    background: var(--accent2);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.85em;
+  }
+  .pick-info code {
+    color: var(--good);
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>ToonCrafter Output Preview</h1>
+<p class="subtitle">idle-east f0 → f2 | 16フレーム補間結果の評価</p>
+
+<div class="controls">
+  <div>
+    <label>速度: </label>
+    <input type="range" id="speedSlider" min="50" max="500" value="200" step="25">
+    <span class="val" id="speedVal">200ms</span>
+  </div>
+  <button onclick="paused=!paused">⏯ 一時停止/再開</button>
+  <button onclick="resetSelection()">🔄 選択リセット</button>
+  <div>
+    <label>表示: </label>
+    <select id="frameSource" onchange="switchSource(this.value)">
+      <option value="frames" selected>透過版 (rembg)</option>
+      <option value="frames_original">オリジナル (RGB)</option>
+    </select>
+  </div>
+</div>
+
+<h2>入力フレーム（参考）</h2>
+<div class="input-row">
+  <div class="input-card">
+    <div class="label">f0（キーフレームA = 出発点）</div>
+    <img src="../../from_creator/gemini/_tooncrafter_test/idle-east-f0_512x320.png" alt="f0">
+    <div class="status status-good">茶耳 ✓ パーツ完全 ✓</div>
+  </div>
+  <div class="input-card">
+    <div class="label">f2（宛先 = ガイド）</div>
+    <img src="../../from_creator/gemini/_tooncrafter_test/idle-east-f2_512x320.png" alt="f2">
+    <div class="status status-warn">オレンジ耳 ⚠ 宛先としてのみ使用</div>
+  </div>
+</div>
+
+<h2>全16フレーム（クリックで4フレームを選択）</h2>
+<p class="pick-info">
+  4フレームをクリックして選択 → 下のループプレビューに反映。
+  出発点(f0)寄りの序盤フレームが高品質。<br>
+  選択中: <code id="selectionDisplay">なし</code>
+</p>
+<div class="frame-strip" id="frameStrip"></div>
+
+<h2>アニメーションプレビュー</h2>
+<div class="anim-section">
+  <div class="anim-box">
+    <div class="title">全16フレーム（連続再生）</div>
+    <canvas id="fullCanvas" width="256" height="160"></canvas>
+    <div class="info" id="fullInfo">frame 0/15</div>
+  </div>
+  <div class="anim-box">
+    <div class="title">選択4フレーム（ループ）</div>
+    <canvas id="loopCanvas" width="256" height="160"></canvas>
+    <div class="info" id="loopInfo">フレームを選択してください</div>
+  </div>
+  <div class="anim-box">
+    <div class="title">選択4フレーム（80×80 リサイズ後）</div>
+    <canvas id="loop80Canvas" width="240" height="240"></canvas>
+    <div class="info" id="loop80Info">最終出力サイズでの見え方</div>
+  </div>
+</div>
+
+<script>
+const FRAMES_BASE = '../../from_creator/gemini/_tooncrafter_test/';
+let framesDir = FRAMES_BASE + 'frames/';
+const TOTAL_FRAMES = 16;
+
+let paused = false;
+let speed = 200;
+let selectedFrames = [];
+let frameImages = [];
+
+// Load all frames
+async function loadFrames() {
+  const promises = [];
+  for (let i = 1; i <= TOTAL_FRAMES; i++) {
+    const img = new Image();
+    const p = new Promise((resolve) => {
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+    });
+    img.src = framesDir + `frame_${String(i).padStart(2, '0')}.png`;
+    promises.push(p);
+  }
+  frameImages = await Promise.all(promises);
+}
+
+// Build frame strip
+function buildFrameStrip() {
+  const strip = document.getElementById('frameStrip');
+  strip.innerHTML = '';
+  for (let i = 0; i < TOTAL_FRAMES; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'frame-cell';
+    cell.dataset.index = i;
+    cell.onclick = () => toggleFrame(i);
+
+    const img = document.createElement('img');
+    img.src = framesDir + `frame_${String(i + 1).padStart(2, '0')}.png`;
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = `#${i + 1}`;
+
+    cell.appendChild(img);
+    cell.appendChild(label);
+    strip.appendChild(cell);
+  }
+}
+
+function toggleFrame(index) {
+  const pos = selectedFrames.indexOf(index);
+  if (pos >= 0) {
+    selectedFrames.splice(pos, 1);
+  } else if (selectedFrames.length < 4) {
+    selectedFrames.push(index);
+    selectedFrames.sort((a, b) => a - b);
+  }
+  updateSelectionUI();
+}
+
+function resetSelection() {
+  selectedFrames = [];
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  // Update cell highlights
+  document.querySelectorAll('.frame-cell').forEach((cell, i) => {
+    cell.classList.toggle('selected', selectedFrames.includes(i));
+  });
+  // Update display
+  const display = document.getElementById('selectionDisplay');
+  if (selectedFrames.length === 0) {
+    display.textContent = 'なし';
+  } else {
+    display.textContent = selectedFrames.map(i => `#${i + 1}`).join(', ');
+  }
+}
+
+// Animation state
+let fullFrame = 0;
+let loopFrame = 0;
+let lastFullTime = 0;
+let lastLoopTime = 0;
+
+function animate(time) {
+  requestAnimationFrame(animate);
+  if (paused) return;
+
+  // Full 16-frame animation
+  if (time - lastFullTime >= speed) {
+    fullFrame = (fullFrame + 1) % TOTAL_FRAMES;
+    lastFullTime = time;
+    const ctx = document.getElementById('fullCanvas').getContext('2d');
+    ctx.clearRect(0, 0, 256, 160);
+    if (frameImages[fullFrame]) {
+      ctx.drawImage(frameImages[fullFrame], 0, 0, 256, 160);
+    }
+    document.getElementById('fullInfo').textContent = `frame ${fullFrame + 1}/16`;
+  }
+
+  // Selected 4-frame loop
+  if (selectedFrames.length > 0 && time - lastLoopTime >= speed) {
+    loopFrame = (loopFrame + 1) % selectedFrames.length;
+    lastLoopTime = time;
+    const idx = selectedFrames[loopFrame];
+
+    // 512x320 version
+    const ctx = document.getElementById('loopCanvas').getContext('2d');
+    ctx.clearRect(0, 0, 256, 160);
+    if (frameImages[idx]) {
+      ctx.drawImage(frameImages[idx], 0, 0, 256, 160);
+    }
+    document.getElementById('loopInfo').textContent =
+      `frame #${idx + 1} (${loopFrame + 1}/${selectedFrames.length})`;
+
+    // 80x80 version (simulated downscale)
+    const ctx80 = document.getElementById('loop80Canvas').getContext('2d');
+    ctx80.imageSmoothingEnabled = false;
+    ctx80.clearRect(0, 0, 240, 240);
+    if (frameImages[idx]) {
+      // First draw to 80x80, then scale up 3x for visibility
+      // Use offscreen canvas for downscale
+      const off = document.createElement('canvas');
+      off.width = 80;
+      off.height = 80;
+      const offCtx = off.getContext('2d');
+      // Extract character region (center area of 512x320)
+      // Character is roughly centered, ~250px wide, ~272px tall
+      // Source region: roughly 130,10 to 380,290
+      offCtx.drawImage(frameImages[idx], 100, 5, 310, 310, 0, 0, 80, 80);
+      // Now draw 80x80 scaled to 240x240
+      ctx80.drawImage(off, 0, 0, 80, 80, 0, 0, 240, 240);
+    }
+    document.getElementById('loop80Info').textContent =
+      `80×80 → 3x表示 | frame #${idx + 1}`;
+  }
+}
+
+// Source switching
+async function switchSource(dir) {
+  framesDir = FRAMES_BASE + dir + '/';
+  await loadFrames();
+  buildFrameStrip();
+  updateSelectionUI();
+}
+
+// Controls
+document.getElementById('speedSlider').addEventListener('input', (e) => {
+  speed = parseInt(e.target.value);
+  document.getElementById('speedVal').textContent = speed + 'ms';
+});
+
+// Init
+(async () => {
+  await loadFrames();
+  buildFrameStrip();
+  // Pre-select frames 1, 4, 8, 12 as default
+  selectedFrames = [0, 3, 7, 11];
+  updateSelectionUI();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

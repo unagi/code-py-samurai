@@ -561,7 +561,7 @@ def process_tiles(
 
 def main() -> None:
     """メインエントリポイント."""
-    source_dir = Path(__file__).parent.parent / "from_creator" / "gemini"
+    source_dir = Path(__file__).parent.parent.parent / "from_creator" / "gemini"
     output_base = source_dir / "_extracted"
 
     targets = [
