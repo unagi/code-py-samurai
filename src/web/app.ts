@@ -16,6 +16,24 @@ const RELATIVE_DIRECTIONS: RelativeDirection[] = [
   "backward",
 ];
 
+const ABILITY_TO_API: Record<string, string[]> = {
+  "walk!": ["warrior.walk()", "warrior.walk('backward')"],
+  "attack!": ["warrior.attack()", "warrior.attack('left')"],
+  "rest!": ["warrior.rest()"],
+  "rescue!": ["warrior.rescue()", "warrior.rescue('right')"],
+  "shoot!": ["warrior.shoot()", "warrior.shoot('forward')"],
+  "pivot!": ["warrior.pivot()", "warrior.pivot('backward')"],
+  "bind!": ["warrior.bind()", "warrior.bind('left')"],
+  "detonate!": ["warrior.detonate()", "warrior.detonate('forward')"],
+  feel: ["warrior.feel()", "warrior.feel('left')"],
+  health: ["warrior.health()"],
+  look: ["warrior.look()", "warrior.look('backward')"],
+  listen: ["warrior.listen()"],
+  direction_of_stairs: ["warrior.direction_of_stairs()"],
+  direction_of: ["warrior.direction_of(space)"],
+  distance_of: ["warrior.distance_of(space)"],
+};
+
 class MemoryLogger implements ILogger {
   lines: string[] = [];
 
@@ -156,6 +174,13 @@ function getLevelDefinition(state: AppState): LevelDefinition {
   return tower.getLevel(state.levelNumber) ?? tower.levels[0];
 }
 
+function getAvailableApiList(level: LevelDefinition): string[] {
+  const mapped = level.warrior.abilities.flatMap((ability) => {
+    return ABILITY_TO_API[ability] ?? [];
+  });
+  return [...new Set(mapped)];
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")
@@ -286,6 +311,7 @@ export function mountApp(): void {
 
   const renderGame = (): void => {
     const level = getLevelDefinition(state);
+    const availableApi = getAvailableApiList(level);
     root.innerHTML = `
       <main class="layout">
         <section class="panel game-panel">
@@ -308,6 +334,21 @@ export function mountApp(): void {
           </header>
           <p class="run-state">State: <span id="run-state">Ready</span></p>
           <p class="description">${escapeHtml(level.description)}</p>
+          <article class="panel-sub info-panel">
+            <h3>Level Info</h3>
+            <p><strong>Tip:</strong> ${escapeHtml(level.tip)}</p>
+            ${
+              level.clue
+                ? `<p><strong>Clue:</strong> ${escapeHtml(level.clue)}</p>`
+                : ""
+            }
+            <h4>Available API</h4>
+            <ul class="api-list">
+              ${availableApi.length > 0
+                ? availableApi.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
+                : "<li>(none)</li>"}
+            </ul>
+          </article>
           <div class="grid">
             <article class="panel-sub">
               <h3>Board (ASCII)</h3>
@@ -382,6 +423,7 @@ export function mountApp(): void {
 
   const renderResult = (): void => {
     const result = session.result;
+    const level = getLevelDefinition(state);
     root.innerHTML = `
       <main class="layout">
         <section class="panel result-panel">
@@ -393,6 +435,11 @@ export function mountApp(): void {
             <li>Time Bonus: ${result?.timeBonus ?? 0}</li>
             <li>Grade: ${result?.grade ?? "-"}</li>
           </ul>
+          ${
+            !result?.passed && level.clue
+              ? `<p class="clue-box"><strong>Clue:</strong> ${escapeHtml(level.clue)}</p>`
+              : ""
+          }
           <div class="controls">
             <button id="retry">Retry</button>
             <button id="back-title">Title</button>

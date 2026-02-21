@@ -118,6 +118,31 @@ button:hover {
   padding: 0.8rem;
 }
 
+.info-panel {
+  margin-bottom: 0.8rem;
+}
+
+.info-panel h3,
+.info-panel h4 {
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+}
+
+.info-panel p {
+  margin: 0 0 0.4rem;
+}
+
+.api-list {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.api-list li {
+  margin: 0.2rem 0;
+  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.84rem;
+}
+
 pre {
   margin: 0;
   white-space: pre-wrap;
@@ -150,6 +175,14 @@ pre {
 .result-status {
   font-size: 1.2rem;
   font-weight: 700;
+}
+
+.clue-box {
+  margin: 0.8rem 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #c9ab5f;
+  border-radius: 8px;
+  background: #fff3cf;
 }
 
 @media (max-width: 740px) {
