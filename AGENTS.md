@@ -38,11 +38,15 @@ Notes:
   - Affected scope
   - Whether there is any breaking change
 
-## Preview / Dev Server
+## UI動作確認の制約
 
-- `preview_*` ツール（Claude Preview MCP）はサンドボックス環境の制限により動作しない。
-- UI 変更の確認には `npm run dev` のローカル起動、または `npm run build` の成功を検証手段とする。
-- Stop hook の「Preview Required」警告が出ても `preview_start` を呼ばないこと。
+エージェント環境はテキストベースであり、ブラウザUIの視覚的確認はできない。
+
+- `npm run dev` 等でReactアプリを起動しての動作確認は**禁止**
+- `preview_*` ツール（`preview_start`, `preview_screenshot` 等）を**使用しない**
+- Stop hook の「Preview Required」警告が出ても `preview_start` を呼ばないこと
+- UIの動作確認はユーザーに委ねる。変更内容を明示して引き渡すこと
+- エージェントが確認できるのは `npx tsc --noEmit`（型チェック）と `npm test`（テスト）まで
 
 ## Branch and PR Conventions
 

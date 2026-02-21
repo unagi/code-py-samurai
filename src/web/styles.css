@@ -231,14 +231,13 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
+  line-height: 1;
 }
 
 .tile-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .damage-popup {
@@ -282,61 +281,32 @@ body {
   }
 }
 
-.tile-frame {
-  background: linear-gradient(180deg, #506884, #243647);
-  color: #e4f2ff;
+.tile-void {
+  background: #0a0a0a;
 }
 
-.tile-empty {
-  background: #15202b;
+.tile-floor {
+  background: #3d2b1a;
 }
 
-.tile-stairs {
-  background: linear-gradient(180deg, #d9c67d, #9f8342);
-  color: #2a1f09;
+.tile-wall-h {
+  background: linear-gradient(180deg, #2a1e14, #5a4030);
 }
 
-.tile-warrior {
-  background: linear-gradient(180deg, #6ccaff, #2f6ea0);
-  color: #0f2030;
-  font-weight: 700;
+.tile-wall-v {
+  background: #2a1e14;
 }
 
-.tile-golem {
-  background: linear-gradient(180deg, #b7c1cc, #6e7a87);
-  color: #1d2329;
-  font-weight: 700;
-}
-
-.tile-sludge {
-  background: linear-gradient(180deg, #87cb77, #3b7a31);
-  color: #10250d;
-}
-
-.tile-thick-sludge {
-  background: linear-gradient(180deg, #5ab24e, #245d1d);
-  color: #e2f7de;
-  font-weight: 700;
-}
-
-.tile-archer {
-  background: linear-gradient(180deg, #f2c989, #b77d3b);
-  color: #2d1e0f;
-}
-
-.tile-wizard {
-  background: linear-gradient(180deg, #d5b3ff, #8450b6);
-  color: #251336;
-}
-
-.tile-captive {
-  background: linear-gradient(180deg, #ffe8ad, #d0a64e);
-  color: #422f11;
-}
-
+.tile-stairs,
+.tile-warrior,
+.tile-golem,
+.tile-sludge,
+.tile-thick-sludge,
+.tile-archer,
+.tile-wizard,
+.tile-captive,
 .tile-unknown {
-  background: #61311f;
-  color: #ffd8c8;
+  background: url("/assets/tiles/cave-floor.png") center / cover;
 }
 
 .console-controls {
