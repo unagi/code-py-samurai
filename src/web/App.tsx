@@ -6,8 +6,8 @@ import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
 import type { ILogger, LevelDefinition } from "../engine/types";
-import { compilePythonPlayer } from "../runtime/python-player";
 import { formatPythonError } from "../runtime/errors";
+import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
 
 const STARTER_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        # ここに1ターン分の処理を書く\n        pass`;
@@ -151,7 +151,7 @@ class LevelSession {
     this._setupError = null;
     this._runtimeError = null;
     try {
-      const player = compilePythonPlayer(playerCode);
+      const { player } = runPythonPlayerSource(playerCode);
       this._level = new Level(levelDef, this._logger);
       this._level.setup(player, []);
     } catch (error) {

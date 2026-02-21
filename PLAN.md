@@ -283,12 +283,12 @@ class Player:
    - 複数アクション実行の検出 → 警告
 
 **完了条件** (`npm test` 全Pass):
-- [ ] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
-- [ ] `tests/runtime/bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがTurnに反映
-- [ ] `tests/runtime/py-builtins.test.ts`: Space.is_empty()等のPythonバインディングが正しい値
-- [ ] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
-- [ ] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
-- [ ] `tests/runtime/python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
+- [x] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
+- [x] `tests/runtime/bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがTurnに反映
+- [x] `tests/runtime/py-builtins.test.ts`: Space.is_empty()等のPythonバインディングが正しい値
+- [x] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
+- [x] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
+- [x] `tests/runtime/python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
 
 ---
 
