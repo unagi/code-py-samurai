@@ -24,7 +24,7 @@ export class Level {
   warrior!: Warrior;
   private _timeBonus: number;
   private _turnCount: number;
-  private _logger: ILogger;
+  private readonly _logger: ILogger;
 
   constructor(definition: LevelDefinition, logger?: ILogger) {
     this.definition = definition;

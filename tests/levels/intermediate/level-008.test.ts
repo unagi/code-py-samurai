@@ -3,7 +3,6 @@ import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
 import type { Space } from "@engine/space";
-import type { RelativeDirection } from "@engine/direction";
 import { level008 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 8", () => {

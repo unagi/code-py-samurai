@@ -7,7 +7,7 @@ export class Floor implements IFloor {
   readonly width: number;
   readonly height: number;
   private _stairsLocation: [number, number] = [-1, -1];
-  private _allUnits: IUnit[] = [];
+  private readonly _allUnits: IUnit[] = [];
 
   constructor(width: number, height: number) {
     this.width = width;

@@ -23,7 +23,7 @@ export interface GameResult {
 export class Game {
   readonly tower: Tower;
   readonly profile: Profile;
-  private _logger: ILogger;
+  private readonly _logger: ILogger;
 
   constructor(tower: Tower, profile: Profile, logger?: ILogger) {
     this.tower = tower;

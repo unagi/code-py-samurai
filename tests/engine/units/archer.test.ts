@@ -53,7 +53,6 @@ describe("Archer", () => {
     const archer = new Archer();
     floor.add(archer, 4, 0, "west");
     archer.prepareTurn();
-    // Should not throw
-    archer.performTurn();
+    expect(() => archer.performTurn()).not.toThrow();
   });
 });

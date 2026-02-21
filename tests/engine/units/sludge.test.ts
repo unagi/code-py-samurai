@@ -57,10 +57,8 @@ describe("Sludge", () => {
     floor.placeStairs(7, 0);
     const sludge = new Sludge();
     floor.add(sludge, 4, 0, "west");
-    // No warrior on the floor
     sludge.prepareTurn();
-    // No action recorded, should not throw
-    sludge.performTurn();
+    expect(() => sludge.performTurn()).not.toThrow();
   });
 
   it("takes damage and dies", () => {

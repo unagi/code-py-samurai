@@ -57,6 +57,6 @@ describe("Walk", () => {
   it("throws on invalid direction", () => {
     const { warrior } = setup();
     const walk = warrior.abilities.get("walk!") as Walk;
-    expect(() => walk.perform("up" as any)).toThrow("Unknown direction");
+    expect(() => walk.perform("up" as unknown as "forward")).toThrow("Unknown direction");
   });
 });

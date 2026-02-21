@@ -1,6 +1,5 @@
 import type { ILogger } from "../types";
 import { BaseUnit } from "./base";
-import { Warrior } from "./warrior";
 import { Sludge } from "./sludge";
 import { ThickSludge } from "./thick-sludge";
 import { Archer } from "./archer";
