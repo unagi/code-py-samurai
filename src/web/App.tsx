@@ -273,7 +273,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button onClick={startLevel}>Start Level #{levelNumber}</button>
+            <button onClick={startLevel}>Start Lv.{levelNumber}</button>
           </div>
         </header>
         <nav className="level-progress" aria-label="Level Progress">
@@ -282,7 +282,7 @@ export default function App() {
               key={step}
               className={step === levelNumber ? "progress-step active" : "progress-step"}
             >
-              {step}
+              Lv.{step}
               {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
             </span>
           ))}
