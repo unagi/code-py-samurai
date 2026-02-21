@@ -53,7 +53,9 @@ export class Level {
     this.warrior.player = player;
 
     // Add existing abilities from profile + level-defined abilities
-    const levelAbilities = warriorAbilitiesToEngineAbilities(warDef.abilities);
+    const levelAbilities = warDef.abilities
+      ? warriorAbilitiesToEngineAbilities(warDef.abilities)
+      : [];
     const allAbilities = [...new Set([...existingAbilities, ...levelAbilities])];
     this.warrior.addAbilities(...allAbilities);
 

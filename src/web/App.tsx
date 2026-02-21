@@ -9,7 +9,10 @@ import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
 import type { ILogger, IPlayer, LevelDefinition, WarriorAbilitySet } from "../engine/types";
-import { mergeWarriorAbilities, warriorAbilitiesToEngineAbilities } from "../engine/warrior-abilities";
+import {
+  getWarriorAbilitiesAtLevel,
+  warriorAbilitiesToEngineAbilities,
+} from "../engine/warrior-abilities";
 import { formatPythonError } from "../runtime/errors";
 import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
@@ -562,15 +565,9 @@ export default function App() {
   const level = useMemo(() => {
     return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
   }, [selectedTower, levelNumber]);
-  const unlockedWarriorAbilities = useMemo(() => {
-    const unlocked: WarriorAbilitySet[] = [];
-    for (let i = 1; i <= warriorLevel; i++) {
-      const lv = selectedTower.getLevel(i);
-      if (!lv) continue;
-      unlocked.push(lv.warrior.abilities);
-    }
-    return mergeWarriorAbilities(unlocked);
-  }, [selectedTower, warriorLevel]);
+  const unlockedWarriorAbilities = useMemo<WarriorAbilitySet>(() => {
+    return getWarriorAbilitiesAtLevel(towerName, warriorLevel);
+  }, [towerName, warriorLevel]);
   const unlockedEngineAbilities = useMemo(
     () => warriorAbilitiesToEngineAbilities(unlockedWarriorAbilities),
     [unlockedWarriorAbilities],

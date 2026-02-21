@@ -76,7 +76,7 @@ export interface LevelDefinition {
     x: number;
     y: number;
     direction: AbsoluteDirection;
-    abilities: WarriorAbilitySet;
+    abilities?: WarriorAbilitySet;
   };
   units: Array<{
     unitId?: string;
@@ -102,7 +102,7 @@ export interface MapWarriorDefinition {
   unitId?: string;
   position: MapPoint;
   direction: AbsoluteDirection;
-  abilities: WarriorAbilitySet;
+  abilities?: WarriorAbilitySet;
 }
 
 export interface MapUnitDefinition {

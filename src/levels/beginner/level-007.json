@@ -15,13 +15,6 @@
     "x": 5,
     "y": 0,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "pivot()",
-        "pivot('backward')"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": [

@@ -16,15 +16,6 @@
     "x": 1,
     "y": 1,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "rescue()",
-        "rescue('right')",
-        "bind()",
-        "bind('left')"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": [

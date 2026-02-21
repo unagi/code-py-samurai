@@ -16,15 +16,6 @@
     "x": 0,
     "y": 0,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "feel()",
-        "feel('left')",
-        "attack()",
-        "attack('left')"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": [

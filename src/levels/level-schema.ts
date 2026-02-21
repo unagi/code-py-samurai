@@ -99,7 +99,10 @@ export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
       x: asInt(warriorRaw.x, "warrior.x"),
       y: asInt(warriorRaw.y, "warrior.y"),
       direction: asDirection(warriorRaw.direction, "warrior.direction"),
-      abilities: asWarriorAbilities(warriorRaw.abilities, "warrior.abilities"),
+      abilities:
+        warriorRaw.abilities === undefined
+          ? undefined
+          : asWarriorAbilities(warriorRaw.abilities, "warrior.abilities"),
     },
     units: unitsRaw.map((unit, index) => {
       if (!isRecord(unit)) {

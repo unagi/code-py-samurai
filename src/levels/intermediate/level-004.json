@@ -16,13 +16,6 @@
     "x": 1,
     "y": 1,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "listen()",
-        "direction_of(space)"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": [

@@ -8,7 +8,7 @@ describe("level json schema", () => {
     const level = parseLevelDefinitionJson(rawLevel001);
     expect(level.floor.width).toBe(8);
     expect(level.stairs).toEqual({ x: 7, y: 0 });
-    expect(level.warrior.abilities.skills).toContain("walk()");
+    expect(level.warrior.abilities).toBeUndefined();
   });
 
   it("fails when required fields are missing", () => {
@@ -16,7 +16,7 @@ describe("level json schema", () => {
       description: "x",
       tip: "y",
       floor: { width: 8, height: 1 },
-      warrior: { x: 0, y: 0, direction: "east", abilities: { skills: [], stats: [] } },
+      warrior: { x: 0, y: 0, direction: "east" },
       units: [],
     };
 

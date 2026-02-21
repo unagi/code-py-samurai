@@ -15,16 +15,6 @@
     "x": 0,
     "y": 1,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "walk()",
-        "walk('backward')",
-        "feel()",
-        "feel('left')",
-        "direction_of_stairs()"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": []

@@ -1,9 +1,10 @@
 import { Level, type LevelResult } from "./level";
 import { Profile } from "./profile";
 import { Tower } from "./tower";
-import type { ILogger, IPlayer, WarriorAbilitySet } from "./types";
+import type { ILogger, IPlayer } from "./types";
 import {
-  mergeWarriorAbilities,
+  getWarriorAbilitiesAtLevel,
+  getWarriorAbilityIncrement,
   warriorAbilitiesToEngineAbilities,
 } from "./warrior-abilities";
 
@@ -45,8 +46,12 @@ export class Game {
 
     if (result.passed) {
       this.profile.score += result.totalScore;
-      // Accumulate abilities from the level definition
-      this.profile.addAbilities(...warriorAbilitiesToEngineAbilities(levelDef.warrior.abilities));
+      const increment = getWarriorAbilityIncrement(this.tower.name, this.profile.levelNumber);
+      const unlockedFromProgression = warriorAbilitiesToEngineAbilities(increment);
+      const unlockedFromLevel = levelDef.warrior.abilities
+        ? warriorAbilitiesToEngineAbilities(levelDef.warrior.abilities)
+        : [];
+      this.profile.addAbilities(...new Set([...unlockedFromProgression, ...unlockedFromLevel]));
     }
 
     return result;
@@ -107,13 +112,16 @@ export class Game {
   }
 
   private getAccumulatedAbilities(upToLevel: number): string[] {
-    const unlocked: WarriorAbilitySet[] = [];
+    const fromProgression = warriorAbilitiesToEngineAbilities(
+      getWarriorAbilitiesAtLevel(this.tower.name, upToLevel),
+    );
+    const fromLevelDef: string[] = [];
     for (let n = 1; n <= upToLevel; n++) {
       const level = this.tower.getLevel(n);
-      if (level) {
-        unlocked.push(level.warrior.abilities);
+      if (level?.warrior.abilities) {
+        fromLevelDef.push(...warriorAbilitiesToEngineAbilities(level.warrior.abilities));
       }
     }
-    return warriorAbilitiesToEngineAbilities(mergeWarriorAbilities(unlocked));
+    return [...new Set([...fromProgression, ...fromLevelDef])];
   }
 }

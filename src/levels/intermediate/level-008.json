@@ -16,15 +16,6 @@
     "x": 0,
     "y": 0,
     "direction": "east",
-    "abilities": {
-      "skills": [
-        "look()",
-        "look('backward')",
-        "detonate()",
-        "detonate('forward')"
-      ],
-      "stats": []
-    },
     "unitId": "warrior"
   },
   "units": [
