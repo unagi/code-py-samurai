@@ -227,6 +227,7 @@ def assemble_sprite_sheet(
 def main() -> None:
     project_root = Path(__file__).parent.parent
     extracted_dir = project_root / "from_creator" / "gemini" / "_extracted"
+    corrected_dir = project_root / "from_creator" / "gemini" / "_corrected"
     output_sprites = project_root / "public" / "assets" / "sprites" / "samurai-cat"
     output_tiles = project_root / "public" / "assets" / "tiles"
 
@@ -235,12 +236,13 @@ def main() -> None:
 
     print("=== Phase 5-6: Normalize + Assemble ===\n")
 
-    # Step 1: Determine scale factors
+    # Step 1: Determine scale factors (always from _extracted for consistency)
     print("[1/3] Determining scale factors...")
     scales = determine_scale_factors(extracted_dir)
     print()
 
     # Step 2: Process warrior frames
+    # For corrected sources (warrior-01/idle), prefer _corrected over _extracted
     print("[2/3] Processing warrior frames...")
     for cfg in WARRIOR_SOURCES:
         scale = scales.get(cfg.source_dir)
@@ -248,13 +250,18 @@ def main() -> None:
             print(f"  SKIP {cfg.source_dir}: no scale factor")
             continue
 
-        src_dir = extracted_dir / cfg.source_dir
+        # Use corrected dir if available, else extracted
+        corrected_src = corrected_dir / cfg.source_dir
+        extracted_src = extracted_dir / cfg.source_dir
 
         for direction in cfg.directions:
             frames: list[Image.Image] = []
             for fi in range(cfg.frames_per_dir):
                 fname = f"{cfg.action}-{direction}-f{fi}.png"
-                fpath = src_dir / fname
+                # Prefer corrected frame, fall back to extracted
+                fpath = corrected_src / fname
+                if not fpath.exists():
+                    fpath = extracted_src / fname
                 if not fpath.exists():
                     print(f"  WARN: missing {fname}")
                     continue
