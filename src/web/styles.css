@@ -103,16 +103,32 @@ button:hover {
   justify-content: space-between;
   align-items: start;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .description {
   margin: 0 0 1rem;
 }
 
-.run-state {
+.level-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.1rem;
   margin: 0 0 0.7rem;
-  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.progress-step {
+  color: #7e6f58;
+}
+
+.progress-step.active {
+  color: #8d5b33;
+}
+
+.progress-arrow {
+  color: #9a8b74;
 }
 
 .speed-label {
@@ -132,18 +148,15 @@ button:hover {
   margin-bottom: 0.8rem;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
-}
-
 .panel-sub {
   background: #fdf9f1;
   border: 1px solid #dac8a9;
   border-radius: 10px;
   padding: 0.8rem;
+}
+
+.full-width-panel {
+  margin-bottom: 0.8rem;
 }
 
 .info-panel {
@@ -220,6 +233,25 @@ pre {
 
 .result-inline {
   margin-top: 0.8rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 20, 13, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(520px, 94vw);
+  background: #fffaf2;
+  border: 1px solid #c7b9a2;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 12px 28px rgba(39, 26, 8, 0.2);
 }
 
 @media (max-width: 740px) {

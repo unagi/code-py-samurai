@@ -174,18 +174,21 @@ export default function App() {
   const [board, setBoard] = useState("");
   const [logs, setLogs] = useState("(ログなし)");
   const [result, setResult] = useState<LevelResult | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const sessionRef = useRef(new LevelSession());
   const timerRef = useRef<number | null>(null);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
+  const levelNumber = 1;
 
   const level = useMemo(() => {
     const tower = towers.find((item) => item.name === towerName) ?? towers[0];
-    return tower.getLevel(1) ?? tower.levels[0];
+    return tower.getLevel(levelNumber) ?? tower.levels[0];
   }, [towerName]);
 
   const availableApi = useMemo(() => getAvailableApiList(level), [level]);
+  const levelSteps = useMemo(() => ["A", "B", "C", "D"], []);
 
   const refreshGameState = (): void => {
     const session = sessionRef.current;
@@ -204,6 +207,7 @@ export default function App() {
 
   const startLevel = (): void => {
     stopTimer();
+    setShowResultModal(false);
     sessionRef.current.setup(level, playerCode);
     refreshGameState();
   };
@@ -213,6 +217,7 @@ export default function App() {
     refreshGameState();
     if (!canContinue) {
       stopTimer();
+      setShowResultModal(true);
     }
   };
 
@@ -266,10 +271,14 @@ export default function App() {
             <button onClick={startLevel}>Start Level #1</button>
           </div>
         </header>
-
-        <p className="run-state">
-          Course: <strong>{towerName}</strong> / State: <strong>{isPlaying ? "Running" : "Ready"}</strong>
-        </p>
+        <nav className="level-progress" aria-label="Level Progress">
+          {levelSteps.map((step, index) => (
+            <span key={step} className={index === 0 ? "progress-step active" : "progress-step"}>
+              {step}
+              {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
+            </span>
+          ))}
+        </nav>
         <p className="description">{level.description}</p>
 
         <article className="panel-sub info-panel">
@@ -314,16 +323,15 @@ export default function App() {
           <button onClick={startLevel}>Reset</button>
         </div>
 
-        <div className="grid">
-          <article className="panel-sub">
-            <h3>Board (ASCII)</h3>
-            <pre id="board">{board}</pre>
-          </article>
-          <article className="panel-sub">
-            <h3>Logs</h3>
-            <pre id="logs">{logs}</pre>
-          </article>
-        </div>
+        <article className="panel-sub full-width-panel">
+          <h3>Board (ASCII)</h3>
+          <pre id="board">{board}</pre>
+        </article>
+
+        <article className="panel-sub full-width-panel">
+          <h3>Logs</h3>
+          <pre id="logs">{logs}</pre>
+        </article>
 
         <article className="panel-sub">
           <h3>Player Code (CodeMirror)</h3>
@@ -331,22 +339,35 @@ export default function App() {
           <p className="code-note">コード変更は次回の Start/Reset 時に反映されます。</p>
         </article>
 
-        {result ? (
-          <article className="panel-sub result-inline">
-            <h3>Result</h3>
-            <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
-            <ul>
-              <li>Turns: {result.turns}</li>
-              <li>Total Score: {result.totalScore}</li>
-              <li>Time Bonus: {result.timeBonus}</li>
-              <li>Grade: {result.grade ?? "-"}</li>
-            </ul>
-            {!result.passed && level.clue ? (
-              <p className="clue-box">
-                <strong>Clue:</strong> {level.clue}
-              </p>
-            ) : null}
-          </article>
+        {showResultModal && result ? (
+          <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Result">
+            <article className="modal-card">
+              <h3>Result</h3>
+              <p className="result-status">{result.passed ? "CLEAR" : "FAILED"}</p>
+              <ul>
+                <li>Turns: {result.turns}</li>
+                <li>Total Score: {result.totalScore}</li>
+                <li>Time Bonus: {result.timeBonus}</li>
+                <li>Grade: {result.grade ?? "-"}</li>
+              </ul>
+              {!result.passed && level.clue ? (
+                <p className="clue-box">
+                  <strong>Clue:</strong> {level.clue}
+                </p>
+              ) : null}
+              <div className="controls">
+                <button
+                  onClick={() => {
+                    setShowResultModal(false);
+                    startLevel();
+                  }}
+                >
+                  Retry
+                </button>
+                <button onClick={() => setShowResultModal(false)}>Close</button>
+              </div>
+            </article>
+          </div>
         ) : null}
       </section>
     </main>
