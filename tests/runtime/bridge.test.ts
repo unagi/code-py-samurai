@@ -56,4 +56,15 @@ describe("runtime bridge", () => {
     const pySpace = callSense(turn, "feel");
     expect(pySpace).toBeNull();
   });
+
+  it("maps hp sense to health", () => {
+    const turn = asRuntimeTurn(new FakeTurn());
+    expect(callSense(turn, "hp")).toBe(0);
+  });
+
+  it("throws when turn does not satisfy runtime interface", () => {
+    expect(() => asRuntimeTurn({ doAction() {} } as unknown as ITurn)).toThrow(
+      /interface is not available/i,
+    );
+  });
 });

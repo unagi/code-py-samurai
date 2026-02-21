@@ -65,4 +65,35 @@ describe("toPythonValue", () => {
     expect(wrapped[0]).toBeNull();
     expect((wrapped[1] as { is_enemy: () => boolean }).is_enemy()).toBe(false);
   });
+
+  it("supports snake_case space methods", () => {
+    const snakeSpace = {
+      is_empty: () => false,
+      is_enemy: () => true,
+      is_captive: () => false,
+      is_stairs: () => false,
+      is_wall: () => true,
+    };
+
+    const wrapped = toPythonValue(snakeSpace) as {
+      is_enemy: () => boolean;
+      is_wall: () => boolean;
+    };
+    expect(wrapped.is_enemy()).toBe(true);
+    expect(wrapped.is_wall()).toBe(true);
+  });
+
+  it("throws when wrapped space misses predicate implementation", () => {
+    const broken = {
+      isEmpty: () => false,
+    };
+    const wrapped = toPythonValue(broken) as { is_enemy: () => boolean };
+    expect(() => wrapped.is_enemy()).toThrow(/not available/i);
+  });
+
+  it("returns primitive values unchanged", () => {
+    expect(toPythonValue(123)).toBe(123);
+    expect(toPythonValue("abc")).toBe("abc");
+    expect(toPythonValue(false)).toBe(false);
+  });
 });

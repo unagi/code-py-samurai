@@ -16,6 +16,8 @@ describe("Intermediate Level 4", () => {
     "rest!",
     "rescue!",
     "bind!",
+    "listen",
+    "direction_of",
   ];
 
   it("passes with solving strategy", () => {

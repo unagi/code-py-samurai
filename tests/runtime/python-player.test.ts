@@ -139,4 +139,54 @@ describe("compilePythonPlayer", () => {
     player.playTurn(turn as never);
     expect(turn.action).toEqual(["walk!", "forward"]);
   });
+
+  it("throws on unsupported warrior action/property/predicate", () => {
+    expect(() =>
+      compilePythonPlayer(
+        "class Player:\n    def play_turn(self, warrior):\n        warrior.sing()",
+      ),
+    ).toThrow(/Unsupported warrior action/i);
+
+    expect(() =>
+      compilePythonPlayer(
+        "class Player:\n    def play_turn(self, warrior):\n        if warrior.energy < 1:\n            warrior.walk()",
+      ),
+    ).toThrow(/Unsupported warrior property/i);
+
+    expect(() =>
+      compilePythonPlayer(
+        "class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_empty():\n            warrior.walk()",
+      ),
+    ).toThrow(/Unsupported predicate/i);
+  });
+
+  it("throws on missing block and trailing elif syntax", () => {
+    expect(() =>
+      compilePythonPlayer(
+        "class Player:\n    def play_turn(self, warrior):\n        if warrior.hp < 10:\n        warrior.walk()",
+      ),
+    ).toThrow(/Missing block after condition/i);
+
+    expect(() =>
+      compilePythonPlayer(
+        "class Player:\n    def play_turn(self, warrior):\n        elif warrior.hp < 10:\n            warrior.walk()",
+      ),
+    ).toThrow(/Unsupported trailing syntax/i);
+  });
+
+  it("wraps non-Error throws as PythonRuntimeError", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = new FakeTurn({
+      feel: () => ({
+        isEmpty: () => false,
+        isEnemy: () => {
+          throw "boom";
+        },
+      }),
+    });
+
+    expect(() => player.playTurn(turn as never)).toThrow(/boom/);
+  });
 });

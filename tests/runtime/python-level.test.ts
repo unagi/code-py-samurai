@@ -11,7 +11,7 @@ describe("python runtime level integration", () => {
 
     const player = compilePythonPlayer(source);
     const level = new Level(level001);
-    level.setup(player);
+    level.setup(player, ["walk!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -24,7 +24,7 @@ describe("python runtime level integration", () => {
 
     const player = compilePythonPlayer(source);
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -37,7 +37,7 @@ describe("python runtime level integration", () => {
 
     const player = compilePythonPlayer(source);
     const level = new Level(level003);
-    level.setup(player, ["feel", "attack!", "walk!"]);
+    level.setup(player, ["feel", "attack!", "walk!", "health", "rest!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);

@@ -7,7 +7,7 @@ import { level007 } from "../../src/levels/beginner";
 
 describe("Beginner Level 7", () => {
   const inherited = [
-    "walk!", "feel", "attack!", "health", "rest!", "rescue!",
+    "walk!", "feel", "attack!", "health", "rest!", "rescue!", "pivot!",
   ];
 
   it("is passed with pivot+fight+retreat strategy", () => {

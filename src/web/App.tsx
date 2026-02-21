@@ -130,13 +130,6 @@ function buildWarriorLevel(data: ProgressStorageData): number {
     }
   }
 
-  if (typeof data.towerName === "string" && typeof data.levelNumber === "number") {
-    migrated = Math.max(
-      migrated,
-      getGlobalLevelFromTowerLevel(data.towerName, Math.floor(data.levelNumber)),
-    );
-  }
-
   return Math.min(Math.max(1, migrated), maxLv);
 }
 
@@ -744,6 +737,42 @@ export default function App() {
     setLevelNumber((prev) => Math.min(prev, nextTower.levelCount));
   };
 
+  const applyCodeToEditor = (code: string): void => {
+    const view = editorViewRef.current;
+    if (!view) return;
+    const current = view.state.doc.toString();
+    if (current === code) return;
+    view.dispatch({
+      changes: {
+        from: 0,
+        to: view.state.doc.length,
+        insert: code,
+      },
+    });
+  };
+
+  const handleClearData = (): void => {
+    const ok = window.confirm("保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？");
+    if (!ok) return;
+
+    stopTimer();
+    setShowResultModal(false);
+    setHoveredEnemyStats(null);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY_PROGRESS);
+      window.localStorage.removeItem(STORAGE_KEY_PLAYER_CODE);
+    } catch {
+      // ignore storage errors
+    }
+
+    setTowerName("beginner");
+    setLevelNumber(1);
+    setWarriorLevel(1);
+    setPlayerCode(STARTER_PLAYER_CODE);
+    applyCodeToEditor(STARTER_PLAYER_CODE);
+    setIsCodeDirty(true);
+  };
+
   useEffect(() => {
     if (!editorHostRef.current) return;
 
@@ -807,35 +836,44 @@ export default function App() {
         <div className="hero-line" />
       </section>
 
-      <nav className="level-progress" aria-label="Level Progress">
-        {levelSteps.map((step, index) => (
-          <button
-            key={step}
-            type="button"
-            className={step === levelNumber ? "progress-step active" : "progress-step"}
-            disabled={isPlaying}
-            onClick={() => goToLevel(step)}
-          >
-            Lv.{getGlobalLevelFromTowerLevel(towerName, step)}
-            {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
-          </button>
-        ))}
-      </nav>
+      <div className="top-controls">
+        <div className="top-controls-main">
+          <nav className="level-progress" aria-label="Level Progress">
+            {levelSteps.map((step, index) => (
+              <button
+                key={step}
+                type="button"
+                className={step === levelNumber ? "progress-step active" : "progress-step"}
+                disabled={isPlaying}
+                onClick={() => goToLevel(step)}
+              >
+                Lv.{getGlobalLevelFromTowerLevel(towerName, step)}
+                {index < levelSteps.length - 1 ? <span className="progress-arrow">{" > "}</span> : null}
+              </button>
+            ))}
+          </nav>
 
-      <div className="course-tabs" role="tablist" aria-label="Course">
-        {towers.map((tower) => (
-          <button
-            key={tower.name}
-            type="button"
-            role="tab"
-            aria-selected={towerName === tower.name}
-            className={towerName === tower.name ? "tab-button active" : "tab-button"}
-            disabled={isPlaying}
-            onClick={() => handleTowerChange(tower.name)}
-          >
-            {tower.name}
+          <div className="course-tabs" role="tablist" aria-label="Course">
+            {towers.map((tower) => (
+              <button
+                key={tower.name}
+                type="button"
+                role="tab"
+                aria-selected={towerName === tower.name}
+                className={towerName === tower.name ? "tab-button active" : "tab-button"}
+                disabled={isPlaying}
+                onClick={() => handleTowerChange(tower.name)}
+              >
+                {tower.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="top-controls-side">
+          <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
+            <span className="icon-label"><i className="bi bi-trash3" />データ消去</span>
           </button>
-        ))}
+        </div>
       </div>
 
       <section className="workspace">

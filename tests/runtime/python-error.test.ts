@@ -47,4 +47,9 @@ describe("python error handling", () => {
       expect(formatPythonError(error)).toMatch(/^Python runtime error:/);
     }
   });
+
+  it("formats generic Error and non-Error values", () => {
+    expect(formatPythonError(new Error("oops"))).toBe("Python error: oops");
+    expect(formatPythonError("oops")).toBe("Python error: oops");
+  });
 });

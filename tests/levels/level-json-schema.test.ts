@@ -22,4 +22,87 @@ describe("level json schema", () => {
 
     expect(() => parseLevelDefinitionJson(invalid)).toThrow(/stairs/i);
   });
+
+  it("parses abilities and unit metadata", () => {
+    const parsed = parseLevelDefinitionJson({
+      description: "x",
+      tip: "y",
+      clue: "z",
+      timeBonus: 10,
+      aceScore: 20,
+      floor: { width: 4, height: 1 },
+      stairs: { x: 3, y: 0 },
+      warrior: {
+        unitId: "warrior",
+        x: 0,
+        y: 0,
+        direction: "east",
+        abilities: { skills: ["walk()"], stats: ["hp"] },
+      },
+      units: [
+        {
+          unitId: "sludge#1",
+          type: "sludge",
+          x: 2,
+          y: 0,
+          direction: "west",
+          abilities: ["attack!"],
+          abilityConfig: { "attack!": { power: 3 } },
+        },
+      ],
+    });
+
+    expect(parsed.warrior.abilities?.skills).toEqual(["walk()"]);
+    expect(parsed.units[0].unitId).toBe("sludge#1");
+    expect(parsed.units[0].abilities).toEqual(["attack!"]);
+  });
+
+  it("fails when direction is invalid", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "warrior", x: 0, y: 0, direction: "up" },
+        units: [],
+      }),
+    ).toThrow(/must be one of/i);
+  });
+
+  it("fails when integer/string array constraints are violated", () => {
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2.5, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: { unitId: "warrior", x: 0, y: 0, direction: "east" },
+        units: [],
+      }),
+    ).toThrow(/integer/i);
+
+    expect(() =>
+      parseLevelDefinitionJson({
+        description: "x",
+        tip: "y",
+        timeBonus: 1,
+        aceScore: 1,
+        floor: { width: 2, height: 1 },
+        stairs: { x: 1, y: 0 },
+        warrior: {
+          unitId: "warrior",
+          x: 0,
+          y: 0,
+          direction: "east",
+          abilities: { skills: ["walk()"], stats: [1] },
+        },
+        units: [],
+      }),
+    ).toThrow(/string\[\]/i);
+  });
 });

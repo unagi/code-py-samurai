@@ -20,6 +20,7 @@ describe("Intermediate Level 9", () => {
     "direction_of",
     "look",
     "detonate!",
+    "distance_of",
   ];
 
   it("passes with solving strategy", () => {

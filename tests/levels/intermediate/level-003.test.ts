@@ -14,6 +14,8 @@ describe("Intermediate Level 3", () => {
     "attack!",
     "health",
     "rest!",
+    "rescue!",
+    "bind!",
   ];
 
   it("passes with solving strategy", () => {

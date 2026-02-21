@@ -18,6 +18,8 @@ describe("Intermediate Level 8", () => {
     "bind!",
     "listen",
     "direction_of",
+    "look",
+    "detonate!",
   ];
 
   it("passes with solving strategy", () => {

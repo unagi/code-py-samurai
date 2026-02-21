@@ -6,7 +6,7 @@ import type { Space } from "@engine/space";
 import { level005 } from "../../src/levels/beginner";
 
 describe("Beginner Level 5", () => {
-  const inherited = ["walk!", "feel", "attack!", "health", "rest!"];
+  const inherited = ["walk!", "feel", "attack!", "health", "rest!", "rescue!"];
 
   it("is passed with rescue+fight strategy", () => {
     let lastHealth = 20;

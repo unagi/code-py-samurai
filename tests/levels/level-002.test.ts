@@ -20,7 +20,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
     expect(result.passed).toBe(true);
@@ -41,7 +41,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
     expect(result.warriorScore).toBe(12); // Sludge maxHealth = 12
@@ -61,7 +61,7 @@ describe("Beginner Level 2", () => {
     };
 
     const level = new Level(level002);
-    level.setup(player, ["walk!"]);
+    level.setup(player, ["walk!", "feel", "attack!"]);
     level.play();
 
     // Warrior should have taken some damage from Sludge (attack=3)

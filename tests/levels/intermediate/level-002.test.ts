@@ -7,7 +7,7 @@ import type { RelativeDirection } from "@engine/direction";
 import { level002 } from "../../../src/levels/intermediate";
 
 describe("Intermediate Level 2", () => {
-  const inherited = ["walk!", "feel", "direction_of_stairs"];
+  const inherited = ["walk!", "feel", "direction_of_stairs", "attack!", "health", "rest!"];
 
   it("passes with solving strategy", () => {
     const directions: RelativeDirection[] = [
