@@ -174,6 +174,24 @@ describe("compilePythonPlayer", () => {
     ).toThrow(/Unsupported trailing syntax/i);
   });
 
+  it("handles pass statement without error", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        pass`;
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({});
+    player.playTurn(turn as never);
+    expect(turn.action).toBeNull();
+  });
+
+  it("skips rest! when action is unavailable", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.rest()`;
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({});
+    // Remove rest! from available actions to test the guard branch
+    (turn as unknown as { actions: Set<string> }).actions.delete("rest!");
+    player.playTurn(turn as never);
+    expect(turn.action).toBeNull();
+  });
+
   it("wraps non-Error throws as PythonRuntimeError", () => {
     const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
     const player = compilePythonPlayer(source);
