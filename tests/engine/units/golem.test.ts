@@ -3,18 +3,18 @@ import { Golem } from "@engine/units/golem";
 import { Floor } from "@engine/floor";
 import { Turn } from "@engine/turn";
 
-describe("Golem", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const golem = new Golem();
-    golem.maxHealthValue = 10;
-    golem.health = 10;
-    golem.addAbilities("walk!", "feel", "attack!");
-    floor.add(golem, 0, 0, "east");
-    return { floor, golem };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const golem = new Golem();
+  golem.maxHealthValue = 10;
+  golem.health = 10;
+  golem.addAbilities("walk!", "feel", "attack!");
+  floor.add(golem, 0, 0, "east");
+  return { floor, golem };
+}
 
+describe("Golem", () => {
   it("isGolem returns true", () => {
     const { golem } = setup();
     expect(golem.isGolem()).toBe(true);

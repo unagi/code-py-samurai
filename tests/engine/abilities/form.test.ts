@@ -5,17 +5,17 @@ import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 import { Golem } from "@engine/units/golem";
 
-describe("Form", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("form!");
-    floor.add(warrior, 3, 0, "east");
-    const ability = warrior.abilities.get("form!") as Form;
-    return { floor, warrior, ability };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("form!");
+  floor.add(warrior, 3, 0, "east");
+  const ability = warrior.abilities.get("form!") as Form;
+  return { floor, warrior, ability };
+}
 
+describe("Form", () => {
   it("creates golem in empty adjacent space", () => {
     const { floor, ability } = setup();
     ability.perform("forward");

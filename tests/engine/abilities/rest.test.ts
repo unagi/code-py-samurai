@@ -3,16 +3,16 @@ import { Rest } from "@engine/abilities/rest";
 import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 
-describe("Rest", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("rest!");
-    floor.add(warrior, 0, 0, "east");
-    return { warrior };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("rest!");
+  floor.add(warrior, 0, 0, "east");
+  return { warrior };
+}
 
+describe("Rest", () => {
   it("heals 10% of max health", () => {
     const { warrior } = setup();
     warrior.takeDamage(10); // health = 10

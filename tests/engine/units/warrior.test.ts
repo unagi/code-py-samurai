@@ -4,18 +4,18 @@ import { Floor } from "@engine/floor";
 import type { IPlayer, ITurn } from "@engine/types";
 import { Turn } from "@engine/turn";
 
-describe("Warrior", () => {
-  function setup(abilities: string[] = []) {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    if (abilities.length > 0) {
-      warrior.addAbilities(...abilities);
-    }
-    floor.add(warrior, 0, 0, "east");
-    return { floor, warrior };
+function setup(abilities: string[] = []) {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  if (abilities.length > 0) {
+    warrior.addAbilities(...abilities);
   }
+  floor.add(warrior, 0, 0, "east");
+  return { floor, warrior };
+}
 
+describe("Warrior", () => {
   it("has correct stats", () => {
     const warrior = new Warrior();
     expect(warrior.attackPower).toBe(5);

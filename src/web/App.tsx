@@ -108,7 +108,7 @@ function clampLevel(value: unknown, levelCount: number): number {
 
 function readProgressStorage(): ProgressStorageData {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
+    const raw = globalThis.localStorage.getItem(STORAGE_KEY_PROGRESS);
     if (!raw) return {};
     return JSON.parse(raw) as ProgressStorageData;
   } catch {
@@ -197,7 +197,7 @@ function buildBoardGrid(board: string): BoardGridData {
 }
 
 function normalizeIdPrefix(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return value.toLowerCase().replaceAll(/[^a-z0-9]+/g, "");
 }
 
 function parseDamageLine(line: string): { unitId: string; amount: number } | null {
@@ -264,7 +264,7 @@ function buildTileIndexResolver(
       if (kind !== "warrior" && warriorIndex >= 0) {
         indices.sort((a, b) => {
           const d = distanceToWarrior(a) - distanceToWarrior(b);
-          return d !== 0 ? d : a - b;
+          return d === 0 ? a - b : d;
         });
       }
       const tileIndex = indices[used % indices.length];
@@ -544,7 +544,7 @@ export default function App() {
   const [speedMs, setSpeedMs] = useState(450);
   const [playerCode, setPlayerCode] = useState(() => {
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY_PLAYER_CODE);
+      const saved = globalThis.localStorage.getItem(STORAGE_KEY_PLAYER_CODE);
       if (typeof saved === "string" && saved.length > 0) {
         return saved;
       }
@@ -568,7 +568,7 @@ export default function App() {
   const [isCodeDirty, setIsCodeDirty] = useState(false);
 
   const sessionRef = useRef(new LevelSession());
-  const timerRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
@@ -675,7 +675,7 @@ export default function App() {
 
   const stopTimer = (): void => {
     if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current);
+      globalThis.clearInterval(timerRef.current);
       timerRef.current = null;
     }
     setIsPlaying(false);
@@ -719,7 +719,7 @@ export default function App() {
     const playable = isCodeDirty ? startLevel() : canPlay;
     if (!playable) return;
     setIsPlaying(true);
-    timerRef.current = window.setInterval(handleTick, speedMs);
+    timerRef.current = globalThis.setInterval(handleTick, speedMs);
   };
 
   const handlePause = (): void => {
@@ -772,15 +772,15 @@ export default function App() {
   };
 
   const handleClearData = (): void => {
-    const ok = window.confirm("保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？");
+    const ok = globalThis.confirm("保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？");
     if (!ok) return;
 
     stopTimer();
     setShowResultModal(false);
     setHoveredEnemyStats(null);
     try {
-      window.localStorage.removeItem(STORAGE_KEY_PROGRESS);
-      window.localStorage.removeItem(STORAGE_KEY_PLAYER_CODE);
+      globalThis.localStorage.removeItem(STORAGE_KEY_PROGRESS);
+      globalThis.localStorage.removeItem(STORAGE_KEY_PLAYER_CODE);
     } catch {
       // ignore storage errors
     }
@@ -811,10 +811,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const animationTimer = window.setInterval(() => {
+    const animationTimer = globalThis.setInterval(() => {
       setWarriorFrame((prev) => (prev + 1) % WARRIOR_IDLE_FRAME_COUNT);
     }, WARRIOR_IDLE_FRAME_MS);
-    return () => window.clearInterval(animationTimer);
+    return () => globalThis.clearInterval(animationTimer);
   }, []);
 
   function expireDamagePopups() {
@@ -823,8 +823,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    const timer = window.setInterval(expireDamagePopups, 120);
-    return () => window.clearInterval(timer);
+    const timer = globalThis.setInterval(expireDamagePopups, 120);
+    return () => globalThis.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -833,7 +833,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(
+      globalThis.localStorage.setItem(
         STORAGE_KEY_PROGRESS,
         JSON.stringify({ towerName, levelNumber, warriorLevel }),
       );
@@ -844,7 +844,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_KEY_PLAYER_CODE, playerCode);
+      globalThis.localStorage.setItem(STORAGE_KEY_PLAYER_CODE, playerCode);
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
@@ -933,6 +933,12 @@ export default function App() {
                         setHoveredEnemyStats(`${tile.alt.toUpperCase()}  ${tileStats}`);
                       }}
                       onMouseLeave={() => setHoveredEnemyStats(null)}
+                      onFocus={() => {
+                        if (!tileStats) return;
+                        if (tile.kind === "warrior") return;
+                        setHoveredEnemyStats(`${tile.alt.toUpperCase()}  ${tileStats}`);
+                      }}
+                      onBlur={() => setHoveredEnemyStats(null)}
                     >
                       {tileImageSrc ? (
                         <img src={tileImageSrc} alt={tile.alt} className="tile-image" />

@@ -3,16 +3,16 @@ import { Pivot } from "@engine/abilities/pivot";
 import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 
-describe("Pivot", () => {
-  function setup(direction: "north" | "east" | "south" | "west" = "east") {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("pivot!");
-    floor.add(warrior, 3, 0, direction);
-    return { warrior };
-  }
+function setup(direction: "north" | "east" | "south" | "west" = "east") {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("pivot!");
+  floor.add(warrior, 3, 0, direction);
+  return { warrior };
+}
 
+describe("Pivot", () => {
   it("pivots backward (default) - turns 180 degrees", () => {
     const { warrior } = setup("east");
     const pivot = warrior.abilities.get("pivot!") as Pivot;

@@ -9,7 +9,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function asNumber(value: unknown, path: string): number {
   if (typeof value !== "number" || Number.isNaN(value)) {
-    throw new Error(`${path} must be a number`);
+    throw new TypeError(`${path} must be a number`);
   }
   return value;
 }
@@ -17,28 +17,28 @@ function asNumber(value: unknown, path: string): number {
 function asInt(value: unknown, path: string): number {
   const n = asNumber(value, path);
   if (!Number.isInteger(n)) {
-    throw new Error(`${path} must be an integer`);
+    throw new TypeError(`${path} must be an integer`);
   }
   return n;
 }
 
 function asString(value: unknown, path: string): string {
   if (typeof value !== "string") {
-    throw new Error(`${path} must be a string`);
+    throw new TypeError(`${path} must be a string`);
   }
   return value;
 }
 
 function asStringArray(value: unknown, path: string): string[] {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-    throw new Error(`${path} must be string[]`);
+    throw new TypeError(`${path} must be string[]`);
   }
   return value;
 }
 
 function asWarriorAbilities(value: unknown, path: string): { skills: string[]; stats: string[] } {
   if (!isRecord(value)) {
-    throw new Error(`${path} must be an object`);
+    throw new TypeError(`${path} must be an object`);
   }
   return {
     skills: asStringArray(value.skills, `${path}.skills`),
@@ -49,14 +49,14 @@ function asWarriorAbilities(value: unknown, path: string): { skills: string[]; s
 function asDirection(value: unknown, path: string): AbsoluteDirection {
   const direction = asString(value, path);
   if (!VALID_DIRECTIONS.includes(direction as AbsoluteDirection)) {
-    throw new Error(`${path} must be one of: ${VALID_DIRECTIONS.join(", ")}`);
+    throw new TypeError(`${path} must be one of: ${VALID_DIRECTIONS.join(", ")}`);
   }
   return direction as AbsoluteDirection;
 }
 
 function asPoint(value: unknown, path: string): { x: number; y: number } {
   if (!isRecord(value)) {
-    throw new Error(`${path} must be an object`);
+    throw new TypeError(`${path} must be an object`);
   }
   return {
     x: asNumber(value.x, `${path}.x`),
@@ -66,21 +66,21 @@ function asPoint(value: unknown, path: string): { x: number; y: number } {
 
 export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
   if (!isRecord(value)) {
-    throw new Error("level json must be an object");
+    throw new TypeError("level json must be an object");
   }
 
   const floor = isRecord(value.floor) ? value.floor : (() => {
-    throw new Error("floor must be an object");
+    throw new TypeError("floor must be an object");
   })();
   const stairs = asPoint(value.stairs, "stairs");
 
   const warriorRaw = isRecord(value.warrior) ? value.warrior : (() => {
-    throw new Error("warrior must be an object");
+    throw new TypeError("warrior must be an object");
   })();
 
   const unitsRaw = value.units;
   if (!Array.isArray(unitsRaw)) {
-    throw new Error("units must be an array");
+    throw new TypeError("units must be an array");
   }
 
   return {
@@ -106,7 +106,7 @@ export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
     },
     units: unitsRaw.map((unit, index) => {
       if (!isRecord(unit)) {
-        throw new Error(`units[${index}] must be an object`);
+        throw new TypeError(`units[${index}] must be an object`);
       }
       return {
         unitId: asString(unit.unitId, `units[${index}].unitId`),

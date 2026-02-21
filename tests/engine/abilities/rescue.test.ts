@@ -5,16 +5,16 @@ import { Warrior } from "@engine/units/warrior";
 import { Captive } from "@engine/units/captive";
 import { Sludge } from "@engine/units/sludge";
 
-describe("Rescue", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("rescue!");
-    floor.add(warrior, 0, 0, "east");
-    return { floor, warrior };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("rescue!");
+  floor.add(warrior, 0, 0, "east");
+  return { floor, warrior };
+}
 
+describe("Rescue", () => {
   it("rescues a captive and earns 20 points", () => {
     const { floor, warrior } = setup();
     const captive = new Captive();

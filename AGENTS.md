@@ -38,6 +38,12 @@ Notes:
   - Affected scope
   - Whether there is any breaking change
 
+## Preview / Dev Server
+
+- `preview_*` ツール（Claude Preview MCP）はサンドボックス環境の制限により動作しない。
+- UI 変更の確認には `npm run dev` のローカル起動、または `npm run build` の成功を検証手段とする。
+- Stop hook の「Preview Required」警告が出ても `preview_start` を呼ばないこと。
+
 ## Branch and PR Conventions
 
 - Do not push directly to `main` (except initial repository setup).

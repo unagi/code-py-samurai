@@ -68,7 +68,7 @@ export function getGlobalLevelFromTowerLevel(towerName: string, localLevel: numb
 }
 
 export function getMaxWarriorLevel(): number {
-  return Math.max(1, ...Object.keys(WARRIOR_ABILITY_INCREMENTS).map((item) => Number(item)));
+  return Math.max(1, ...Object.keys(WARRIOR_ABILITY_INCREMENTS).map(Number));
 }
 
 export function getWarriorAbilityIncrementAtGlobalLevel(globalLevel: number): WarriorAbilitySet {

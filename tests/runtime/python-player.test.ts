@@ -192,6 +192,17 @@ describe("compilePythonPlayer", () => {
     expect(turn.action).toBeNull();
   });
 
+  it("throws TypeError when predicate is not a function", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = new FakeTurn({
+      feel: () => ({ is_enemy: "not a function" }),
+    });
+
+    expect(() => player.playTurn(turn as never)).toThrow(/not available/i);
+  });
+
   it("wraps non-Error throws as PythonRuntimeError", () => {
     const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
     const player = compilePythonPlayer(source);

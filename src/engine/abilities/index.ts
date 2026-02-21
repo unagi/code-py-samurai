@@ -52,22 +52,20 @@ export function createAbility(
   return new Ctor(unit);
 }
 
-export {
-  Walk,
-  Feel,
-  Health,
-  Attack,
-  Rest,
-  Rescue,
-  Pivot,
-  Look,
-  Shoot,
-  DirectionOfStairs,
-  DirectionOf,
-  DistanceOf,
-  Listen,
-  Bind,
-  Explode,
-  Detonate,
-  Form,
-};
+export { Walk } from "./walk";
+export { Feel } from "./feel";
+export { Health } from "./health";
+export { Attack } from "./attack";
+export { Rest } from "./rest";
+export { Rescue } from "./rescue";
+export { Pivot } from "./pivot";
+export { Look } from "./look";
+export { Shoot } from "./shoot";
+export { DirectionOfStairs } from "./direction-of-stairs";
+export { DirectionOf } from "./direction-of";
+export { DistanceOf } from "./distance-of";
+export { Listen } from "./listen";
+export { Bind } from "./bind";
+export { Explode } from "./explode";
+export { Detonate } from "./detonate";
+export { Form } from "./form";

@@ -65,7 +65,7 @@ def compute_structural_diff(img_a: Image.Image, img_b: Image.Image) -> tuple[flo
 def create_comparison_strip(
     frames: list[Image.Image],
     frame_names: list[str],
-    action_dir: str,
+    _action_dir: str,
 ) -> Image.Image:
     """Create a comparison strip showing frames + diff heatmaps."""
     if not frames:

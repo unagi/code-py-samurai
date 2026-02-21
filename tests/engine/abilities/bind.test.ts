@@ -4,17 +4,17 @@ import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 
-describe("Bind", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("bind!");
-    floor.add(warrior, 0, 0, "east");
-    const ability = warrior.abilities.get("bind!") as Bind;
-    return { floor, warrior, ability };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("bind!");
+  floor.add(warrior, 0, 0, "east");
+  const ability = warrior.abilities.get("bind!") as Bind;
+  return { floor, warrior, ability };
+}
 
+describe("Bind", () => {
   it("binds enemy in given direction", () => {
     const { floor, ability } = setup();
     const sludge = new Sludge();

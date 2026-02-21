@@ -117,7 +117,7 @@ export class Profile {
   }
 
   get storageKey(): string {
-    const safeName = this.warriorName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const safeName = this.warriorName.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
     return `pysamurai-${safeName}-${this.towerName}`;
   }
 

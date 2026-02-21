@@ -5,16 +5,16 @@ import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
-describe("Explode", () => {
-  function setup() {
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    warrior.addAbilities("walk!", "feel", "attack!");
-    floor.add(warrior, 0, 0, "east");
-    return { floor, warrior };
-  }
+function setup() {
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  const warrior = new Warrior();
+  warrior.addAbilities("walk!", "feel", "attack!");
+  floor.add(warrior, 0, 0, "east");
+  return { floor, warrior };
+}
 
+describe("Explode", () => {
   it("deals 100 damage to all units on floor when performed", () => {
     const { floor, warrior } = setup();
     const captive = new Captive();

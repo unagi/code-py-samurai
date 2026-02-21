@@ -4,17 +4,17 @@ import { Floor } from "@engine/floor";
 import { Warrior } from "@engine/units/warrior";
 import { Sludge } from "@engine/units/sludge";
 
-describe("DirectionOf", () => {
-  function setup() {
-    const floor = new Floor(6, 4);
-    floor.placeStairs(5, 3);
-    const warrior = new Warrior();
-    warrior.addAbilities("direction_of");
-    floor.add(warrior, 2, 2, "east");
-    const ability = warrior.abilities.get("direction_of") as DirectionOf;
-    return { floor, warrior, ability };
-  }
+function setup() {
+  const floor = new Floor(6, 4);
+  floor.placeStairs(5, 3);
+  const warrior = new Warrior();
+  warrior.addAbilities("direction_of");
+  floor.add(warrior, 2, 2, "east");
+  const ability = warrior.abilities.get("direction_of") as DirectionOf;
+  return { floor, warrior, ability };
+}
 
+describe("DirectionOf", () => {
   it("returns forward for space ahead", () => {
     const { floor, ability } = setup();
     const space = floor.space(4, 2);
