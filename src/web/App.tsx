@@ -167,7 +167,6 @@ function createCodeEditor(
 }
 
 export default function App() {
-  const [playerName, setPlayerName] = useState("Samurai");
   const [towerName, setTowerName] = useState("beginner");
   const [speedMs, setSpeedMs] = useState(450);
   const [playerCode, setPlayerCode] = useState(FIXED_PLAYER_CODE);
@@ -249,26 +248,27 @@ export default function App() {
         <header className="game-header">
           <h1>Py Samurai</h1>
           <div className="controls">
-            <label>
-              Name
-              <input value={playerName} onChange={(e) => setPlayerName(e.target.value)} />
-            </label>
-            <label>
-              Course
-              <select value={towerName} onChange={(e) => setTowerName(e.target.value)}>
-                {towers.map((tower) => (
-                  <option key={tower.name} value={tower.name}>
-                    {tower.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="course-tabs" role="tablist" aria-label="Course">
+              {towers.map((tower) => (
+                <button
+                  key={tower.name}
+                  type="button"
+                  role="tab"
+                  aria-selected={towerName === tower.name}
+                  className={towerName === tower.name ? "tab-button active" : "tab-button"}
+                  disabled={isPlaying}
+                  onClick={() => setTowerName(tower.name)}
+                >
+                  {tower.name}
+                </button>
+              ))}
+            </div>
             <button onClick={startLevel}>Start Level #1</button>
           </div>
         </header>
 
         <p className="run-state">
-          Player: <strong>{playerName || "Samurai"}</strong> / State: <strong>{isPlaying ? "Running" : "Ready"}</strong>
+          Course: <strong>{towerName}</strong> / State: <strong>{isPlaying ? "Running" : "Ready"}</strong>
         </p>
         <p className="description">{level.description}</p>
 

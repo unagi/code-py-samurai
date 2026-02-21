@@ -79,6 +79,25 @@ button:hover {
   min-width: 150px;
 }
 
+.course-tabs {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.tab-button {
+  border: 1px solid #b8a58a;
+  border-radius: 999px;
+  background: #f8efdf;
+  color: #4e351f;
+  padding: 0.35rem 0.7rem;
+}
+
+.tab-button.active {
+  border-color: #8d5b33;
+  background: #a86a3b;
+  color: #fffaf2;
+}
+
 .game-header {
   display: flex;
   justify-content: space-between;
