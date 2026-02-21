@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./web/styles.css";
+import "./i18n/config";
 import App from "./web/App";
 
 const container = document.querySelector<HTMLDivElement>("#app");
