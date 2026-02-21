@@ -1,0 +1,100 @@
+{
+  "description": "Never before have you seen a room so full of sludge. Start the fireworks!",
+  "tip": "Be careful not to let the ticking captive get caught in the flames. Use warrior.distance_of to avoid the captives.",
+  "clue": "Be sure to bind the surrounding enemies before fighting. Check your health before detonating explosives.",
+  "timeBonus": 70,
+  "aceScore": 0,
+  "floor": {
+    "width": 4,
+    "height": 3
+  },
+  "stairs": {
+    "x": 3,
+    "y": 0
+  },
+  "warrior": {
+    "x": 0,
+    "y": 1,
+    "direction": "east",
+    "abilities": {
+      "skills": [
+        "distance_of(space)"
+      ],
+      "stats": []
+    },
+    "unitId": "warrior"
+  },
+  "units": [
+    {
+      "type": "captive",
+      "x": 2,
+      "y": 0,
+      "direction": "south",
+      "abilities": [
+        "explode!"
+      ],
+      "abilityConfig": {
+        "explode!": {
+          "time": 20
+        }
+      },
+      "unitId": "captive#1"
+    },
+    {
+      "type": "captive",
+      "x": 2,
+      "y": 2,
+      "direction": "north",
+      "unitId": "captive#2"
+    },
+    {
+      "type": "sludge",
+      "x": 0,
+      "y": 0,
+      "direction": "south",
+      "unitId": "sludge#1"
+    },
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 0,
+      "direction": "south",
+      "unitId": "sludge#2"
+    },
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 1,
+      "direction": "east",
+      "unitId": "sludge#3"
+    },
+    {
+      "type": "sludge",
+      "x": 2,
+      "y": 1,
+      "direction": "east",
+      "unitId": "sludge#4"
+    },
+    {
+      "type": "sludge",
+      "x": 3,
+      "y": 1,
+      "direction": "east",
+      "unitId": "sludge#5"
+    },
+    {
+      "type": "sludge",
+      "x": 0,
+      "y": 2,
+      "direction": "north",
+      "unitId": "sludge#6"
+    },
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 2,
+      "direction": "north",
+      "unitId": "sludge#7"
+    }
+  ]
+}

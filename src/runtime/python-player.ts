@@ -14,7 +14,6 @@ const ACTION_MAP: Record<string, string> = {
 };
 
 const SPACE_PREDICATES = new Set([
-  "is_empty",
   "is_enemy",
   "is_captive",
   "is_stairs",
@@ -26,9 +25,12 @@ type CompareOp = "<" | "<=" | ">" | ">=" | "==" | "!=";
 type Expr =
   | { kind: "number"; value: number }
   | { kind: "string"; value: string }
+  | { kind: "none" }
   | { kind: "var"; name: string }
+  | { kind: "warrior_property"; name: string }
   | { kind: "sense"; sense: string; args: Expr[] }
   | { kind: "predicate"; target: Expr; name: string }
+  | { kind: "is_none"; target: Expr; negated: boolean }
   | { kind: "compare"; left: Expr; op: CompareOp; right: Expr }
   | { kind: "not"; expr: Expr };
 
@@ -51,6 +53,26 @@ function normalizeDirection(value: unknown): string {
   return value;
 }
 
+function countIndent(raw: string): number {
+  let width = 0;
+  for (const ch of raw) {
+    if (ch === " ") {
+      width += 1;
+      continue;
+    }
+    if (ch === "\t") {
+      width += 2;
+      continue;
+    }
+    if (ch === "\u3000") {
+      width += 2;
+      continue;
+    }
+    break;
+  }
+  return width;
+}
+
 function tokenizePlayTurn(source: string): TokenLine[] {
   const normalized = source.replace(/\r\n?/g, "\n");
   if (normalized.trim().length === 0) {
@@ -64,7 +86,7 @@ function tokenizePlayTurn(source: string): TokenLine[] {
   }
 
   const defLine = lines[defIndex];
-  const defIndent = defLine.match(/^\s*/)?.[0].length ?? 0;
+  const defIndent = countIndent(defLine);
   const tokens: TokenLine[] = [];
 
   for (let i = defIndex + 1; i < lines.length; i++) {
@@ -73,7 +95,7 @@ function tokenizePlayTurn(source: string): TokenLine[] {
       continue;
     }
 
-    const indent = raw.match(/^\s*/)?.[0].length ?? 0;
+    const indent = countIndent(raw);
     if (indent <= defIndent) {
       break;
     }
@@ -216,6 +238,10 @@ function parseWarriorAction(text: string, lineNo: number): Stmt | null {
 function parseExpr(raw: string, lineNo: number): Expr {
   const text = raw.trim();
 
+  if (text === "None") {
+    return { kind: "none" };
+  }
+
   if (/^\d+$/.test(text)) {
     return { kind: "number", value: Number(text) };
   }
@@ -229,6 +255,24 @@ function parseExpr(raw: string, lineNo: number): Expr {
     return {
       kind: "not",
       expr: parseExpr(text.slice(4), lineNo),
+    };
+  }
+
+  const isNotNone = text.match(/^(.+)\s+is\s+not\s+None$/);
+  if (isNotNone) {
+    return {
+      kind: "is_none",
+      target: parseExpr(isNotNone[1], lineNo),
+      negated: true,
+    };
+  }
+
+  const isNone = text.match(/^(.+)\s+is\s+None$/);
+  if (isNone) {
+    return {
+      kind: "is_none",
+      target: parseExpr(isNone[1], lineNo),
+      negated: false,
     };
   }
 
@@ -267,6 +311,14 @@ function parseExpr(raw: string, lineNo: number): Expr {
     return { kind: "var", name: text };
   }
 
+  const warriorProperty = text.match(/^warrior\.([A-Za-z_][A-Za-z0-9_]*)$/);
+  if (warriorProperty) {
+    if (warriorProperty[1] !== "hp") {
+      throw new ParseError(`Unsupported warrior property '${warriorProperty[1]}' at line ${lineNo}.`);
+    }
+    return { kind: "warrior_property", name: warriorProperty[1] };
+  }
+
   throw new ParseError(`Unsupported expression at line ${lineNo}: ${text}`);
 }
 
@@ -276,11 +328,15 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
       return expr.value;
     case "string":
       return expr.value;
+    case "none":
+      return null;
     case "var":
       if (!env.has(expr.name)) {
         throw new Error(`Unknown variable: ${expr.name}`);
       }
       return env.get(expr.name);
+    case "warrior_property":
+      return callSense(turn, expr.name);
     case "sense": {
       const args = expr.args.map((arg) => evalExpr(arg, turn, env));
       return callSense(turn, expr.sense, ...args);
@@ -293,20 +349,25 @@ function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unk
       }
       return fn.call(target);
     }
+    case "is_none": {
+      const value = evalExpr(expr.target, turn, env);
+      const result = value === null;
+      return expr.negated ? !result : result;
+    }
     case "not":
       return !Boolean(evalExpr(expr.expr, turn, env));
     case "compare": {
-      const left = evalExpr(expr.left, turn, env) as number;
-      const right = evalExpr(expr.right, turn, env) as number;
+      const left = evalExpr(expr.left, turn, env);
+      const right = evalExpr(expr.right, turn, env);
       switch (expr.op) {
         case "<":
-          return left < right;
+          return Number(left) < Number(right);
         case "<=":
-          return left <= right;
+          return Number(left) <= Number(right);
         case ">":
-          return left > right;
+          return Number(left) > Number(right);
         case ">=":
-          return left >= right;
+          return Number(left) >= Number(right);
         case "==":
           return left === right;
         case "!=":

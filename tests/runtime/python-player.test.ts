@@ -80,8 +80,8 @@ describe("compilePythonPlayer", () => {
     expect(() => compilePythonPlayer("   \n\n")).toThrow(/empty/i);
   });
 
-  it("executes if/elif/else by sensed space and health", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.attack()\n        elif warrior.health() < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
+  it("executes if/elif/else by sensed space and hp property", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is None:\n            if warrior.hp < 8:\n                warrior.rest()\n            else:\n                warrior.walk()\n        elif space.is_enemy():\n            warrior.attack()\n        elif warrior.hp < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
 
     const player = compilePythonPlayer(source);
 
@@ -107,9 +107,36 @@ describe("compilePythonPlayer", () => {
     expect(walkTurn.action).toEqual(["walk!", "forward"]);
   });
 
+  it("supports is not None", () => {
+    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is not None:\n            warrior.attack()\n        else:\n            warrior.walk()`;
+
+    const player = compilePythonPlayer(source);
+    const enemyTurn = new FakeTurn({
+      feel: () => new FakeSpace(true, false, false),
+    });
+    player.playTurn(enemyTurn as never);
+    expect(enemyTurn.action).toEqual(["attack!", "forward"]);
+  });
+
   it("throws on unsupported syntax", () => {
     const source = `class Player:\n    def play_turn(self, warrior):\n        for x in range(3):\n            warrior.walk()`;
 
     expect(() => compilePythonPlayer(source)).toThrow(/unsupported/i);
+  });
+
+  it("accepts 2-space indentation", () => {
+    const source = `class Player:\n  def play_turn(self, warrior):\n    warrior.walk()`;
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({});
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("accepts tab indentation", () => {
+    const source = "class Player:\n\tdef play_turn(self, warrior):\n\t\twarrior.walk()";
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({});
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
   });
 });

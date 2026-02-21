@@ -11,7 +11,6 @@ function callBoolMethod(target: Record<string, unknown>, snake: string, camel: s
 }
 
 export interface PythonSpace {
-  is_empty(): boolean;
   is_enemy(): boolean;
   is_captive(): boolean;
   is_stairs(): boolean;
@@ -21,7 +20,6 @@ export interface PythonSpace {
 export function wrapSpace(value: unknown): PythonSpace {
   const target = value as Record<string, unknown>;
   return {
-    is_empty: () => callBoolMethod(target, "is_empty", "isEmpty"),
     is_enemy: () => callBoolMethod(target, "is_enemy", "isEnemy"),
     is_captive: () => callBoolMethod(target, "is_captive", "isCaptive"),
     is_stairs: () => callBoolMethod(target, "is_stairs", "isStairs"),
@@ -43,6 +41,11 @@ export function toPythonValue(value: unknown): unknown {
     return value.map((item) => toPythonValue(item));
   }
   if (looksLikeSpace(value)) {
+    const target = value as Record<string, unknown>;
+    const isEmpty = callBoolMethod(target, "is_empty", "isEmpty");
+    if (isEmpty) {
+      return null;
+    }
     return wrapSpace(value);
   }
   return value;

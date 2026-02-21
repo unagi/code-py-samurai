@@ -22,5 +22,6 @@ export function asRuntimeTurn(turn: ITurn): RuntimeTurn {
 }
 
 export function callSense(turn: RuntimeTurn, name: string, ...args: unknown[]): unknown {
-  return toPythonValue(turn.doSense(name, ...args));
+  const senseName = name === "hp" ? "health" : name;
+  return toPythonValue(turn.doSense(senseName, ...args));
 }

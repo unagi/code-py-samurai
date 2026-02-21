@@ -51,9 +51,9 @@ describe("runtime bridge", () => {
     expect(turn.action).toEqual(["walk!", "forward"]);
   });
 
-  it("maps sensed Space to python-style methods", () => {
+  it("maps empty sensed Space to python None", () => {
     const turn = asRuntimeTurn(new FakeTurn());
-    const pySpace = callSense(turn, "feel") as { is_empty: () => boolean };
-    expect(pySpace.is_empty()).toBe(true);
+    const pySpace = callSense(turn, "feel");
+    expect(pySpace).toBeNull();
   });
 });

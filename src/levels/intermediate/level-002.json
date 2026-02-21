@@ -1,0 +1,54 @@
+{
+  "description": "Another large room, but with several enemies blocking your way to the stairs.",
+  "tip": "Just like walking, you can attack and feel in multiple directions (forward, left, right, backward).",
+  "clue": "Call warrior.feel(direction).is_enemy() in each direction to make sure there isn't an enemy beside you (attack if there is). Call warrior.rest() if you're low on health when there are no enemies around.",
+  "timeBonus": 40,
+  "aceScore": 84,
+  "floor": {
+    "width": 4,
+    "height": 2
+  },
+  "stairs": {
+    "x": 3,
+    "y": 1
+  },
+  "warrior": {
+    "x": 0,
+    "y": 0,
+    "direction": "east",
+    "abilities": {
+      "skills": [
+        "attack()",
+        "attack('left')",
+        "rest()"
+      ],
+      "stats": [
+        "hp"
+      ]
+    },
+    "unitId": "warrior"
+  },
+  "units": [
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 0,
+      "direction": "west",
+      "unitId": "sludge#1"
+    },
+    {
+      "type": "thick_sludge",
+      "x": 2,
+      "y": 1,
+      "direction": "west",
+      "unitId": "thicksludge#1"
+    },
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 1,
+      "direction": "north",
+      "unitId": "sludge#2"
+    }
+  ]
+}

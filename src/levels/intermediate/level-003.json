@@ -1,0 +1,60 @@
+{
+  "description": "You feel slime on all sides, you're surrounded!",
+  "tip": "Call warrior.bind(direction) to bind an enemy to keep him from attacking. Bound enemies look like captives.",
+  "clue": "Count the number of enemies around you. Bind an enemy if there are two or more.",
+  "timeBonus": 50,
+  "aceScore": 101,
+  "floor": {
+    "width": 3,
+    "height": 3
+  },
+  "stairs": {
+    "x": 0,
+    "y": 0
+  },
+  "warrior": {
+    "x": 1,
+    "y": 1,
+    "direction": "east",
+    "abilities": {
+      "skills": [
+        "rescue()",
+        "rescue('right')",
+        "bind()",
+        "bind('left')"
+      ],
+      "stats": []
+    },
+    "unitId": "warrior"
+  },
+  "units": [
+    {
+      "type": "sludge",
+      "x": 1,
+      "y": 0,
+      "direction": "west",
+      "unitId": "sludge#1"
+    },
+    {
+      "type": "captive",
+      "x": 1,
+      "y": 2,
+      "direction": "west",
+      "unitId": "captive#1"
+    },
+    {
+      "type": "sludge",
+      "x": 0,
+      "y": 1,
+      "direction": "west",
+      "unitId": "sludge#2"
+    },
+    {
+      "type": "sludge",
+      "x": 2,
+      "y": 1,
+      "direction": "west",
+      "unitId": "sludge#3"
+    }
+  ]
+}

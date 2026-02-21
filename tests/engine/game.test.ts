@@ -18,8 +18,8 @@ function createTestTower(): Tower {
     timeBonus: 10,
     aceScore: 10,
     floor: { width: 4, height: 1 },
-    stairs: [3, 0],
-    warrior: { x: 0, y: 0, direction: "east", abilities: ["walk!"] },
+    stairs: { x: 3, y: 0 },
+    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["walk()"], stats: [] } },
     units: [],
   };
 
@@ -30,8 +30,8 @@ function createTestTower(): Tower {
     timeBonus: 15,
     aceScore: 20,
     floor: { width: 5, height: 1 },
-    stairs: [4, 0],
-    warrior: { x: 0, y: 0, direction: "east", abilities: ["feel", "attack!"] },
+    stairs: { x: 4, y: 0 },
+    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["feel()", "attack()"], stats: [] } },
     units: [{ type: "sludge", x: 2, y: 0, direction: "west" }],
   };
 
@@ -42,8 +42,8 @@ function createTestTower(): Tower {
     timeBonus: 20,
     aceScore: 30,
     floor: { width: 6, height: 1 },
-    stairs: [5, 0],
-    warrior: { x: 0, y: 0, direction: "east", abilities: ["health", "rest!"] },
+    stairs: { x: 5, y: 0 },
+    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["rest()"], stats: ["hp"] } },
     units: [{ type: "sludge", x: 3, y: 0, direction: "west" }],
   };
 

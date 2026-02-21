@@ -8,6 +8,7 @@ import { Turn } from "../turn";
  * Ported from RubyWarrior::Units::Base
  */
 export abstract class BaseUnit implements IUnit {
+  private _unitId: string;
   position: Position | null = null;
   private _health: number | null = null;
   private _bound: boolean = false;
@@ -17,6 +18,7 @@ export abstract class BaseUnit implements IUnit {
 
   constructor(logger?: ILogger) {
     this._logger = logger ?? { log: () => {} };
+    this._unitId = this.name.toLowerCase().replace(/[^a-z0-9]+/g, "") || "unit";
   }
 
   // Override in subclass
@@ -34,6 +36,15 @@ export abstract class BaseUnit implements IUnit {
   }
   get name(): string {
     return this.constructor.name;
+  }
+
+  get unitId(): string {
+    return this._unitId;
+  }
+
+  setUnitId(id: string): void {
+    const normalized = id.toLowerCase().replace(/[^a-z0-9#_-]+/g, "");
+    this._unitId = normalized.length > 0 ? normalized : this._unitId;
   }
 
   get health(): number {
@@ -97,7 +108,7 @@ export abstract class BaseUnit implements IUnit {
   }
 
   say(msg: string): void {
-    this._logger.log(`${this.name} ${msg}`);
+    this._logger.log(`${this._unitId} ${msg}`);
   }
 
   addAbilities(...abilityNames: string[]): void {

@@ -1,0 +1,48 @@
+{
+  "description": "You can feel the stairs right next to you, but are you sure you want to go up them right away?",
+  "tip": "You'll get more points for clearing the level first. Don't rush to stairs. Prioritize nearby units first, then head toward stairs with warrior.direction_of_stairs().",
+  "clue": "If going towards a unit is the same direction as the stairs, try moving another empty direction until you can safely move toward the enemies.",
+  "timeBonus": 45,
+  "aceScore": 107,
+  "floor": {
+    "width": 5,
+    "height": 2
+  },
+  "stairs": {
+    "x": 1,
+    "y": 1
+  },
+  "warrior": {
+    "x": 0,
+    "y": 1,
+    "direction": "east",
+    "abilities": {
+      "skills": [],
+      "stats": []
+    },
+    "unitId": "warrior"
+  },
+  "units": [
+    {
+      "type": "thick_sludge",
+      "x": 4,
+      "y": 0,
+      "direction": "west",
+      "unitId": "thicksludge#1"
+    },
+    {
+      "type": "thick_sludge",
+      "x": 3,
+      "y": 1,
+      "direction": "north",
+      "unitId": "thicksludge#2"
+    },
+    {
+      "type": "captive",
+      "x": 4,
+      "y": 1,
+      "direction": "west",
+      "unitId": "captive#1"
+    }
+  ]
+}
