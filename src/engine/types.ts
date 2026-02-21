@@ -1,6 +1,8 @@
-import type { AbsoluteDirection, RelativeDirection } from "./direction";
+import type { AbsoluteDirection } from "./direction";
 import type { Position } from "./position";
 import type { Space } from "./space";
+import type { BaseAbility } from "./abilities/base";
+import type { Turn } from "./turn";
 
 /**
  * Minimal interface for Floor, used by Position/Space to avoid circular deps.
@@ -12,6 +14,8 @@ export interface IFloor {
   units: IUnit[];
   outOfBounds(x: number, y: number): boolean;
   get(x: number, y: number): IUnit | undefined;
+  space(x: number, y: number): Space;
+  add(unit: IUnit, x: number, y: number, direction?: AbsoluteDirection): void;
 }
 
 /**
@@ -24,6 +28,7 @@ export interface IUnit {
   readonly maxHealth: number;
   readonly attackPower: number;
   readonly shootPower: number;
+  readonly abilities: Map<string, BaseAbility>;
   isBound(): boolean;
   isWarrior(): boolean;
   isGolem(): boolean;
@@ -34,6 +39,11 @@ export interface IUnit {
   say(msg: string): void;
   unbind(): void;
   bind(): void;
+  setUnitId(id: string): void;
+  addAbilities(...names: string[]): void;
+  prepareTurn(): void;
+  performTurn(): void;
+  playTurn(turn: Turn): void;
 }
 
 /**

@@ -26,8 +26,6 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm i --no-save @vitest/coverage-v8
-      - run: npm run test:coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6

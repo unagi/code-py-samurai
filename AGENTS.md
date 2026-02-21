@@ -47,6 +47,7 @@ Notes:
   - `docs/<short-topic>`
 - Before creating a PR:
   - Re-run `npm test`
+  - Run `npm run lint` (ESLint + sonarjs) to catch code smells before SonarCloud review
   - Review changed files and descriptions for accuracy
 - In PR description, include:
   - Summary of changes

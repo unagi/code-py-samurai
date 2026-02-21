@@ -11,6 +11,20 @@ const walkingPlayer: IPlayer = {
   },
 };
 
+describe("Level setup", () => {
+  it("ignores unknown unit types gracefully", () => {
+    const definition = {
+      ...level001,
+      units: [{ type: "unknown-monster", x: 3, y: 0, direction: "east" as const }],
+    };
+    const level = new Level(definition);
+    // Should not throw even though unit type is unrecognised
+    level.setup(walkingPlayer, ["walk!"]);
+    // Only the warrior should be on the floor
+    expect(level.floor.units.length).toBe(1);
+  });
+});
+
 describe("Level step API", () => {
   it("updates turn count one step at a time", () => {
     const level = new Level(level001);

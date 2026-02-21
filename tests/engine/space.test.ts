@@ -24,6 +24,10 @@ function createMockFloor(opts: {
       }
       return undefined;
     },
+    space() {
+      throw new Error("not implemented in mock");
+    },
+    add() {},
   };
 }
 
@@ -35,6 +39,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     maxHealth: 20,
     attackPower: 5,
     shootPower: 3,
+    abilities: new Map(),
     isBound: () => false,
     isWarrior: () => false,
     isGolem: () => false,
@@ -45,6 +50,11 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     say: () => {},
     unbind: () => {},
     bind: () => {},
+    setUnitId: () => {},
+    addAbilities: () => {},
+    prepareTurn: () => {},
+    performTurn: () => {},
+    playTurn: () => {},
     ...overrides,
   };
 }

@@ -20,6 +20,10 @@ function createMockFloor(
     get(_x: number, _y: number) {
       return undefined;
     },
+    space() {
+      throw new Error("not implemented in mock");
+    },
+    add() {},
   };
 }
 

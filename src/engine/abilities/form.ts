@@ -25,7 +25,7 @@ export class Form extends BaseAbility {
       }
 
       this._unit.health -= golemHealth;
-      (pos.floor as any).add(golem, x, y, pos.direction);
+      pos.floor.add(golem, x, y, pos.direction);
 
       this._unit.say(
         `forms a golem ${direction} and gives half of health (${golemHealth})`
