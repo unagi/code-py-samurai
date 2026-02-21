@@ -1069,7 +1069,7 @@ export default function App() {
       </section>
 
       {showResultModal && result ? (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t("result.heading")}>
+        <dialog className="modal-backdrop" open aria-label={t("result.heading")}>
           <article className="modal-card">
             <h3>🏁 {t("result.heading")}</h3>
             <p className="result-status">{result.passed ? t("result.clear") : t("result.failed")}</p>
@@ -1104,7 +1104,7 @@ export default function App() {
               )}
             </div>
           </article>
-        </div>
+        </dialog>
       ) : null}
     </main>
   );
