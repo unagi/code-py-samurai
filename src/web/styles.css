@@ -121,6 +121,13 @@ pre {
   min-height: 8rem;
 }
 
+.editor-host {
+  border: 1px solid #dac8a9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fffdf8;
+}
+
 .result-status {
   font-size: 1.2rem;
   font-weight: 700;

@@ -4,6 +4,8 @@ import type { Space } from "../engine/space";
 import { Turn } from "../engine/turn";
 import type { IPlayer, ITurn, ILogger, LevelDefinition } from "../engine/types";
 import { towers } from "../levels";
+import { basicSetup, EditorView } from "codemirror";
+import { python } from "@codemirror/lang-python";
 
 const FIXED_PLAYER_CODE = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.attack()\n        elif warrior.health() < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
 
@@ -34,10 +36,10 @@ class LevelSession {
   private _logger = new MemoryLogger();
   private _level: Level | null = null;
 
-  setup(levelDef: LevelDefinition): void {
+  setup(levelDef: LevelDefinition, playerCode: string): void {
     this._logger.clear();
     this._level = new Level(levelDef, this._logger);
-    this._level.setup(createFixedPlayer(), []);
+    this._level.setup(createScriptedPlayer(playerCode), []);
   }
 
   step(): boolean {
@@ -68,28 +70,37 @@ interface AppState {
   towerName: string;
   levelNumber: number;
   speedMs: number;
+  playerCode: string;
 }
 
-function createFixedPlayer(): IPlayer {
+function createScriptedPlayer(source: string): IPlayer {
+  const canFeel = /\bfeel\s*\(/.test(source);
+  const canHealth = /\bhealth\s*\(/.test(source);
+  const canWalk = /\bwalk\s*\(/.test(source);
+  const canAttack = /\battack\s*\(/.test(source);
+  const canRescue = /\brescue\s*\(/.test(source);
+  const canRest = /\brest\s*\(/.test(source);
+  const canPivot = /\bpivot\s*\(/.test(source);
+
   return {
     playTurn(turn: ITurn): void {
       const t = turn as Turn;
 
-      if (t.hasSense("feel")) {
+      if (canFeel && t.hasSense("feel")) {
         for (const direction of RELATIVE_DIRECTIONS) {
           const space = t.doSense("feel", direction) as Space;
-          if (space.isEnemy() && t.hasAction("attack!")) {
+          if (canAttack && space.isEnemy() && t.hasAction("attack!")) {
             t.doAction("attack!", direction);
             return;
           }
-          if (space.isCaptive() && t.hasAction("rescue!")) {
+          if (canRescue && space.isCaptive() && t.hasAction("rescue!")) {
             t.doAction("rescue!", direction);
             return;
           }
         }
       }
 
-      if (t.hasSense("health") && t.hasAction("rest!")) {
+      if (canHealth && canRest && t.hasSense("health") && t.hasAction("rest!")) {
         const health = t.doSense("health") as number;
         if (health <= 8) {
           t.doAction("rest!");
@@ -97,16 +108,46 @@ function createFixedPlayer(): IPlayer {
         }
       }
 
-      if (t.hasAction("walk!")) {
+      if (canWalk && t.hasAction("walk!")) {
         t.doAction("walk!", "forward");
         return;
       }
 
-      if (t.hasAction("pivot!")) {
+      if (canPivot && t.hasAction("pivot!")) {
         t.doAction("pivot!", "backward");
       }
     },
   };
+}
+
+function createCodeEditor(
+  parent: HTMLElement,
+  initialCode: string,
+  onChange: (code: string) => void,
+): EditorView {
+  return new EditorView({
+    doc: initialCode,
+    parent,
+    extensions: [
+      basicSetup,
+      python(),
+      EditorView.theme({
+        "&": {
+          minHeight: "220px",
+          fontSize: "14px",
+        },
+        ".cm-scroller": {
+          overflow: "auto",
+          fontFamily: "\"UDEV Gothic 35\", \"SFMono-Regular\", Consolas, monospace",
+        },
+      }),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          onChange(update.state.doc.toString());
+        }
+      }),
+    ],
+  });
 }
 
 function getLevelDefinition(state: AppState): LevelDefinition {
@@ -135,10 +176,12 @@ export function mountApp(): void {
     towerName: "beginner",
     levelNumber: 1,
     speedMs: 450,
+    playerCode: FIXED_PLAYER_CODE,
   };
 
   const session = new LevelSession();
   let timer: ReturnType<typeof setInterval> | null = null;
+  let editorView: EditorView | null = null;
 
   const stopTimer = (): void => {
     if (timer) {
@@ -171,7 +214,7 @@ export function mountApp(): void {
   const resetSession = (): void => {
     stopTimer();
     const level = getLevelDefinition(state);
-    session.setup(level);
+    session.setup(level, state.playerCode);
     refreshGameState();
   };
 
@@ -241,8 +284,8 @@ export function mountApp(): void {
             </article>
           </div>
           <article class="panel-sub">
-            <h3>固定プレイヤーコード（Phase 3-2）</h3>
-            <pre class="code-view">${escapeHtml(FIXED_PLAYER_CODE)}</pre>
+            <h3>Player Code (CodeMirror)</h3>
+            <div id="editor-host" class="editor-host"></div>
           </article>
         </section>
       </main>
@@ -252,6 +295,17 @@ export function mountApp(): void {
     const pause = root.querySelector<HTMLButtonElement>("#pause");
     const reset = root.querySelector<HTMLButtonElement>("#reset");
     const toTitle = root.querySelector<HTMLButtonElement>("#to-title");
+    const editorHost = root.querySelector<HTMLDivElement>("#editor-host");
+
+    if (editorView) {
+      editorView.destroy();
+      editorView = null;
+    }
+    if (editorHost) {
+      editorView = createCodeEditor(editorHost, state.playerCode, (code) => {
+        state.playerCode = code;
+      });
+    }
 
     play?.addEventListener("click", () => {
       if (timer) return;
@@ -268,6 +322,10 @@ export function mountApp(): void {
 
     toTitle?.addEventListener("click", () => {
       stopTimer();
+      if (editorView) {
+        editorView.destroy();
+        editorView = null;
+      }
       state.screen = "title";
       render();
     });
@@ -306,6 +364,10 @@ export function mountApp(): void {
     });
 
     backTitle?.addEventListener("click", () => {
+      if (editorView) {
+        editorView.destroy();
+        editorView = null;
+      }
       state.screen = "title";
       render();
     });
