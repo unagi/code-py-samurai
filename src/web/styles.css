@@ -1,0 +1,139 @@
+:root {
+  color-scheme: light;
+  font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
+  background: linear-gradient(180deg, #f5f7e8 0%, #efe5d6 100%);
+  color: #23201a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.layout {
+  width: min(1100px, 92vw);
+  margin: 2rem auto;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #c7b9a2;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 24px rgba(47, 31, 9, 0.1);
+}
+
+.title-panel,
+.result-panel {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.8rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #b8a58a;
+  border-radius: 8px;
+}
+
+button {
+  border: 1px solid #8d5b33;
+  border-radius: 8px;
+  background: #a86a3b;
+  color: #fffaf2;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #90572e;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.description {
+  margin: 0 0 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel-sub {
+  background: #fdf9f1;
+  border: 1px solid #dac8a9;
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.88rem;
+}
+
+#board {
+  min-height: 7rem;
+}
+
+#logs {
+  min-height: 7rem;
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.code-view {
+  min-height: 8rem;
+}
+
+.result-status {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+@media (max-width: 740px) {
+  .layout {
+    width: 94vw;
+    margin: 1rem auto;
+  }
+
+  .game-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

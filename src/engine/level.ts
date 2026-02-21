@@ -23,11 +23,13 @@ export class Level {
   floor!: Floor;
   warrior!: Warrior;
   private _timeBonus: number;
+  private _turnCount: number;
   private _logger: ILogger;
 
   constructor(definition: LevelDefinition, logger?: ILogger) {
     this.definition = definition;
     this._timeBonus = definition.timeBonus;
+    this._turnCount = 0;
     this._logger = logger ?? { log: () => {} };
   }
 
@@ -76,38 +78,54 @@ export class Level {
     }
 
     this._timeBonus = this.definition.timeBonus;
+    this._turnCount = 0;
   }
 
   /**
    * Run the level for up to maxTurns.
    */
   play(maxTurns: number = 1000): LevelResult {
-    let turnCount = 0;
-
     for (let n = 0; n < maxTurns; n++) {
-      if (this.passed() || this.failed()) break;
-
-      turnCount = n + 1;
-      this._logger.log(`- turn ${turnCount} -`);
-      this._logger.log(this.floor.character());
-
-      // Prepare all units' turns (calls playTurn which records actions)
-      const aliveUnits = this.floor.units;
-      for (const unit of aliveUnits) {
-        (unit as any).prepareTurn();
-      }
-
-      // Perform all units' turns (executes recorded actions)
-      for (const unit of this.floor.units) {
-        (unit as any).performTurn();
-      }
-
-      if (this._timeBonus > 0) {
-        this._timeBonus--;
-      }
+      if (!this.step()) break;
     }
 
-    return this.getResult(turnCount);
+    return this.result();
+  }
+
+  /**
+   * Execute exactly one turn. Returns true when the level can continue.
+   */
+  step(): boolean {
+    if (this.passed() || this.failed()) return false;
+
+    this._turnCount += 1;
+    this._logger.log(`- turn ${this._turnCount} -`);
+    this._logger.log(this.floor.character());
+
+    // Prepare all units' turns (calls playTurn which records actions)
+    const aliveUnits = this.floor.units;
+    for (const unit of aliveUnits) {
+      (unit as any).prepareTurn();
+    }
+
+    // Perform all units' turns (executes recorded actions)
+    for (const unit of this.floor.units) {
+      (unit as any).performTurn();
+    }
+
+    if (this._timeBonus > 0) {
+      this._timeBonus--;
+    }
+
+    return !this.passed() && !this.failed();
+  }
+
+  result(): LevelResult {
+    return this.getResult(this._turnCount);
+  }
+
+  get turnCount(): number {
+    return this._turnCount;
   }
 
   passed(): boolean {
