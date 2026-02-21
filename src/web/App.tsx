@@ -28,6 +28,7 @@ interface TileMeta {
   kind: string;
   altKey: string;
   assetPath?: string;
+  emoji?: string;
 }
 
 const VOID_TILE: TileMeta = { kind: "void", altKey: "tiles.empty" };
@@ -42,13 +43,13 @@ const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
     altKey: "tiles.warrior",
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
-  s: { kind: "sludge", altKey: "tiles.sludge" },
-  S: { kind: "thick-sludge", altKey: "tiles.thickSludge" },
-  a: { kind: "archer", altKey: "tiles.archer" },
-  w: { kind: "wizard", altKey: "tiles.wizard" },
-  C: { kind: "captive", altKey: "tiles.captive" },
-  G: { kind: "golem", altKey: "tiles.golem" },
-  "?": { kind: "unknown", altKey: "tiles.unknown" },
+  s: { kind: "sludge", altKey: "tiles.sludge", emoji: "\u{1F9DF}" },         // 🧟
+  S: { kind: "thick-sludge", altKey: "tiles.thickSludge", emoji: "\u{1F47E}" }, // 👾
+  a: { kind: "archer", altKey: "tiles.archer", emoji: "\u{1F3F9}" },         // 🏹
+  w: { kind: "wizard", altKey: "tiles.wizard", emoji: "\u{1F9D9}" },         // 🧙
+  C: { kind: "captive", altKey: "tiles.captive", emoji: "\u{1F64F}" },       // 🙏
+  G: { kind: "golem", altKey: "tiles.golem", emoji: "\u{1FAA8}" },           // 🪨
+  "?": { kind: "unknown", altKey: "tiles.unknown", emoji: "\u{2753}" },      // ❓
 };
 
 interface BoardTile {
@@ -56,6 +57,7 @@ interface BoardTile {
   kind: string;
   altKey: string;
   assetPath?: string;
+  emoji?: string;
 }
 
 interface BoardGridData {
@@ -205,7 +207,7 @@ function buildBoardGrid(board: string): BoardGridData {
         tiles.push(isTopWallRow ? { ...WALL_V_TILE } : { ...WALL_H_TILE });
       } else {
         const meta = TILE_META_BY_SYMBOL[symbol] ?? { kind: "unknown", altKey: "tiles.unknown" };
-        tiles.push({ symbol, kind: meta.kind, altKey: meta.altKey, assetPath: meta.assetPath });
+        tiles.push({ symbol, kind: meta.kind, altKey: meta.altKey, assetPath: meta.assetPath, emoji: meta.emoji });
       }
     }
     // Right padding
@@ -978,7 +980,7 @@ export default function App() {
                 style={boardGridStyle}
               >
                 {boardGrid.tiles.map((tile, index) => {
-                  const displaySymbol = tile.symbol === " " ? "\u00a0" : tile.symbol;
+                  const displaySymbol = tile.emoji ?? (tile.symbol === " " ? "\u00a0" : tile.symbol);
                   const tileImageSrc =
                     tile.kind === "warrior" ? getWarriorIdleFramePath(warriorFrame) : tile.assetPath;
                   const tilePopups = damagePopupsByTile.get(index) ?? [];
@@ -1006,7 +1008,7 @@ export default function App() {
                       {tileImageSrc ? (
                         <img src={tileImageSrc} alt={tileAlt} className="tile-image" />
                       ) : (
-                        <span className="tile-fallback" aria-hidden="true">{displaySymbol}</span>
+                        <span className="tile-fallback" style={{ fontSize: `${Math.round(tileSizePx * 0.7)}px` }} aria-hidden="true">{displaySymbol}</span>
                       )}
                       {tilePopups.map((popup) => (
                         <span key={popup.id} className="damage-popup" aria-hidden="true">
