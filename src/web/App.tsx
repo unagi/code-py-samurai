@@ -89,6 +89,46 @@ const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }>
   captive: { hp: 1, atk: 0 },
 };
 
+interface ProgressStorageData {
+  towerName?: string;
+  levelNumber?: number;
+  warriorLevelByTower?: Record<string, number>;
+}
+
+function clampLevel(value: unknown, levelCount: number): number {
+  const n = typeof value === "number" ? Math.floor(value) : 1;
+  return Math.min(Math.max(1, n), levelCount);
+}
+
+function readProgressStorage(): ProgressStorageData {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
+    if (!raw) return {};
+    return JSON.parse(raw) as ProgressStorageData;
+  } catch {
+    return {};
+  }
+}
+
+function buildWarriorLevelByTower(data: ProgressStorageData): Record<string, number> {
+  const byTower: Record<string, number> = {};
+  for (const tower of towers) {
+    const saved = data.warriorLevelByTower?.[tower.name];
+    byTower[tower.name] = clampLevel(saved, tower.levelCount);
+  }
+
+  const savedTowerName = data.towerName;
+  if (typeof savedTowerName === "string") {
+    const tower = towers.find((item) => item.name === savedTowerName);
+    if (tower) {
+      const legacyLevel = clampLevel(data.levelNumber, tower.levelCount);
+      byTower[savedTowerName] = Math.max(byTower[savedTowerName] ?? 1, legacyLevel);
+    }
+  }
+
+  return byTower;
+}
+
 function getWarriorIdleFramePath(frameIndex: number): string {
   const frame = String((frameIndex % WARRIOR_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
   return `/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`;
@@ -465,28 +505,17 @@ function createCodeEditor(
 }
 
 export default function App() {
+  const initialProgress = readProgressStorage();
   const [towerName, setTowerName] = useState(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
-      if (!raw) return "beginner";
-      const data = JSON.parse(raw) as { towerName?: string };
-      const exists = towers.some((tower) => tower.name === data.towerName);
-      return exists && data.towerName ? data.towerName : "beginner";
-    } catch {
-      return "beginner";
-    }
+    const exists = towers.some((tower) => tower.name === initialProgress.towerName);
+    return exists && initialProgress.towerName ? initialProgress.towerName : "beginner";
   });
   const [levelNumber, setLevelNumber] = useState(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
-      if (!raw) return 1;
-      const data = JSON.parse(raw) as { towerName?: string; levelNumber?: number };
-      const tower = towers.find((item) => item.name === data.towerName) ?? towers[0];
-      const lv = typeof data.levelNumber === "number" ? data.levelNumber : 1;
-      return Math.min(Math.max(1, Math.floor(lv)), tower.levelCount);
-    } catch {
-      return 1;
-    }
+    const tower = towers.find((item) => item.name === initialProgress.towerName) ?? towers[0];
+    return clampLevel(initialProgress.levelNumber, tower.levelCount);
+  });
+  const [warriorLevelByTower, setWarriorLevelByTower] = useState<Record<string, number>>(() => {
+    return buildWarriorLevelByTower(initialProgress);
   });
   const [speedMs, setSpeedMs] = useState(450);
   const [playerCode, setPlayerCode] = useState(() => {
@@ -526,34 +555,33 @@ export default function App() {
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
   }, [towerName]);
+  const warriorLevel = useMemo(() => {
+    return clampLevel(warriorLevelByTower[towerName], selectedTower.levelCount);
+  }, [warriorLevelByTower, towerName, selectedTower.levelCount]);
 
   const level = useMemo(() => {
     return selectedTower.getLevel(levelNumber) ?? selectedTower.levels[0];
   }, [selectedTower, levelNumber]);
-  const inheritedWarriorAbilities = useMemo(() => {
+  const unlockedWarriorAbilities = useMemo(() => {
     const unlocked: WarriorAbilitySet[] = [];
-    for (let i = 1; i < levelNumber; i++) {
-      const prev = selectedTower.getLevel(i);
-      if (!prev) continue;
-      unlocked.push(prev.warrior.abilities);
+    for (let i = 1; i <= warriorLevel; i++) {
+      const lv = selectedTower.getLevel(i);
+      if (!lv) continue;
+      unlocked.push(lv.warrior.abilities);
     }
     return mergeWarriorAbilities(unlocked);
-  }, [selectedTower, levelNumber]);
-  const currentWarriorAbilities = useMemo(
-    () => mergeWarriorAbilities([inheritedWarriorAbilities, level.warrior.abilities]),
-    [inheritedWarriorAbilities, level.warrior.abilities],
-  );
-  const inheritedEngineAbilities = useMemo(
-    () => warriorAbilitiesToEngineAbilities(inheritedWarriorAbilities),
-    [inheritedWarriorAbilities],
+  }, [selectedTower, warriorLevel]);
+  const unlockedEngineAbilities = useMemo(
+    () => warriorAbilitiesToEngineAbilities(unlockedWarriorAbilities),
+    [unlockedWarriorAbilities],
   );
   const availableMethods = useMemo(
-    () => currentWarriorAbilities.skills.map((item) => `warrior.${item}`),
-    [currentWarriorAbilities.skills],
+    () => unlockedWarriorAbilities.skills.map((item) => `warrior.${item}`),
+    [unlockedWarriorAbilities.skills],
   );
   const availableProperties = useMemo(
-    () => currentWarriorAbilities.stats.map((item) => `warrior.${item}`),
-    [currentWarriorAbilities.stats],
+    () => unlockedWarriorAbilities.stats.map((item) => `warrior.${item}`),
+    [unlockedWarriorAbilities.stats],
   );
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
   const levelSteps = useMemo(() => {
@@ -646,7 +674,7 @@ export default function App() {
     logLineCountRef.current = 0;
     unitTileIndexMapRef.current = new Map<string, number>();
     setDamagePopups([]);
-    sessionRef.current.setup(level, playerCode, inheritedEngineAbilities);
+    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
     refreshGameState();
     setIsCodeDirty(false);
     return sessionRef.current.canPlay;
@@ -664,6 +692,14 @@ export default function App() {
     }
     if (!canContinue) {
       stopTimer();
+      if (currentResult?.passed) {
+        setWarriorLevelByTower((prev) => {
+          const current = prev[towerName] ?? 1;
+          const next = Math.max(current, levelNumber);
+          if (next === current) return prev;
+          return { ...prev, [towerName]: next };
+        });
+      }
       setShowResultModal(true);
     }
   };
@@ -751,12 +787,12 @@ export default function App() {
     try {
       window.localStorage.setItem(
         STORAGE_KEY_PROGRESS,
-        JSON.stringify({ towerName, levelNumber }),
+        JSON.stringify({ towerName, levelNumber, warriorLevelByTower }),
       );
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [towerName, levelNumber]);
+  }, [towerName, levelNumber, warriorLevelByTower]);
 
   useEffect(() => {
     try {
