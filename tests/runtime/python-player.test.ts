@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { compilePythonPlayer } from "@runtime/python-player";
-import { PythonSyntaxError } from "@runtime/errors";
+import { compilePythonPlayer, isPythonPlayerCodeEmpty } from "@runtime/python-player";
+import { PythonRuntimeError, PythonSyntaxError } from "@runtime/errors";
 
 class FakeSpace {
   constructor(
@@ -82,8 +82,17 @@ class FakeTurn {
 }
 
 describe("compilePythonPlayer", () => {
+  it("isPythonPlayerCodeEmpty returns expected values", () => {
+    expect(isPythonPlayerCodeEmpty(" \n\t ")).toBe(true);
+    expect(isPythonPlayerCodeEmpty("class Player:\n    pass")).toBe(false);
+  });
+
   it("throws on empty source (no default injection)", () => {
     expect(() => compilePythonPlayer("   \n\n")).toThrow(/empty/i);
+  });
+
+  it("throws when class Player is missing", () => {
+    expect(() => compilePythonPlayer("print('hello')")).toThrow(/class Player not found/i);
   });
 
   it("executes if/elif/else by sensed space and hp property", () => {
@@ -466,5 +475,205 @@ describe("compilePythonPlayer", () => {
     const turn = new FakeTurn({});
     player.playTurn(turn as never);
     expect(turn.action).toEqual(["pivot!", "backward"]);
+  });
+
+  it("supports camelCase-only space methods for terrain and occupant fallback (stairs)", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
+      "        if space.terrain == Terrain.STAIRS and space.unit is None:",
+      "            samurai.walk()",
+      "        else:",
+      "            samurai.attack()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      feel: () => ({
+        isWall: () => false,
+        isStairs: () => true,
+      }),
+    });
+
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("falls back to empty floor occupant=None when predicates are mostly missing", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
+      "        if space.terrain == Terrain.FLOOR and space.unit is None:",
+      "            samurai.walk()",
+      "        else:",
+      "            samurai.attack()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      feel: () => ({
+        isWall: () => false,
+        isStairs: () => false,
+      }),
+    });
+
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("maps non-enemy/non-captive occupied spaces to UnitKind.ALLY", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
+      "        if space.unit is not None and space.unit.kind == UnitKind.ALLY and (not space.unit.ticking):",
+      "            samurai.walk()",
+      "        else:",
+      "            samurai.attack()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      feel: () => ({
+        unit: { id: "ally#1" },
+        isEnemy: () => false,
+        isCaptive: () => false,
+        isTicking: () => false,
+        isWall: () => false,
+        isStairs: () => false,
+      }),
+    });
+
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("handles null sense results and null items in sense arrays", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        if samurai.direction_of_stairs() is None and samurai.look()[0] is None:",
+      "            samurai.walk()",
+      "        else:",
+      "            samurai.attack()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      direction_of_stairs: () => null,
+      look: () => [null],
+    });
+
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("passes undefined to distance_of when called without an argument", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        if samurai.distance_of() == 0:",
+      "            samurai.walk()",
+    ].join("\n");
+
+    let receivedArg: unknown = Symbol("unset");
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      distance_of: (arg?: unknown) => {
+        receivedArg = arg;
+        return 0;
+      },
+    });
+
+    player.playTurn(turn as never);
+    expect(receivedArg).toBeUndefined();
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("rethrows PythonRuntimeError from the runtime turn without wrapping", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = {
+      doAction: () => {
+        throw new PythonRuntimeError("turn failed");
+      },
+      doSense: () => 0,
+      hasAction: () => true,
+      hasSense: () => true,
+    };
+
+    expect(() => player.playTurn(turn as never)).toThrow(PythonRuntimeError);
+    expect(() => player.playTurn(turn as never)).toThrow(/turn failed/);
+  });
+
+  it("wraps plain Error from runtime turn actions as PythonRuntimeError", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = {
+      doAction: () => {
+        throw new Error("action boom");
+      },
+      doSense: () => 0,
+      hasAction: () => true,
+      hasSense: () => true,
+    };
+
+    expect(() => player.playTurn(turn as never)).toThrow(PythonRuntimeError);
+    expect(() => player.playTurn(turn as never)).toThrow(/action boom/);
+  });
+
+  it("wraps plain Error thrown before runtime turn adaptation", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = {
+      get doAction() {
+        throw new Error("adapter boom");
+      },
+      doSense: () => 0,
+      hasAction: () => true,
+      hasSense: () => true,
+    };
+
+    expect(() => player.playTurn(turn as never)).toThrow(PythonRuntimeError);
+    expect(() => player.playTurn(turn as never)).toThrow(/adapter boom/);
+  });
+
+  it("wraps non-Error values thrown before runtime turn adaptation", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = {
+      get doAction() {
+        throw "adapter string boom";
+      },
+      doSense: () => 0,
+      hasAction: () => true,
+      hasSense: () => true,
+    };
+
+    expect(() => player.playTurn(turn as never)).toThrow(PythonRuntimeError);
+    expect(() => player.playTurn(turn as never)).toThrow(/adapter string boom/);
+  });
+
+  it("rethrows PythonRuntimeError thrown before runtime turn adaptation", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
+    const player = compilePythonPlayer(source);
+
+    const turn = {
+      get doAction() {
+        throw new PythonRuntimeError("adapter runtime error");
+      },
+      doSense: () => 0,
+      hasAction: () => true,
+      hasSense: () => true,
+    };
+
+    expect(() => player.playTurn(turn as never)).toThrow(PythonRuntimeError);
+    expect(() => player.playTurn(turn as never)).toThrow(/adapter runtime error/);
   });
 });
