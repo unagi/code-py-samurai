@@ -1,20 +1,40 @@
 # Python API Reference (Player / Warrior / Space)
 
-Python プレイヤー向け API リファレンスです。
+このドキュメントは、学習者向け Python API の仕様（ドキュメント先行）です。
 
 ## Conventions
 
-- 方向引数には `Direction` を使用する（`forward`, `right`, `backward`, `left`）
+- 方向は `Direction` を使う（`FORWARD`, `RIGHT`, `BACKWARD`, `LEFT`）
+- 地形は `Terrain` を使う（`FLOOR`, `WALL`, `STAIRS`）
+- ユニット種別は `UnitKind` を使う（`ENEMY`, `CAPTIVE`, `ALLY`）
 - アクションメソッドは 1 ターンに 1 回のみ実行可能
 - 感知メソッドは同一ターン内で複数回呼び出し可能
-- `feel()` / `look()` の空マス（階段を含む）は `None` として扱う
+- `feel()` / `look()` は常に `Space` を返す（空マスは `space.unit is None` で判定する）
 
 ## Enum: `Direction`
 
 ```java
 /**
- * Warrior API で使用する方向。
- * @values forward | right | backward | left
+ * Warrior API で使用する相対方向。
+ * @values FORWARD | RIGHT | BACKWARD | LEFT
+ */
+```
+
+## Enum: `Terrain`
+
+```java
+/**
+ * Space の地形種別。
+ * @values FLOOR | WALL | STAIRS
+ */
+```
+
+## Enum: `UnitKind`
+
+```java
+/**
+ * Space にいるユニットの種別。
+ * @values ENEMY | CAPTIVE | ALLY
  */
 ```
 
@@ -68,12 +88,12 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `walk(self, direction: Direction = "forward") -> None`
+#### `walk(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向へ 1 マス移動する。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -83,12 +103,12 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `attack(self, direction: Direction = "forward") -> None`
+#### `attack(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向の隣接マスを近接攻撃する。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -111,12 +131,12 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `rescue(self, direction: Direction = "forward") -> None`
+#### `rescue(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向の捕虜を救出する。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -126,12 +146,12 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `shoot(self, direction: Direction = "forward") -> None`
+#### `shoot(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向へ射撃する。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -141,27 +161,27 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `pivot(self, direction: Direction = "backward") -> None`
+#### `pivot(self, direction: Direction = Direction.BACKWARD) -> None`
 
 ```java
 /**
  * 向きを変更する。
- * @param direction Direction 回転先の相対方向。省略時は `backward`。
+ * @param direction Direction 回転先の相対方向。省略時は `Direction.BACKWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
- * @remarks 既定値が "backward" である点に注意。
+ * @remarks 既定値が `Direction.BACKWARD` である点に注意。
  * @since GlobalLevel 7
  */
 ```
 
-#### `bind(self, direction: Direction = "forward") -> None`
+#### `bind(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向の隣接ユニットを拘束する。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -171,12 +191,12 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `detonate(self, direction: Direction = "forward") -> None`
+#### `detonate(self, direction: Direction = Direction.FORWARD) -> None`
 
 ```java
 /**
  * 指定方向に爆破攻撃を行う。
- * @param direction Direction 相対方向。省略時は `forward`。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -196,30 +216,30 @@ Python プレイヤー向け API リファレンスです。
  */
 ```
 
-#### `feel(self, direction: Direction = "forward") -> Space | None`
+#### `feel(self, direction: Direction = Direction.FORWARD) -> Space`
 
 ```java
 /**
  * 指定方向の隣接 1 マスを感知する。
- * @param direction Direction 相対方向。省略時は `forward`。
- * @return Space | None 対象（敵/捕虜/壁など）がある場合は Space、空マス（階段含む）は None。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
+ * @return Space 感知したマス。
  * @category sense
  * @throws RuntimeError 無効な方向を指定した場合。
- * @remarks この API では `is_empty()` ではなく `None` 判定を使用する。
+ * @apiNote 空マス判定は `space.unit is None` を使用する。
  * @since GlobalLevel 2
  */
 ```
 
-#### `look(self, direction: Direction = "forward") -> list[Space | None]`
+#### `look(self, direction: Direction = Direction.FORWARD) -> list[Space]`
 
 ```java
 /**
  * 指定方向の 1〜3 マス先を感知する。
- * @param direction Direction 相対方向。省略時は `forward`。
- * @return list[Space | None] 長さ 3 の配列。各要素は Space または None。
+ * @param direction Direction 相対方向。省略時は `Direction.FORWARD`。
+ * @return list[Space] 長さ 3 の配列。各要素は Space。
  * @category sense
  * @throws RuntimeError 無効な方向を指定した場合。
- * @remarks 空マス（階段を含む）は `None` を返す。
+ * @apiNote 空マス判定は各要素の `space.unit is None` を使用する。
  * @since GlobalLevel 8
  */
 ```
@@ -229,9 +249,10 @@ Python プレイヤー向け API リファレンスです。
 ```java
 /**
  * フロア上の他ユニットの位置を取得する。
- * @return list[Space] 他ユニットが存在するマスの Space 配列。None は含まない。
+ * @return list[Space] 他ユニットが存在するマスの Space 配列。
  * @category sense
  * @remarks 自分自身は含まない。
+ * @guarantee 返される各 `Space` では `space.unit is not None`。
  * @since GlobalLevel 13
  */
 ```
@@ -252,10 +273,10 @@ Python プレイヤー向け API リファレンスです。
 ```java
 /**
  * 指定した Space の方向を相対方向で返す。
- * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
+ * @param space Space 対象マス。
  * @return Direction 対象マスの方向。
  * @category sense
- * @throws RuntimeError None や不正なオブジェクトを渡した場合。
+ * @throws RuntimeError 無効な Space を渡した場合。
  * @since GlobalLevel 13
  */
 ```
@@ -265,10 +286,10 @@ Python プレイヤー向け API リファレンスです。
 ```java
 /**
  * 指定した Space までの距離を返す。
- * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
+ * @param space Space 対象マス。
  * @return int マンハッタン距離。
  * @category sense
- * @throws RuntimeError None や不正なオブジェクトを渡した場合。
+ * @throws RuntimeError 無効な Space を渡した場合。
  * @since GlobalLevel 18
  */
 ```
@@ -277,66 +298,56 @@ Python プレイヤー向け API リファレンスです。
 
 ```java
 /**
- * Map cell / target descriptor returned by sense APIs.
- * 周囲マスやユニットの状態判定に使用する。
+ * A map cell.
+ * 地形（terrain）と占有ユニット（unit）を保持する。
  */
 ```
 
-### Acquisition
+### Property: `terrain: Terrain`
 
 ```java
 /**
- * 取得元一覧
- * @source Warrior.feel(...)   -> Space | None
- * @source Warrior.look(...)   -> list[Space | None]
- * @source Warrior.listen()    -> list[Space]
+ * このマスの地形。
+ * @type Terrain
+ * @remarks `FLOOR`, `WALL`, `STAIRS` のいずれか。
  */
 ```
 
-### `is_enemy(self) -> bool`
+### Property: `unit: Occupant | None`
 
 ```java
 /**
- * マス上の対象が敵ユニットかを判定する。
- * @return bool 敵ユニットなら True。
+ * このマスにいるユニット。
+ * @type Occupant | None
+ * @remarks 空マスなら None。
+ * @apiNote 階段の上にユニットがいる場合、`terrain == Terrain.STAIRS` かつ `unit is not None` になりうる。
  */
 ```
 
-### `is_captive(self) -> bool`
+## Class: `Occupant`
 
 ```java
 /**
- * マス上の対象が捕虜（拘束状態）かを判定する。
- * @return bool 捕虜なら True。
+ * Space 上のユニットを表す読み取り専用オブジェクト。
  */
 ```
 
-### `is_stairs(self) -> bool`
+### Property: `kind: UnitKind`
 
 ```java
 /**
- * マスが階段かを判定する。
- * @return bool 階段なら True。
- * @remarks 階段マスは feel()/look() では `None` として扱われるため、直接使う場面は少ない。
+ * ユニット種別。
+ * @type UnitKind
  */
 ```
 
-### `is_wall(self) -> bool`
+### Property: `ticking: bool`
 
 ```java
 /**
- * マスが壁（場外）かを判定する。
- * @return bool 壁なら True。
- */
-```
-
-### `is_ticking(self) -> bool`
-
-```java
-/**
- * マス上の対象が時限爆弾状態かを判定する。
- * @return bool 時限爆弾付きユニットなら True。
- * @remarks 典型用途は is_captive() と組み合わせた優先救出判定（中級6 / GlobalLevel 15）。
+ * 時限爆弾状態かどうか。
+ * @type bool
+ * @remarks 典型用途は `kind == UnitKind.CAPTIVE` と組み合わせた優先救出判定。
  */
 ```
 
