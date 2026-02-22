@@ -73,7 +73,7 @@
 /**
  * 現在HP。
  * @type int
- * @since GlobalLevel 3
+ * @since Level 3
  */
 ```
 
@@ -99,7 +99,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 移動先が空でない場合は移動しない。
- * @since GlobalLevel 1
+ * @since Level 1
  */
 ```
 
@@ -114,7 +114,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 後方攻撃はダメージが低下する。
- * @since GlobalLevel 2
+ * @since Level 2
  */
 ```
 
@@ -127,7 +127,7 @@
  * @category action
  * @constraint one-action-per-turn
  * @remarks 最大HP時は回復しない。
- * @since GlobalLevel 3
+ * @since Level 3
  */
 ```
 
@@ -142,7 +142,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 捕虜でない対象には効果なし。
- * @since GlobalLevel 5
+ * @since Level 5
  */
 ```
 
@@ -157,7 +157,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 射程は 1〜3 マス。最初に見つかったユニットに命中する。
- * @since GlobalLevel 8
+ * @since Level 8
  */
 ```
 
@@ -172,7 +172,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 既定値が `Direction.BACKWARD` である点に注意。
- * @since GlobalLevel 7
+ * @since Level 7
  */
 ```
 
@@ -187,7 +187,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 対象がいない場合は効果なし。
- * @since GlobalLevel 12
+ * @since Level 12
  */
 ```
 
@@ -202,7 +202,7 @@
  * @constraint one-action-per-turn
  * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 範囲ダメージ。爆発系ユニットには連鎖爆発が発生する場合がある。
- * @since GlobalLevel 17
+ * @since Level 17
  */
 ```
 
@@ -226,7 +226,7 @@
  * @category sense
  * @throws RuntimeError 無効な方向を指定した場合。
  * @apiNote 空マス判定は `space.unit is None` を使用する。
- * @since GlobalLevel 2
+ * @since Level 2
  */
 ```
 
@@ -240,7 +240,7 @@
  * @category sense
  * @throws RuntimeError 無効な方向を指定した場合。
  * @apiNote 空マス判定は各要素の `space.unit is None` を使用する。
- * @since GlobalLevel 8
+ * @since Level 8
  */
 ```
 
@@ -253,7 +253,7 @@
  * @category sense
  * @remarks 自分自身は含まない。
  * @guarantee 返される各 `Space` では `space.unit is not None`。
- * @since GlobalLevel 13
+ * @since Level 13
  */
 ```
 
@@ -264,7 +264,7 @@
  * 階段の方向を相対方向で返す。
  * @return Direction 階段の方向。
  * @category sense
- * @since GlobalLevel 10
+ * @since Level 10
  */
 ```
 
@@ -277,7 +277,7 @@
  * @return Direction 対象マスの方向。
  * @category sense
  * @throws RuntimeError 無効な Space を渡した場合。
- * @since GlobalLevel 13
+ * @since Level 13
  */
 ```
 
@@ -290,7 +290,7 @@
  * @return int マンハッタン距離。
  * @category sense
  * @throws RuntimeError 無効な Space を渡した場合。
- * @since GlobalLevel 18
+ * @since Level 18
  */
 ```
 
@@ -351,18 +351,18 @@
  */
 ```
 
-## Availability Table (Global Level)
+## Availability by Level
 
-| GlobalLevel | Local (Intermediate) | API |
-|---|---:|---|
-| 1 | - | `walk()` |
-| 2 | - | `feel()`, `attack()` |
-| 3 | - | `rest()`, `hp` |
-| 5 | - | `rescue()` |
-| 7 | - | `pivot()` |
-| 8 | - | `look()`, `shoot()` |
-| 10 | 1 | `direction_of_stairs()` |
-| 12 | 3 | `bind()` |
-| 13 | 4 | `listen()`, `direction_of(space)` |
-| 17 | 8 | `detonate()` |
-| 18 | 9 | `distance_of(space)` |
+| Level | API |
+|---:|---|
+| 1 | `walk()` |
+| 2 | `feel()`, `attack()` |
+| 3 | `rest()`, `hp` |
+| 5 | `rescue()` |
+| 7 | `pivot()` |
+| 8 | `look()`, `shoot()` |
+| 10 | `direction_of_stairs()` |
+| 12 | `bind()` |
+| 13 | `listen()`, `direction_of(space)` |
+| 17 | `detonate()` |
+| 18 | `distance_of(space)` |
