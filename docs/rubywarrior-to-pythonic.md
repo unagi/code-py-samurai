@@ -2,6 +2,10 @@
 
 このプロジェクトは RubyWarrior をベースにしつつ、Python 初学者向けに一部 API を変更しています。
 
+関連:
+
+- `docs/python-api-reference.md`（`Player` / `Warrior` / `Space` の参照）
+
 ## 方針
 
 - Ruby 由来の表現より、Python で読みやすい表現を優先する
