@@ -58,6 +58,17 @@
 
 ### Action Methods
 
+```java
+/**
+ * Action methods are mutually exclusive within a turn.
+ * @category action
+ * @constraint one-action-per-turn
+ * @apiNote 同一ターン内で複数の action メソッドを呼び出してはならない。
+ * @implNote 現行実装は Python デコレーターではなく、ランタイム/エンジン側のターン状態管理
+ *           （主に `src/engine/turn.ts` の `doAction()`）で制約を適用する。
+ */
+```
+
 #### `walk(self, direction: RelativeDirection = "forward") -> None`
 
 ```java
@@ -65,6 +76,8 @@
  * 指定方向へ 1 マス移動する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 移動先が空でない場合は移動しない。
  * @since GlobalLevel 1
@@ -78,6 +91,8 @@
  * 指定方向の隣接マスを近接攻撃する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 後方攻撃はダメージが低下する（エンジン実装準拠）。
  * @since GlobalLevel 2
@@ -90,6 +105,8 @@
 /**
  * HPを回復する。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @remarks 最大HP時は回復しない。
  * @since GlobalLevel 3
  */
@@ -102,6 +119,8 @@
  * 指定方向の捕虜を救出する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 捕虜でない対象には効果なし。
  * @since GlobalLevel 5
@@ -115,6 +134,8 @@
  * 指定方向へ射撃する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 射程は 1〜3 マス。最初に見つかったユニットに命中する。
  * @since GlobalLevel 8
@@ -128,6 +149,8 @@
  * 向きを変更する。
  * @param direction RelativeDirection 回転先の相対方向。省略時は "backward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 既定値が "backward" である点に注意。
  * @since GlobalLevel 7
@@ -141,6 +164,8 @@
  * 指定方向の隣接ユニットを拘束する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 対象がいない場合は効果なし。
  * @since GlobalLevel 12
@@ -154,6 +179,8 @@
  * 指定方向に爆破攻撃を行う。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return None
+ * @category action
+ * @constraint one-action-per-turn
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 範囲ダメージ。爆発系ユニットには連鎖爆発が発生する場合がある。
  * @since GlobalLevel 17
@@ -162,6 +189,15 @@
 
 ### Sense Methods
 
+```java
+/**
+ * Sense methods may be called multiple times within a turn.
+ * @category sense
+ * @constraint repeatable-within-turn
+ * @implNote 現行実装では action と sense を別系統で管理し、sense 呼び出し回数に制限は設けていない。
+ */
+```
+
 #### `feel(self, direction: RelativeDirection = "forward") -> Space | None`
 
 ```java
@@ -169,6 +205,7 @@
  * 指定方向の隣接 1 マスを感知する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return Space | None 対象（敵/捕虜/壁など）がある場合は Space、空マス（階段含む）は None。
+ * @category sense
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks Python 仕様では is_empty() ではなく None 判定を使用する。
  * @since GlobalLevel 2
@@ -182,6 +219,7 @@
  * 指定方向の 1〜3 マス先を感知する。
  * @param direction RelativeDirection 相対方向。省略時は "forward"。
  * @return list[Space | None] 長さ 3 の配列。各要素は Space または None。
+ * @category sense
  * @throws RuntimeError 不正な方向文字列を指定した場合。
  * @remarks 空マス（階段含む）は None に正規化される。
  * @since GlobalLevel 8
@@ -194,6 +232,7 @@
 /**
  * フロア上の他ユニットの位置を取得する。
  * @return list[Space] 他ユニットが存在するマスの Space 配列。None は含まない。
+ * @category sense
  * @remarks 自分自身は含まない。
  * @since GlobalLevel 13
  */
@@ -205,6 +244,7 @@
 /**
  * 階段の方向を相対方向で返す。
  * @return RelativeDirection 階段の方向。
+ * @category sense
  * @since GlobalLevel 10
  */
 ```
@@ -216,6 +256,7 @@
  * 指定した Space の方向を相対方向で返す。
  * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
  * @return RelativeDirection 対象マスの方向。
+ * @category sense
  * @throws RuntimeError None や不正なオブジェクトを渡した場合。
  * @since GlobalLevel 13
  */
@@ -228,6 +269,7 @@
  * 指定した Space までの距離を返す。
  * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
  * @return int マンハッタン距離。
+ * @category sense
  * @throws RuntimeError None や不正なオブジェクトを渡した場合。
  * @since GlobalLevel 18
  */
