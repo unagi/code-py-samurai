@@ -1,12 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { basicSetup, EditorView } from "codemirror";
-import { indentWithTab } from "@codemirror/commands";
-import { python } from "@codemirror/lang-python";
-import { EditorState } from "@codemirror/state";
-import { HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/language";
-import { keymap } from "@codemirror/view";
-import { tags } from "@lezer/highlight";
+import { type EditorView } from "codemirror";
 
 import type { LevelResult } from "../engine/level";
 import type { LogEntry } from "../engine/log-entry";
@@ -26,6 +20,8 @@ import {
   type SpriteOverride,
 } from "./board-effects";
 import { buildBoardGrid } from "./board-grid";
+import { createCodeEditor } from "./code-editor";
+import { buildTileStatsText, type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
 import {
   buildSamuraiLevel,
@@ -47,16 +43,6 @@ const BOARD_TILE_GAP_PX = 2;
 const UI_MAX_TURNS = 1000;
 const SAMURAI_IDLE_FRAME_COUNT = 16;
 const SAMURAI_IDLE_FRAME_MS = 140;
-
-const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }> = {
-  samurai: { hp: 20, atk: 5 },
-  golem: { hp: null, atk: 3 },
-  sludge: { hp: 12, atk: 3 },
-  "thick-sludge": { hp: 24, atk: 3 },
-  archer: { hp: 7, atk: 3 },
-  wizard: { hp: 3, atk: 11 },
-  captive: { hp: 1, atk: 0 },
-};
 
 // ── スプライト設定 ─────────────────────────────────────────────────────────
 
@@ -103,97 +89,6 @@ const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 function getSamuraiIdleFramePath(frameIndex: number): string {
   const frame = String((frameIndex % SAMURAI_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
   return `/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`;
-}
-
-interface StatsFormatter {
-  hp(current: number | string, max: number | string): string;
-  atk(value: number | string): string;
-}
-
-function buildTileStatsText(
-  tileKind: string,
-  samuraiHealth: number | null,
-  samuraiMaxHealth: number | null,
-  fmt: StatsFormatter,
-): string | null {
-  if (tileKind === "samurai") {
-    return `${fmt.hp(samuraiHealth ?? "--", samuraiMaxHealth ?? "--")}  ${fmt.atk(5)}`;
-  }
-  const stats = TILE_BASE_STATS[tileKind];
-  if (!stats) return null;
-  const hpText = stats.hp === null ? fmt.hp("--", "--") : fmt.hp(stats.hp, stats.hp);
-  const atkText = stats.atk === null ? fmt.atk("--") : fmt.atk(stats.atk);
-  return `${hpText}  ${atkText}`;
-}
-
-function createCodeEditor(
-  parent: HTMLElement,
-  initialCode: string,
-  onChange: (code: string) => void,
-): EditorView {
-  const readableHighlight = HighlightStyle.define([
-    { tag: [tags.keyword, tags.controlKeyword], color: "#7ec7ff", fontWeight: "700" },
-    { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "#ffd58e" },
-    { tag: [tags.variableName, tags.propertyName], color: "#d9e8f5" },
-    { tag: [tags.number, tags.bool, tags.null], color: "#ffb88c" },
-    { tag: [tags.string], color: "#b6f29a" },
-    { tag: [tags.comment], color: "#7f96ac", fontStyle: "italic" },
-    { tag: [tags.operator, tags.punctuation], color: "#b6c8d8" },
-  ]);
-
-  return new EditorView({
-    doc: initialCode,
-    parent,
-    extensions: [
-      basicSetup,
-      keymap.of([indentWithTab]),
-      EditorState.tabSize.of(4),
-      indentUnit.of("    "),
-      python(),
-      syntaxHighlighting(readableHighlight),
-      EditorView.theme({
-        "&": {
-          minHeight: "220px",
-          fontSize: "14px",
-          color: "#dce8f3",
-          backgroundColor: "#15191f",
-        },
-        ".cm-scroller": {
-          overflow: "auto",
-          fontFamily: "\"UDEV Gothic 35\", \"SFMono-Regular\", Consolas, monospace",
-        },
-        ".cm-content": {
-          caretColor: "#9dd7ff",
-        },
-        "&.cm-focused .cm-cursor": {
-          borderLeftColor: "#9dd7ff",
-        },
-        "&.cm-focused .cm-selectionBackground, ::selection": {
-          backgroundColor: "#2b4561",
-        },
-        ".cm-activeLine": {
-          backgroundColor: "#1b222b",
-        },
-        ".cm-activeLineGutter": {
-          backgroundColor: "#1b222b",
-          color: "#9bb2c8",
-        },
-        ".cm-gutters": {
-          backgroundColor: "#15191f",
-          color: "#7f93a8",
-          border: "none",
-        },
-        ".cm-lineNumbers .cm-gutterElement": {
-          color: "#7f93a8",
-        },
-      }),
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
-          onChange(update.state.doc.toString());
-        }
-      }),
-    ],
-  });
 }
 
 export default function App() {
