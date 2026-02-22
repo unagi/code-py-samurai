@@ -42,7 +42,7 @@ export class Game {
 
     const level = new Level(levelDef, this._logger);
     const baselineAbilities = warriorAbilitiesToEngineAbilities(
-      getWarriorAbilitiesAtLevel(this.tower.name, 1),
+      getWarriorAbilitiesAtLevel(this.tower.name, this.profile.levelNumber),
     );
     level.setup(player, [...new Set([...baselineAbilities, ...this.profile.abilities])]);
     const result = level.play(maxTurns);
