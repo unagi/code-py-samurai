@@ -166,8 +166,9 @@ export function useGameController(params: UseGameControllerParams): UseGameContr
       setLogEntries((prev) => [...prev, { key: "logs.systemTimeout", params: { maxTurns: UI_MAX_TURNS } }]);
     }
 
-    if (outcome.nextSamuraiLevel !== null) {
-      setSamuraiLevel((prev) => Math.max(prev, outcome.nextSamuraiLevel));
+    const nextSamuraiLevel = outcome.nextSamuraiLevel;
+    if (nextSamuraiLevel !== null) {
+      setSamuraiLevel((prev) => Math.max(prev, nextSamuraiLevel));
     }
 
     if (outcome.shouldShowResultModal) {

@@ -10,13 +10,14 @@ import {
   samuraiAbilitiesToEngineAbilities,
 } from "../engine/samurai-abilities";
 import { towers } from "../levels";
+import { BoardGridView } from "./BoardGridView";
 import {
   type DamagePopup,
   type SpriteOverride,
 } from "./board-effects";
 import { buildBoardGrid } from "./board-grid";
 import { createCodeEditor } from "./code-editor";
-import { buildTileStatsText, type StatsFormatter } from "./board-stats";
+import { type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
 import {
   buildSamuraiLevel,
@@ -28,14 +29,12 @@ import {
   writeProgressStorage,
 } from "./progress-storage";
 import {
-  CHAR_SPRITES,
   SAMURAI_IDLE_FRAME_COUNT,
   SAMURAI_IDLE_FRAME_MS,
   SPRITE_CAPABLE_KINDS,
   SPRITE_FRAME_MS,
-  getSamuraiIdleFramePath,
 } from "./sprite-config";
-import { absoluteDirToSpriteDir, resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { absoluteDirToSpriteDir, type SpriteDir } from "./sprite-utils";
 import { useGameController } from "./use-game-controller";
 
 function buildStarterPlayerCode(comment: string): string {
@@ -187,7 +186,6 @@ export default function App() {
     }
     return map;
     // spriteOverrides を deps に入れることでターン毎に再計算
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spriteOverrides, board]);
 
   const damagePopupsByTile = useMemo(() => {
@@ -364,106 +362,20 @@ export default function App() {
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
-              <div
-                className="board-grid"
-                role="img"
-                aria-label={t("board.ariaLabel", { rows: boardGrid.rows, columns: boardGrid.columns })}
-                style={boardGridStyle}
-              >
-                {boardGrid.tiles.map((tile, index) => {
-                  const displaySymbol = tile.emoji ?? (tile.symbol === " " ? "\u00a0" : tile.symbol);
-                  const tilePopups = damagePopupsByTile.get(index) ?? [];
-                  const tileStats = buildTileStatsText(tile.kind, samuraiHealth, samuraiMaxHealth, statsFmt);
-                  const tileAlt = t(tile.altKey);
-
-                  // スプライトオーバーライド判定
-                  const override = spriteOverrideByTile.get(index);
-                  const overrideSpriteConfig = override ? CHAR_SPRITES[override.kind] : undefined;
-                  const ownSpriteConfig = CHAR_SPRITES[tile.kind];
-                  const spriteDir: SpriteDir = spriteDirByTile.get(index) ?? "right";
-
-                  // ベースタイル画像 (床・壁・idle スプライト等)
-                  let baseTileImageSrc: string | undefined;
-                  if (tile.kind === "samurai") {
-                    baseTileImageSrc = getSamuraiIdleFramePath(samuraiFrame);
-                  } else if (!override && ownSpriteConfig) {
-                    // オーバーライドなし & 自身がスプライト対応キャラ → idle (方向付き)
-                    baseTileImageSrc = resolveSpriteDir(ownSpriteConfig.idle.pathTemplate, spriteDir);
-                  } else if (override && ownSpriteConfig) {
-                    // オーバーライドあり & タイルがキャラ本人 → オーバーライドで上書き（下にベース不要）
-                    baseTileImageSrc = undefined;
-                  } else {
-                    // 通常タイル（床・壁等）
-                    baseTileImageSrc = tile.assetPath;
-                  }
-
-                  // オーバーライドスプライト (attack / damaged / death)
-                  let overlaySrc: string | undefined;
-                  let overlayFrames = 1;
-                  let overlayCurrentFrame = 0;
-                  if (override && overrideSpriteConfig) {
-                    const stateConfig = overrideSpriteConfig[override.state];
-                    overlaySrc = resolveSpriteDir(stateConfig.pathTemplate, spriteDir);
-                    overlayFrames = stateConfig.frames;
-                    if (overlayFrames > 1) {
-                      const elapsed = Date.now() - override.startedAt;
-                      overlayCurrentFrame = Math.min(
-                        Math.floor(elapsed / SPRITE_FRAME_MS),
-                        overlayFrames - 1,
-                      );
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={`${index}-${tile.kind}-${tile.symbol}`}
-                      className={`board-tile tile-${tile.kind}`}
-                      title={tileAlt}
-                      aria-label={tileAlt}
-                      onMouseEnter={() => {
-                        if (!tileStats) return;
-                        if (tile.kind === "samurai") return;
-                        setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
-                      }}
-                      onMouseLeave={() => setHoveredEnemyStats(null)}
-                      onFocus={() => {
-                        if (!tileStats) return;
-                        if (tile.kind === "samurai") return;
-                        setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
-                      }}
-                      onBlur={() => setHoveredEnemyStats(null)}
-                    >
-                      {/* ベースタイル（床・壁・idle スプライト） */}
-                      {baseTileImageSrc ? (
-                        <img src={baseTileImageSrc} alt={tileAlt} className="tile-image" />
-                      ) : !overlaySrc ? (
-                        <span className="tile-fallback" style={{ fontSize: `${Math.round(tileSizePx * 0.7)}px` }} aria-hidden="true">{displaySymbol}</span>
-                      ) : null}
-
-                      {/* オーバーレイ: スプライト状態 (attack / damaged / death) */}
-                      {overlaySrc && overlayFrames <= 1 ? (
-                        <img src={overlaySrc} alt={tileAlt} className="tile-image tile-sprite-overlay" />
-                      ) : overlaySrc && overlayFrames > 1 ? (
-                        <div
-                          className="tile-sprite-sheet tile-sprite-overlay"
-                          role="img"
-                          aria-label={tileAlt}
-                          style={{
-                            backgroundImage: `url(${overlaySrc})`,
-                            backgroundSize: `${overlayFrames * 100}% 100%`,
-                            backgroundPositionX: `${(overlayCurrentFrame / (overlayFrames - 1)) * 100}%`,
-                          }}
-                        />
-                      ) : null}
-                      {tilePopups.map((popup) => (
-                        <span key={popup.id} className="damage-popup" aria-hidden="true">
-                          {popup.text}
-                        </span>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
+              <BoardGridView
+                boardGrid={boardGrid}
+                boardGridStyle={boardGridStyle}
+                t={t}
+                damagePopupsByTile={damagePopupsByTile}
+                spriteOverrideByTile={spriteOverrideByTile}
+                spriteDirByTile={spriteDirByTile}
+                samuraiFrame={samuraiFrame}
+                samuraiHealth={samuraiHealth}
+                samuraiMaxHealth={samuraiMaxHealth}
+                statsFmt={statsFmt}
+                tileSizePx={tileSizePx}
+                onHoveredEnemyStatsChange={setHoveredEnemyStats}
+              />
             </div>
             <div className="console-controls">
               <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
