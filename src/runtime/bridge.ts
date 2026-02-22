@@ -1,5 +1,4 @@
 import type { ITurn } from "@engine/types";
-import { toPythonValue } from "./py-builtins";
 
 export interface RuntimeTurn extends ITurn {
   doAction(name: string, ...args: unknown[]): void;
@@ -19,9 +18,4 @@ export function asRuntimeTurn(turn: ITurn): RuntimeTurn {
     throw new TypeError("Runtime turn interface is not available.");
   }
   return candidate as RuntimeTurn;
-}
-
-export function callSense(turn: RuntimeTurn, name: string, ...args: unknown[]): unknown {
-  const senseName = name === "hp" ? "health" : name;
-  return toPythonValue(turn.doSense(senseName, ...args));
 }

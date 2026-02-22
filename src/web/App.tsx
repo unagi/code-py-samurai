@@ -958,7 +958,7 @@ export default function App() {
           <nav className="level-progress" aria-label={t("nav.levelProgress")}>
             {allLevelSteps.map((globalLvl) => {
               const isActive = globalLvl === currentGlobalLevel;
-              const isCleared = globalLvl <= warriorLevel && !isActive;
+              const isCleared = globalLvl < warriorLevel && !isActive;
               const isLocked = !isLevelAccessible(globalLvl);
 
               let className = "progress-step";
@@ -978,6 +978,8 @@ export default function App() {
                     : t("board.lv", { level: globalLvl })}
                 >
                   {t("board.lv", { level: globalLvl })}
+                  {isActive ? <i className="bi bi-geo-alt-fill" /> : null}
+                  {isCleared ? <i className="bi bi-check-lg" /> : null}
                 </button>
               );
             })}

@@ -1,459 +1,241 @@
+import type {} from "./skulpt.d";
 import type { ITurn, IPlayer } from "@engine/types";
-import { asRuntimeTurn, callSense, type RuntimeTurn } from "./bridge";
+import { asRuntimeTurn, type RuntimeTurn } from "./bridge";
 import { PythonRuntimeError, PythonSyntaxError } from "./errors";
 
-const ACTION_MAP: Record<string, string> = {
-  walk: "walk!",
-  attack: "attack!",
-  rest: "rest!",
-  rescue: "rescue!",
-  shoot: "shoot!",
-  pivot: "pivot!",
-  bind: "bind!",
-  detonate: "detonate!",
-};
+/* ---------- Skulpt access ---------- */
 
-const SPACE_PREDICATES = new Set([
-  "is_enemy",
-  "is_captive",
-  "is_stairs",
-  "is_wall",
-]);
+let moduleCounter = 0;
+let skConfigured = false;
 
-type CompareOp = "<" | "<=" | ">" | ">=" | "==" | "!=";
-
-type Expr =
-  | { kind: "number"; value: number }
-  | { kind: "string"; value: string }
-  | { kind: "none" }
-  | { kind: "var"; name: string }
-  | { kind: "warrior_property"; name: string }
-  | { kind: "sense"; sense: string; args: Expr[] }
-  | { kind: "predicate"; target: Expr; name: string }
-  | { kind: "is_none"; target: Expr; negated: boolean }
-  | { kind: "compare"; left: Expr; op: CompareOp; right: Expr }
-  | { kind: "not"; expr: Expr };
-
-type ActionStmt = { kind: "action"; name: string; args: Expr[] };
-type IfStmt = { kind: "if"; branches: Array<{ cond: Expr; body: Stmt[] }>; elseBody: Stmt[] };
-
-type Stmt =
-  | { kind: "assign"; name: string; expr: Expr }
-  | ActionStmt
-  | IfStmt
-  | { kind: "pass" };
-
-interface TokenLine {
-  indent: number;
-  text: string;
-  lineNo: number;
-}
-
-class ParseError extends PythonSyntaxError {}
-
-function normalizeDirection(value: unknown): string {
-  if (typeof value !== "string") return "forward";
-  return value;
-}
-
-function countIndent(raw: string): number {
-  let width = 0;
-  for (const ch of raw) {
-    if (ch === " ") {
-      width += 1;
-      continue;
-    }
-    if (ch === "\t") {
-      width += 2;
-      continue;
-    }
-    if (ch === "\u3000") {
-      width += 2;
-      continue;
-    }
-    break;
+function getSk(): SkNamespace {
+  if (!globalThis.Sk) {
+    throw new Error("Skulpt is not loaded.");
   }
-  return width;
-}
-
-function tokenizePlayTurn(source: string): TokenLine[] {
-  const normalized = source.replaceAll(/\r\n?/g, "\n");
-  if (normalized.trim().length === 0) {
-    throw new ParseError("Python source is empty.");
-  }
-
-  const lines = normalized.split("\n");
-  const defIndex = lines.findIndex((line) => /\bdef\s+play_turn\s*\(\s*self\s*,\s*warrior\s*\)\s*:/.test(line));
-  if (defIndex < 0) {
-    throw new ParseError("def play_turn(self, warrior): was not found.");
-  }
-
-  const defLine = lines[defIndex];
-  const defIndent = countIndent(defLine);
-  const tokens: TokenLine[] = [];
-
-  for (let i = defIndex + 1; i < lines.length; i++) {
-    const raw = lines[i];
-    if (raw.trim().length === 0 || raw.trimStart().startsWith("#")) {
-      continue;
-    }
-
-    const indent = countIndent(raw);
-    if (indent <= defIndent) {
-      break;
-    }
-
-    tokens.push({
-      indent,
-      text: raw.trim(),
-      lineNo: i + 1,
+  const sk = globalThis.Sk;
+  if (!skConfigured) {
+    sk.configure({
+      output: () => {},
+      read: (path: string) => {
+        if (sk.builtinFiles?.files[path] !== undefined) {
+          return sk.builtinFiles.files[path];
+        }
+        throw new Error(`Module not found: ${path}`);
+      },
+      __future__: sk.python3,
     });
+    skConfigured = true;
   }
-
-  if (tokens.length === 0) {
-    throw new ParseError("play_turn body is empty.");
-  }
-
-  return tokens;
+  return sk;
 }
 
-function parseStatements(tokens: TokenLine[], start: number, indent: number): { body: Stmt[]; next: number } {
-  const body: Stmt[] = [];
-  let index = start;
+/* ---------- Source preprocessing ---------- */
 
-  while (index < tokens.length) {
-    const token = tokens[index];
-    if (token.indent < indent) break;
-    if (token.indent > indent) {
-      throw new ParseError(`Unsupported indentation at line ${token.lineNo}.`);
-    }
-
-    if (token.text === "pass") {
-      body.push({ kind: "pass" });
-      index += 1;
-      continue;
-    }
-
-    if (token.text.startsWith("if ")) {
-      const parsed = parseIfStmt(tokens, index, indent);
-      body.push(parsed.stmt);
-      index = parsed.next;
-      continue;
-    }
-
-    if (token.text.startsWith("elif ") || token.text === "else:") {
-      break;
-    }
-
-    // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
-    const assign = /^([A-Za-z_]\w*) *= *(.+)$/.exec(token.text);
-    if (assign) {
-      body.push({
-        kind: "assign",
-        name: assign[1],
-        expr: parseExpr(assign[2], token.lineNo),
-      });
-      index += 1;
-      continue;
-    }
-
-    const action = parseWarriorAction(token.text, token.lineNo);
-    if (action) {
-      body.push(action);
-      index += 1;
-      continue;
-    }
-
-    throw new ParseError(`Unsupported syntax at line ${token.lineNo}: ${token.text}`);
+/**
+ * Inject a base class with `__getattr__` returning None, so that
+ * uninitialized `self.xxx` returns None instead of raising AttributeError.
+ * This matches Ruby Warrior's nil-default behaviour for instance variables.
+ *
+ * Uses inheritance instead of source injection to avoid indentation issues
+ * (user code may use 2-space, 4-space, or tab indentation).
+ */
+function injectGetattr(source: string): string {
+  if (!/^class\s+Player\s*:/m.test(source)) {
+    throw new PythonSyntaxError("class Player not found.");
   }
-
-  return { body, next: index };
+  const base =
+    "class _PlayerBase:\n    def __getattr__(self, name):\n        return None\n\n";
+  const modified = source.replace(
+    /^(class\s+Player)\s*:/m,
+    "$1(_PlayerBase):",
+  );
+  return base + modified;
 }
 
-function parseIfStmt(tokens: TokenLine[], start: number, indent: number): { stmt: Stmt; next: number } {
-  const branches: Array<{ cond: Expr; body: Stmt[] }> = [];
-  let elseBody: Stmt[] = [];
-  let index = start;
+/* ---------- JS ↔ Skulpt conversions ---------- */
 
-  while (index < tokens.length) {
-    const token = tokens[index];
-    if (token.indent !== indent) break;
+const SPACE_METHODS: ReadonlyArray<readonly [string, string]> = [
+  ["is_enemy", "isEnemy"],
+  ["is_captive", "isCaptive"],
+  ["is_stairs", "isStairs"],
+  ["is_wall", "isWall"],
+];
 
-    if (token.text.startsWith("if ") || token.text.startsWith("elif ")) {
-      const condText = token.text.replace(/^(if|elif)\s+/, "").replace(/:\s*$/, "");
-      const cond = parseExpr(condText, token.lineNo);
-      const bodyIndent = tokens[index + 1]?.indent;
-      if (!bodyIndent || bodyIndent <= indent) {
-        throw new ParseError(`Missing block after condition at line ${token.lineNo}.`);
-      }
-      const parsed = parseStatements(tokens, index + 1, bodyIndent);
-      branches.push({ cond, body: parsed.body });
-      index = parsed.next;
-      continue;
-    }
+/**
+ * Map from Skulpt Space proxy → original JS Space object.
+ * Used to unwrap Space arguments for direction_of/distance_of senses.
+ * Cleared at the start of each playTurn call.
+ */
+const skToJsSpaceMap = new Map<unknown, unknown>();
 
-    if (token.text === "else:") {
-      const bodyIndent = tokens[index + 1]?.indent;
-      if (!bodyIndent || bodyIndent <= indent) {
-        throw new ParseError(`Missing block after else at line ${token.lineNo}.`);
-      }
-      const parsed = parseStatements(tokens, index + 1, bodyIndent);
-      elseBody = parsed.body;
-      index = parsed.next;
-      break;
-    }
+/** Convert a JS Space-like object to a Skulpt Space instance (or None). */
+function jsSpaceToSk(sk: SkNamespace, raw: unknown): unknown {
+  if (raw == null) return sk.builtin.none.none$;
 
-    break;
+  const obj = raw as Record<string, unknown>;
+
+  // Empty space → Python None
+  const isEmptyFn = obj.isEmpty ?? obj.is_empty;
+  if (typeof isEmptyFn === "function" && (isEmptyFn as () => boolean).call(obj)) {
+    return sk.builtin.none.none$;
   }
 
-  if (branches.length === 0) {
-    throw new ParseError(`Invalid if statement at line ${tokens[start].lineNo}.`);
-  }
+  // Wrap as a Skulpt Space class whose methods delegate to the JS object
+  const SpaceClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
+    for (const [snake, camel] of SPACE_METHODS) {
+      ((s, c) => {
+        $loc[s] = new sk.builtin.func(() => {
+          const fn = obj[s] ?? obj[c];
+          if (typeof fn !== "function") {
+            throw new TypeError(`Space method ${s}/${c} is not available.`);
+          }
+          return (fn as () => boolean).call(obj)
+            ? sk.builtin.bool.true$
+            : sk.builtin.bool.false$;
+        });
+      })(snake, camel);
+    }
+  }, "Space", []);
 
-  return {
-    stmt: { kind: "if", branches, elseBody },
-    next: index,
-  };
+  const instance = sk.misceval.callsimArray(SpaceClass, []);
+  skToJsSpaceMap.set(instance, raw);
+  return instance;
 }
 
-function parseArgs(raw: string, lineNo: number): Expr[] {
-  const trimmed = raw.trim();
-  if (trimmed.length === 0) return [];
-  return trimmed.split(",").map((part) => parseExpr(part.trim(), lineNo));
+/** Convert a raw doSense result to a Skulpt value. */
+function senseResultToSk(sk: SkNamespace, value: unknown): unknown {
+  if (value == null) return sk.builtin.none.none$;
+  if (typeof value === "number") return new sk.builtin.int_(value);
+  if (typeof value === "string") return new sk.builtin.str(value);
+  if (Array.isArray(value)) {
+    return new sk.builtin.list(value.map((item) => jsSpaceToSk(sk, item)));
+  }
+  return jsSpaceToSk(sk, value);
 }
 
-function parseWarriorAction(text: string, lineNo: number): Stmt | null {
-  const m = /^warrior\.([A-Za-z_]\w*)\((.*)\)$/.exec(text);
-  if (!m) return null;
+/* ---------- Warrior proxy ---------- */
 
-  const pythonName = m[1];
-  const action = ACTION_MAP[pythonName];
-  if (!action) {
-    throw new ParseError(`Unsupported warrior action '${pythonName}' at line ${lineNo}.`);
-  }
+const ACTION_ENTRIES: ReadonlyArray<readonly [string, string]> = [
+  ["walk", "walk!"],
+  ["attack", "attack!"],
+  ["rest", "rest!"],
+  ["rescue", "rescue!"],
+  ["shoot", "shoot!"],
+  ["pivot", "pivot!"],
+  ["bind", "bind!"],
+  ["detonate", "detonate!"],
+  ["form", "form!"],
+];
 
-  return {
-    kind: "action",
-    name: action,
-    args: parseArgs(m[2], lineNo),
-  };
+/** Senses that take an optional direction string argument. */
+const SENSE_NAMES = ["feel", "look", "listen", "direction_of_stairs"] as const;
+
+/** Senses that take a Space object argument (requires unwrapping Skulpt proxy). */
+const SPACE_SENSE_NAMES = ["direction_of", "distance_of"] as const;
+
+/** Build a Skulpt Warrior instance that delegates to a RuntimeTurn. */
+function buildWarriorInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
+  const WarriorClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
+    // hp property
+    const hpGetter = new sk.builtin.func(() =>
+      new sk.builtin.int_(turn.doSense("health") as number),
+    );
+    $loc.hp = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [hpGetter]);
+
+    // Action methods
+    for (const [pyName, engineName] of ACTION_ENTRIES) {
+      ((py, eng) => {
+        $loc[py] = new sk.builtin.func((_self: unknown, direction?: unknown) => {
+          if (!turn.hasAction(eng)) return sk.builtin.none.none$;
+          if (eng === "rest!") {
+            turn.doAction(eng);
+          } else {
+            const dir = direction ? (sk.ffi.remapToJs(direction) as string) : "forward";
+            turn.doAction(eng, dir);
+          }
+          return sk.builtin.none.none$;
+        });
+      })(pyName, engineName);
+    }
+
+    // Sense methods (direction-argument senses)
+    for (const senseName of SENSE_NAMES) {
+      ((sn) => {
+        $loc[sn] = new sk.builtin.func((_self: unknown, direction?: unknown) => {
+          const args: unknown[] = [];
+          if (direction) args.push(sk.ffi.remapToJs(direction));
+          const result = turn.doSense(sn, ...args);
+          return senseResultToSk(sk, result);
+        });
+      })(senseName);
+    }
+
+    // Sense methods (Space-argument senses: direction_of, distance_of)
+    for (const senseName of SPACE_SENSE_NAMES) {
+      ((sn) => {
+        $loc[sn] = new sk.builtin.func((_self: unknown, spaceArg?: unknown) => {
+          const jsSpace = spaceArg ? skToJsSpaceMap.get(spaceArg) : undefined;
+          const result = turn.doSense(sn, jsSpace);
+          return senseResultToSk(sk, result);
+        });
+      })(senseName);
+    }
+  }, "Warrior", []);
+
+  return sk.misceval.callsimArray(WarriorClass, []);
 }
 
-function parseExpr(raw: string, lineNo: number): Expr {
-  const text = raw.trim();
+/* ---------- Error helpers ---------- */
 
-  if (text === "None") {
-    return { kind: "none" };
-  }
-
-  if (/^\d+$/.test(text)) {
-    return { kind: "number", value: Number(text) };
-  }
-
-  const stringMatch = /^(["'])(.*)\1$/.exec(text);
-  if (stringMatch) {
-    return { kind: "string", value: stringMatch[2] };
-  }
-
-  if (text.startsWith("not ")) {
-    return {
-      kind: "not",
-      expr: parseExpr(text.slice(4), lineNo),
-    };
-  }
-
-  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
-  const isNotNone = /^(.+?) +is +not +None$/.exec(text);
-  if (isNotNone) {
-    return {
-      kind: "is_none",
-      target: parseExpr(isNotNone[1], lineNo),
-      negated: true,
-    };
-  }
-
-  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
-  const isNone = /^(.+?) +is +None$/.exec(text);
-  if (isNone) {
-    return {
-      kind: "is_none",
-      target: parseExpr(isNone[1], lineNo),
-      negated: false,
-    };
-  }
-
-  // eslint-disable-next-line sonarjs/slow-regex -- input is a single short Python line; no ReDoS risk
-  const cmp = /(.+?) *(<=|>=|==|!=|<|>) *(.+)/.exec(text);
-  if (cmp) {
-    return {
-      kind: "compare",
-      left: parseExpr(cmp[1], lineNo),
-      op: cmp[2] as CompareOp,
-      right: parseExpr(cmp[3], lineNo),
-    };
-  }
-
-  const predicate = /^([A-Za-z_]\w*)\.(is_[A-Za-z_]\w*)\(\)$/.exec(text);
-  if (predicate) {
-    if (!SPACE_PREDICATES.has(predicate[2])) {
-      throw new ParseError(`Unsupported predicate '${predicate[2]}' at line ${lineNo}.`);
-    }
-    return {
-      kind: "predicate",
-      target: { kind: "var", name: predicate[1] },
-      name: predicate[2],
-    };
-  }
-
-  const sense = /^warrior\.([A-Za-z_]\w*)\((.*)\)$/.exec(text);
-  if (sense) {
-    return {
-      kind: "sense",
-      sense: sense[1],
-      args: parseArgs(sense[2], lineNo),
-    };
-  }
-
-  if (/^[A-Za-z_]\w*$/.test(text)) {
-    return { kind: "var", name: text };
-  }
-
-  const warriorProperty = /^warrior\.([A-Za-z_]\w*)$/.exec(text);
-  if (warriorProperty) {
-    if (warriorProperty[1] !== "hp") {
-      throw new ParseError(`Unsupported warrior property '${warriorProperty[1]}' at line ${lineNo}.`);
-    }
-    return { kind: "warrior_property", name: warriorProperty[1] };
-  }
-
-  throw new ParseError(`Unsupported expression at line ${lineNo}: ${text}`);
+function extractSkErrorMessage(error: unknown): string {
+  const skErr = error as { args?: { v?: Array<{ v?: string }> } };
+  if (skErr?.args?.v?.[0]?.v) return skErr.args.v[0].v;
+  if (error instanceof Error) return error.message;
+  return String(error);
 }
 
-function evalExpr(expr: Expr, turn: RuntimeTurn, env: Map<string, unknown>): unknown {
-  switch (expr.kind) {
-    case "number":
-      return expr.value;
-    case "string":
-      return expr.value;
-    case "none":
-      return null;
-    case "var":
-      if (!env.has(expr.name)) {
-        throw new Error(`Unknown variable: ${expr.name}`);
-      }
-      return env.get(expr.name);
-    case "warrior_property":
-      return callSense(turn, expr.name);
-    case "sense": {
-      const args = expr.args.map((arg) => evalExpr(arg, turn, env));
-      return callSense(turn, expr.sense, ...args);
-    }
-    case "predicate": {
-      const target = evalExpr(expr.target, turn, env) as Record<string, unknown>;
-      const fn = target[expr.name] as (() => boolean) | undefined;
-      if (typeof fn !== "function") {
-        throw new TypeError(`Predicate ${expr.name} is not available.`);
-      }
-      return fn.call(target);
-    }
-    case "is_none": {
-      const value = evalExpr(expr.target, turn, env);
-      const result = value === null;
-      return expr.negated ? !result : result;
-    }
-    case "not":
-      return !evalExpr(expr.expr, turn, env);
-    case "compare": {
-      const left = evalExpr(expr.left, turn, env);
-      const right = evalExpr(expr.right, turn, env);
-      switch (expr.op) {
-        case "<":
-          return Number(left) < Number(right);
-        case "<=":
-          return Number(left) <= Number(right);
-        case ">":
-          return Number(left) > Number(right);
-        case ">=":
-          return Number(left) >= Number(right);
-        case "==":
-          return left === right;
-        case "!=":
-          return left !== right;
-      }
-    }
-  }
-}
-
-function runAction(stmt: ActionStmt, turn: RuntimeTurn, env: Map<string, unknown>): void {
-  const args = stmt.args.map((arg) => evalExpr(arg, turn, env));
-  if (stmt.name === "rest!") {
-    if (turn.hasAction(stmt.name)) {
-      turn.doAction(stmt.name);
-    }
-    return;
-  }
-  const direction = normalizeDirection(args[0]);
-  if (turn.hasAction(stmt.name)) {
-    turn.doAction(stmt.name, direction);
-  }
-}
-
-function runIf(stmt: IfStmt, turn: RuntimeTurn, env: Map<string, unknown>): void {
-  for (const branch of stmt.branches) {
-    if (evalExpr(branch.cond, turn, env)) {
-      runStatements(branch.body, turn, env);
-      return;
-    }
-  }
-  if (stmt.elseBody.length > 0) {
-    runStatements(stmt.elseBody, turn, env);
-  }
-}
-
-function runStatements(stmts: Stmt[], turn: RuntimeTurn, env: Map<string, unknown>): void {
-  for (const stmt of stmts) {
-    switch (stmt.kind) {
-      case "pass":
-        break;
-      case "assign":
-        env.set(stmt.name, evalExpr(stmt.expr, turn, env));
-        break;
-      case "action":
-        runAction(stmt, turn, env);
-        break;
-      case "if":
-        runIf(stmt, turn, env);
-        break;
-    }
-  }
-}
+/* ---------- Public API ---------- */
 
 export function compilePythonPlayer(source: string): IPlayer {
-  const tokens = tokenizePlayTurn(source);
-  const firstIndent = tokens[0].indent;
-  const parsed = parseStatements(tokens, 0, firstIndent);
-
-  if (parsed.next !== tokens.length) {
-    const token = tokens[parsed.next];
-    throw new ParseError(`Unsupported trailing syntax at line ${token.lineNo}: ${token.text}`);
+  if (source.trim().length === 0) {
+    throw new PythonSyntaxError("Python source is empty.");
   }
 
-  const ast = parsed.body;
+  const sk = getSk();
+  const processed = injectGetattr(source);
+
+  // Compile and instantiate the Player class
+  let playTurnMethod: unknown;
+  try {
+    const moduleName = `<player_${++moduleCounter}>`;
+    const mod = sk.importMainWithBody(moduleName, false, processed);
+    const PlayerClass = mod.tp$getattr(new sk.builtin.str("Player"));
+    if (!PlayerClass) {
+      throw new PythonSyntaxError("class Player not found.");
+    }
+    const playerInstance = sk.misceval.callsimArray(PlayerClass, []) as SkInstance;
+    playTurnMethod = playerInstance.tp$getattr(new sk.builtin.str("play_turn"));
+    // __getattr__ returns Sk.builtin.none.none$ for missing attrs, so check for that too
+    if (!playTurnMethod || playTurnMethod === sk.builtin.none.none$) {
+      throw new PythonSyntaxError("def play_turn(self, warrior) not found.");
+    }
+  } catch (error) {
+    if (error instanceof PythonSyntaxError) throw error;
+    throw new PythonSyntaxError(extractSkErrorMessage(error));
+  }
 
   return {
     playTurn(turnInput: ITurn): void {
       try {
+        skToJsSpaceMap.clear();
         const turn = asRuntimeTurn(turnInput);
-        const env = new Map<string, unknown>();
-        runStatements(ast, turn, env);
+        const warriorProxy = buildWarriorInstance(sk, turn);
+        sk.misceval.callsimArray(playTurnMethod, [warriorProxy]);
       } catch (error) {
         if (error instanceof PythonSyntaxError || error instanceof PythonRuntimeError) {
           throw error;
         }
-        if (error instanceof Error) {
-          throw new PythonRuntimeError(error.message);
-        }
-        throw new PythonRuntimeError(String(error));
+        throw new PythonRuntimeError(extractSkErrorMessage(error));
       }
     },
   };
