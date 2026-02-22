@@ -43,8 +43,29 @@ function injectGetattr(source: string): string {
   if (!/^class\s+Player\s*:/m.test(source)) {
     throw new PythonSyntaxError("class Player not found.");
   }
-  const base =
-    "class _PlayerBase:\n    def __getattr__(self, name):\n        return None\n\n";
+  const base = [
+    "class Direction:",
+    "    FORWARD = 'forward'",
+    "    RIGHT = 'right'",
+    "    BACKWARD = 'backward'",
+    "    LEFT = 'left'",
+    "",
+    "class Terrain:",
+    "    FLOOR = 'floor'",
+    "    WALL = 'wall'",
+    "    STAIRS = 'stairs'",
+    "",
+    "class UnitKind:",
+    "    ENEMY = 'enemy'",
+    "    CAPTIVE = 'captive'",
+    "    ALLY = 'ally'",
+    "",
+    "class _PlayerBase:",
+    "    def __getattr__(self, name):",
+    "        return None",
+    "",
+    "",
+  ].join("\n");
   const modified = source.replace(
     /^(class\s+Player)\s*:/m,
     "$1(_PlayerBase):",
@@ -62,6 +83,18 @@ const SPACE_METHODS: ReadonlyArray<readonly [string, string]> = [
   ["is_ticking", "isTicking"],
 ];
 
+const TERRAIN_VALUES = {
+  FLOOR: "floor",
+  WALL: "wall",
+  STAIRS: "stairs",
+} as const;
+
+const UNIT_KIND_VALUES = {
+  ENEMY: "enemy",
+  CAPTIVE: "captive",
+  ALLY: "ally",
+} as const;
+
 /**
  * Map from Skulpt Space proxy → original JS Space object.
  * Used to unwrap Space arguments for direction_of/distance_of senses.
@@ -69,28 +102,115 @@ const SPACE_METHODS: ReadonlyArray<readonly [string, string]> = [
  */
 const skToJsSpaceMap = new Map<unknown, unknown>();
 
+function getMethod(
+  obj: Record<string, unknown>,
+  snake: string,
+  camel: string,
+): ((...args: unknown[]) => unknown) | undefined {
+  const snakeFn = obj[snake];
+  if (typeof snakeFn === "function") {
+    return snakeFn as (...args: unknown[]) => unknown;
+  }
+  const camelFn = obj[camel];
+  if (typeof camelFn === "function") {
+    return camelFn as (...args: unknown[]) => unknown;
+  }
+  return undefined;
+}
+
+function callSpacePredicate(
+  obj: Record<string, unknown>,
+  snake: string,
+  camel: string,
+): boolean {
+  const fn = getMethod(obj, snake, camel);
+  if (!fn) {
+    throw new TypeError(`Space method ${snake}/${camel} is not available.`);
+  }
+  return Boolean(fn.call(obj));
+}
+
+function callOptionalSpacePredicate(
+  obj: Record<string, unknown>,
+  snake: string,
+  camel: string,
+): boolean | undefined {
+  const fn = getMethod(obj, snake, camel);
+  if (!fn) return undefined;
+  return Boolean(fn.call(obj));
+}
+
+function getTerrainValue(obj: Record<string, unknown>): string {
+  if (callSpacePredicate(obj, "is_wall", "isWall")) return TERRAIN_VALUES.WALL;
+  if (callSpacePredicate(obj, "is_stairs", "isStairs")) return TERRAIN_VALUES.STAIRS;
+  return TERRAIN_VALUES.FLOOR;
+}
+
+function getOccupantInfo(
+  obj: Record<string, unknown>,
+): { kind: string; ticking: boolean } | null {
+  const jsSpaceUnit = "unit" in obj ? (obj as { unit?: unknown }).unit : undefined;
+  const enemy = callOptionalSpacePredicate(obj, "is_enemy", "isEnemy");
+  const captive = callOptionalSpacePredicate(obj, "is_captive", "isCaptive");
+  const ticking = callOptionalSpacePredicate(obj, "is_ticking", "isTicking") ?? false;
+
+  // Engine Space exposes a `unit` getter. If it is absent (test doubles), fall back to predicates.
+  if (jsSpaceUnit !== undefined) {
+    if (captive) return { kind: UNIT_KIND_VALUES.CAPTIVE, ticking };
+    if (enemy) return { kind: UNIT_KIND_VALUES.ENEMY, ticking };
+    return { kind: UNIT_KIND_VALUES.ALLY, ticking };
+  }
+
+  if (captive) return { kind: UNIT_KIND_VALUES.CAPTIVE, ticking };
+  if (enemy) return { kind: UNIT_KIND_VALUES.ENEMY, ticking };
+
+  const isWall = callOptionalSpacePredicate(obj, "is_wall", "isWall") ?? false;
+  if (isWall) return null;
+
+  const isEmpty = callOptionalSpacePredicate(obj, "is_empty", "isEmpty");
+  if (isEmpty === true) return null;
+
+  const isStairs = callOptionalSpacePredicate(obj, "is_stairs", "isStairs") ?? false;
+  if (isStairs) return null;
+
+  return null;
+}
+
+function jsOccupantToSk(sk: SkNamespace, obj: Record<string, unknown>): unknown {
+  const info = getOccupantInfo(obj);
+  if (!info) return sk.builtin.none.none$;
+
+  const OccupantClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
+    const kindGetter = new sk.builtin.func(() => new sk.builtin.str(info.kind));
+    $loc.kind = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [kindGetter]);
+
+    const tickingGetter = new sk.builtin.func(() =>
+      info.ticking ? sk.builtin.bool.true$ : sk.builtin.bool.false$,
+    );
+    $loc.ticking = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [tickingGetter]);
+  }, "Occupant", []);
+
+  return sk.misceval.callsimArray(OccupantClass, []);
+}
+
 /** Convert a JS Space-like object to a Skulpt Space instance (or None). */
 function jsSpaceToSk(sk: SkNamespace, raw: unknown): unknown {
   if (raw == null) return sk.builtin.none.none$;
 
   const obj = raw as Record<string, unknown>;
 
-  // Empty space → Python None
-  const isEmptyFn = obj.isEmpty ?? obj.is_empty;
-  if (typeof isEmptyFn === "function" && (isEmptyFn as () => boolean).call(obj)) {
-    return sk.builtin.none.none$;
-  }
-
   // Wrap as a Skulpt Space class whose methods delegate to the JS object
   const SpaceClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
+    const terrainGetter = new sk.builtin.func(() => new sk.builtin.str(getTerrainValue(obj)));
+    $loc.terrain = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [terrainGetter]);
+
+    const unitGetter = new sk.builtin.func(() => jsOccupantToSk(sk, obj));
+    $loc.unit = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [unitGetter]);
+
     for (const [snake, camel] of SPACE_METHODS) {
       ((s, c) => {
         $loc[s] = new sk.builtin.func(() => {
-          const fn = obj[s] ?? obj[c];
-          if (typeof fn !== "function") {
-            throw new TypeError(`Space method ${s}/${c} is not available.`);
-          }
-          return (fn as () => boolean).call(obj)
+          return callSpacePredicate(obj, s, c)
             ? sk.builtin.bool.true$
             : sk.builtin.bool.false$;
         });
@@ -128,6 +248,10 @@ const ACTION_ENTRIES: ReadonlyArray<readonly [string, string]> = [
   ["form", "form!"],
 ];
 
+const ACTION_DEFAULT_DIRECTIONS: Readonly<Record<string, string>> = {
+  "pivot!": "backward",
+};
+
 /** Senses that take an optional direction string argument. */
 const SENSE_NAMES = ["feel", "look", "listen", "direction_of_stairs"] as const;
 
@@ -151,7 +275,9 @@ function buildSamuraiInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
           if (eng === "rest!") {
             turn.doAction(eng);
           } else {
-            const dir = direction ? (sk.ffi.remapToJs(direction) as string) : "forward";
+            const dir = direction
+              ? (sk.ffi.remapToJs(direction) as string)
+              : (ACTION_DEFAULT_DIRECTIONS[eng] ?? "forward");
             turn.doAction(eng, dir);
           }
           return sk.builtin.none.none$;

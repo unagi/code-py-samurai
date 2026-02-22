@@ -4,11 +4,11 @@ class Player:
         units = samurai.listen()
         adjacent_enemies = []
         adjacent_captive = None
-        for d in ['forward', 'left', 'right', 'backward']:
+        for d in [Direction.FORWARD, Direction.LEFT, Direction.RIGHT, Direction.BACKWARD]:
             space = samurai.feel(d)
-            if space is not None and space.is_enemy():
+            if space.unit is not None and space.unit.kind == UnitKind.ENEMY:
                 adjacent_enemies.append(d)
-            elif space is not None and space.is_captive():
+            elif space.unit is not None and space.unit.kind == UnitKind.CAPTIVE:
                 adjacent_captive = d
         if len(adjacent_enemies) > 0:
             samurai.attack(adjacent_enemies[0])

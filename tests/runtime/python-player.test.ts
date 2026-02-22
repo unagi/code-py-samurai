@@ -402,4 +402,69 @@ describe("compilePythonPlayer", () => {
     player.playTurn(normalTurn as never);
     expect(normalTurn.action).toEqual(["walk!", "forward"]);
   });
+
+  it("provides Direction/Terrain/UnitKind constants and Space/Occupant properties", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        left = samurai.feel(Direction.LEFT)",
+      "        if left.terrain == Terrain.WALL:",
+      "            samurai.walk(Direction.FORWARD)",
+      "            return",
+      "        fwd = samurai.feel(Direction.FORWARD)",
+      "        if fwd.unit is not None and fwd.unit.kind == UnitKind.ENEMY:",
+      "            samurai.attack(Direction.FORWARD)",
+      "            return",
+      "        samurai.walk(Direction.LEFT)",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+
+    const turn = new FakeTurn({
+      feel: (direction?: unknown) => {
+        if (direction === "left") {
+          return {
+            isEmpty: () => false,
+            isEnemy: () => false,
+            isCaptive: () => false,
+            isWall: () => true,
+            isStairs: () => false,
+            isTicking: () => false,
+          };
+        }
+        return new FakeSpace(true, false, false);
+      },
+      health: () => 20,
+    });
+
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("returns Space for empty cells (feel no longer returns None for empty floor)", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
+      "        if space.unit is None and space.terrain == Terrain.FLOOR:",
+      "            samurai.walk()",
+      "        else:",
+      "            samurai.attack()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({
+      feel: () => new FakeSpace(false, false, true),
+    });
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["walk!", "forward"]);
+  });
+
+  it("uses backward as the default pivot direction", () => {
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.pivot()`;
+    const player = compilePythonPlayer(source);
+    const turn = new FakeTurn({});
+    player.playTurn(turn as never);
+    expect(turn.action).toEqual(["pivot!", "backward"]);
+  });
 });

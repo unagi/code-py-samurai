@@ -1,13 +1,13 @@
 class Player:
     def play_turn(self, samurai):
         fwd = samurai.feel()
-        if fwd is not None and fwd.is_captive():
+        if fwd.unit is not None and fwd.unit.kind == UnitKind.CAPTIVE:
             samurai.rescue()
             return
         for space in samurai.look():
-            if space is None:
+            if space.unit is None and space.terrain != Terrain.WALL:
                 continue
-            if space.is_enemy():
+            if space.unit is not None and space.unit.kind == UnitKind.ENEMY:
                 samurai.shoot()
                 return
             break
