@@ -1,7 +1,4 @@
 {
-  "description": "You can hear bow strings being stretched.",
-  "tip": "No new abilities this time, but be careful not to rest while taking damage. Save your previous health in a variable (for example prev_hp) and compare it each turn.",
-  "clue": "Set prev_hp = samurai.hp at the end of each turn. If samurai.hp dropped since last turn then you're taking damage and should not rest.",
   "timeBonus": 45,
   "aceScore": 90,
   "floor": {

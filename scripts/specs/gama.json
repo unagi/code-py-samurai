@@ -1,0 +1,9 @@
+{
+  "character": "gama",
+  "states": [
+    { "name": "idle",    "frames": 3 },
+    { "name": "attack",  "frames": 4 },
+    { "name": "damaged", "frames": 2 },
+    { "name": "death",   "frames": 5 }
+  ]
+}

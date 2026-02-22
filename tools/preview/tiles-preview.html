@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Tile Preview</title>
+<style>
+  body { background: #1a1a2e; color: #eee; font-family: sans-serif; padding: 20px; }
+  h1 { text-align: center; }
+  .controls { text-align: center; margin: 20px 0; }
+  .controls button { margin: 0 5px; padding: 8px 16px; cursor: pointer; }
+  .controls button.active { background: #e94560; color: #fff; border: none; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
+  .tile-card { border: 1px solid #333; border-radius: 8px; padding: 16px; text-align: center; }
+  .tile-card h3 { margin: 0 0 8px 0; font-size: 14px; color: #e94560; }
+  .tile-card .info { font-size: 11px; color: #888; margin-bottom: 8px; }
+  .tile-container { position: relative; display: inline-block; }
+  .tile-container img { max-width: 100%; max-height: 300px; image-rendering: pixelated; }
+  .bg-checker .tile-container { background: repeating-conic-gradient(#808080 0% 25%, #c0c0c0 0% 50%) 50% / 16px 16px; }
+  .bg-white .tile-container { background: #fff; }
+  .bg-black .tile-container { background: #000; }
+  .bg-game .tile-container { background: #2a1a0e; }
+</style>
+</head>
+<body>
+<h1>Tile Preview</h1>
+<div class="controls">
+  <span>Background: </span>
+  <button class="active" onclick="setBg('checker')">Checker</button>
+  <button onclick="setBg('white')">White</button>
+  <button onclick="setBg('black')">Black</button>
+  <button onclick="setBg('game')">Game BG</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const TILES = [
+  "floor-wood", "floor-stone", "floor-tatami",
+  "wall-stone", "wall-stone-narrow", "wall-door-double",
+  "wall-door-single", "stairs-wood", "stairs-stone"
+];
+const BASE = "../../public/assets/tiles/";
+const grid = document.getElementById("grid");
+
+TILES.forEach(name => {
+  const card = document.createElement("div");
+  card.className = "tile-card bg-checker";
+  const img = new Image();
+  img.src = BASE + name + ".png";
+  img.onload = () => {
+    card.querySelector(".info").textContent = `${img.naturalWidth} x ${img.naturalHeight}`;
+  };
+  card.innerHTML = `<h3>${name}</h3><div class="info">loading...</div><div class="tile-container"></div>`;
+  card.querySelector(".tile-container").appendChild(img);
+  grid.appendChild(card);
+});
+
+function setBg(mode) {
+  document.querySelectorAll(".tile-card").forEach(c => {
+    c.className = "tile-card bg-" + mode;
+  });
+  document.querySelectorAll(".controls button").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+}
+</script>
+</body>
+</html>

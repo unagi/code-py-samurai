@@ -74,8 +74,8 @@
     "frame": "frame wall",
     "stairs": "stairs",
     "samurai": "samurai",
-    "sludge": "sludge",
-    "thickSludge": "thick sludge",
+    "sludge": "toad",
+    "thickSludge": "serpent",
     "archer": "archer",
     "wizard": "wizard",
     "captive": "captive",
@@ -127,12 +127,12 @@
         "tip": "Call samurai.walk() to walk forward in the Player 'play_turn' method."
       },
       "2": {
-        "description": "It is too dark to see anything, but you smell sludge nearby.",
+        "description": "It is too dark to see anything, but you smell toads nearby.",
         "tip": "Use samurai.feel() to see what is in front. If it is None, walk; otherwise attack. Remember, you can only do one action per turn.",
         "clue": "Add an if/else condition with `space = samurai.feel()` and `if space is None:` to decide whether to samurai.attack() or samurai.walk()."
       },
       "3": {
-        "description": "The air feels thicker than before. There must be a horde of sludge.",
+        "description": "The air feels thicker than before. There must be a horde of toads.",
         "tip": "Be careful not to die! Use samurai.hp to keep an eye on your health, and samurai.rest() to earn 10% of max health back.",
         "clue": "When there is no enemy ahead of you call samurai.rest() until health is full before walking forward."
       },
@@ -177,7 +177,7 @@
         "clue": "Call samurai.feel(direction).is_enemy() in each direction to make sure there isn't an enemy beside you (attack if there is). Call samurai.rest() if you're low on health when there are no enemies around."
       },
       "3": {
-        "description": "You feel slime on all sides, you're surrounded!",
+        "description": "You sense toads on all sides, you're surrounded!",
         "tip": "Call samurai.bind(direction) to bind an enemy to keep him from attacking. Bound enemies look like captives.",
         "clue": "Count the number of enemies around you. Bind an enemy if there are two or more."
       },
@@ -197,8 +197,8 @@
         "clue": "Avoid fighting enemies at first. Use samurai.listen() to find nearby units and rescue captives as quickly as possible."
       },
       "7": {
-        "description": "Another ticking sound, but some sludge is blocking the way.",
-        "tip": "Quickly kill the sludge and rescue the captive before the bomb goes off. You can't simply go around them.",
+        "description": "Another ticking sound, but some toads are blocking the way.",
+        "tip": "Quickly kill the toads and rescue the captive before the bomb goes off. You can't simply go around them.",
         "clue": "Determine the direction of the ticking captive and kill any enemies blocking that path. You may need to bind surrounding enemies first."
       },
       "8": {
@@ -207,7 +207,7 @@
         "clue": "Calling samurai.look() will return an array of Spaces. If the first two contain enemies, detonate a bomb with samurai.detonate()."
       },
       "9": {
-        "description": "Never before have you seen a room so full of sludge. Start the fireworks!",
+        "description": "Never before have you seen a room so full of toads. Start the fireworks!",
         "tip": "Be careful not to let the ticking captive get caught in the flames. Use samurai.distance_of to avoid the captives.",
         "clue": "Be sure to bind the surrounding enemies before fighting. Check your health before detonating explosives."
       }

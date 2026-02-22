@@ -73,9 +73,6 @@ export interface ITurn {
  * Level definition data.
  */
 export interface LevelDefinition {
-  description: string;
-  tip: string;
-  clue?: string;
   timeBonus: number;
   aceScore: number;
   floor: {

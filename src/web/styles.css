@@ -247,6 +247,21 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.tile-sprite-sheet {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+/* スプライトオーバーレイ: 床画像の上に重ねて表示 */
+.tile-sprite-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .damage-popup {
