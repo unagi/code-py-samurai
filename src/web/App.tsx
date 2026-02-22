@@ -146,12 +146,6 @@ const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
     damaged: { pathTemplate: "/assets/sprites/saru/damaged-{dir}.png", frames: 2 },
     death:   { pathTemplate: "/assets/sprites/saru/death-{dir}.png",   frames: 2 },
   },
-  wizard: {
-    idle:    { pathTemplate: "/assets/sprites/tanuki/idle-{dir}.png",    frames: 2 },
-    attack:  { pathTemplate: "/assets/sprites/tanuki/cast-{dir}.png",   frames: 2 },
-    damaged: { pathTemplate: "/assets/sprites/tanuki/damaged-{dir}.png", frames: 2 },
-    death:   { pathTemplate: "/assets/sprites/tanuki/death-{dir}.png",   frames: 2 },
-  },
 };
 
 
