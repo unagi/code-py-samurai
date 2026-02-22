@@ -52,3 +52,14 @@ describe("Level step API", () => {
     expect(stepped.result()).toEqual(played.play());
   });
 });
+
+describe("Level scoring helpers", () => {
+  it("maps score ratios to grade letters (S/A/B/C/D/F)", () => {
+    expect(Level.gradeLetter(1.0)).toBe("S");
+    expect(Level.gradeLetter(0.95)).toBe("A");
+    expect(Level.gradeLetter(0.85)).toBe("B");
+    expect(Level.gradeLetter(0.75)).toBe("C");
+    expect(Level.gradeLetter(0.65)).toBe("D");
+    expect(Level.gradeLetter(0.59)).toBe("F");
+  });
+});

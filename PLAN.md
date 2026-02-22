@@ -189,7 +189,7 @@ py-samurai/
 
 **完了条件** (`npm test` 全Pass):
 - [x] `turn.test.ts`: アクション1つ制限、センス複数OK、未アクションでのperform
-- [ ] `base-ability.test.ts`: offset計算、space取得
+- [x] `base-ability.test.ts`: offset計算、space取得
 - [x] `walk.test.ts`: forward/backward移動で座標が正しく変化
 - [x] `feel.test.ts`: 隣接Spaceが返る、壁/ユニット/空を正しく検出
 - [x] `attack.test.ts`: ダメージ計算、backward半減、対象HP減少、死亡でposition=null
@@ -216,7 +216,7 @@ py-samurai/
 - [x] 追加アビリティの各ユニットテスト (rescue/shoot/look/pivot/bind/listen/direction_of_stairs)
 - [x] 追加ユニットの各ユニットテスト (Archer/ThickSludge/Captive/Wizard + AI)
 - [x] `level-004.test.ts` 〜 `level-009.test.ts`: 各レベルの解答コードでクリア
-- [ ] `scoring.test.ts`: time_bonus計算、clear_bonus (全敵撃破時+20%)、ace_score、グレード (S/A/B/C/D/F)
+- [x] `scoring.test.ts`: time_bonus計算、clear_bonus (全敵撃破時+20%)、ace_score、グレード (S/A/B/C/D/F)
 
 ---
 

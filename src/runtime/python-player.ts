@@ -59,6 +59,7 @@ const SPACE_METHODS: ReadonlyArray<readonly [string, string]> = [
   ["is_captive", "isCaptive"],
   ["is_stairs", "isStairs"],
   ["is_wall", "isWall"],
+  ["is_ticking", "isTicking"],
 ];
 
 /**

@@ -8,6 +8,7 @@ class FakeSpace {
     private readonly enemy: boolean,
     private readonly captive: boolean,
     private readonly empty: boolean,
+    private readonly ticking: boolean = false,
   ) {}
 
   isEnemy(): boolean {
@@ -28,6 +29,10 @@ class FakeSpace {
 
   isWall(): boolean {
     return false;
+  }
+
+  isTicking(): boolean {
+    return this.ticking;
   }
 }
 
@@ -370,5 +375,31 @@ describe("compilePythonPlayer", () => {
     });
 
     expect(() => player.playTurn(turn as never)).toThrow(/boom/);
+  });
+
+  it("supports space.is_ticking() predicate", () => {
+    const source = [
+      "class Player:",
+      "    def play_turn(self, warrior):",
+      "        space = warrior.feel()",
+      "        if space is not None and space.is_ticking():",
+      "            warrior.rescue()",
+      "        else:",
+      "            warrior.walk()",
+    ].join("\n");
+
+    const player = compilePythonPlayer(source);
+
+    const tickingTurn = new FakeTurn({
+      feel: () => new FakeSpace(false, true, false, true),
+    });
+    player.playTurn(tickingTurn as never);
+    expect(tickingTurn.action).toEqual(["rescue!", "forward"]);
+
+    const normalTurn = new FakeTurn({
+      feel: () => new FakeSpace(false, true, false, false),
+    });
+    player.playTurn(normalTurn as never);
+    expect(normalTurn.action).toEqual(["walk!", "forward"]);
   });
 });
