@@ -8,17 +8,16 @@ import { HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/lang
 import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
-import { Level, type LevelResult } from "../engine/level";
+import type { LevelResult } from "../engine/level";
 import type { LogEntry } from "../engine/log-entry";
-import type { ILogger, IPlayer, LevelDefinition, SamuraiAbilitySet } from "../engine/types";
+import type { SamuraiAbilitySet } from "../engine/types";
 import {
   getTowerAndLocalFromGlobal,
   getSamuraiAbilitiesAtGlobalLevel,
   getSamuraiRank,
   samuraiAbilitiesToEngineAbilities,
 } from "../engine/samurai-abilities";
-import { formatPythonError } from "../runtime/errors";
-import { runPythonPlayerSource } from "../runtime/python-runner";
+import { LevelSession } from "../runtime/level-session";
 import { towers } from "../levels";
 import {
   createDamagePopupsFromEntries,
@@ -26,7 +25,7 @@ import {
   type DamagePopup,
   type SpriteOverride,
 } from "./board-effects";
-import { buildBoardGrid, MAX_BOARD_SIZE } from "./board-grid";
+import { buildBoardGrid } from "./board-grid";
 import { formatLogEntry } from "./log-format";
 import {
   buildSamuraiLevel,
@@ -38,6 +37,7 @@ import {
   writeProgressStorage,
 } from "./progress-storage";
 import { absoluteDirToSpriteDir, resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { buildUnitDirectionMap, buildUnitTileIndexMap } from "./unit-maps";
 
 function buildStarterPlayerCode(comment: string): string {
   return `class Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
@@ -124,163 +124,6 @@ function buildTileStatsText(
   const hpText = stats.hp === null ? fmt.hp("--", "--") : fmt.hp(stats.hp, stats.hp);
   const atkText = stats.atk === null ? fmt.atk("--") : fmt.atk(stats.atk);
   return `${hpText}  ${atkText}`;
-}
-
-class MemoryLogger implements ILogger {
-  entries: LogEntry[] = [];
-
-  log(entry: LogEntry): void {
-    this.entries.push(entry);
-  }
-
-  clear(): void {
-    this.entries = [];
-  }
-}
-
-class LevelSession {
-  private _logger = new MemoryLogger();
-  private _level: Level | null = null;
-  private _setupError: string | null = null;
-  private _runtimeError: string | null = null;
-  private _fallbackBoard = "";
-  private _lastValidPlayer: IPlayer | null = null;
-  private readonly _fallbackMessageKey = "logs.systemFallback";
-
-  private buildFallbackBoard(levelDef: LevelDefinition): string {
-    const previewPlayer: IPlayer = {
-      playTurn: () => {},
-    };
-    const previewLevel = new Level(levelDef);
-    previewLevel.setup(previewPlayer, []);
-    return previewLevel.floor.character();
-  }
-
-  setup(levelDef: LevelDefinition, playerCode: string, existingAbilities: string[] = []): void {
-    this._logger.clear();
-    this._setupError = null;
-    this._runtimeError = null;
-    this._fallbackBoard = this.buildFallbackBoard(levelDef);
-    try {
-      const { player } = runPythonPlayerSource(playerCode);
-      this._lastValidPlayer = player;
-      this._level = new Level(levelDef, this._logger);
-      this._level.setup(player, existingAbilities);
-    } catch (error) {
-      this._setupError = formatPythonError(error);
-      this._logger.log({ key: "logs.pythonError", params: { message: this._setupError } });
-      if (this._lastValidPlayer) {
-        this._logger.log({ key: this._fallbackMessageKey, params: {} });
-        this._level = new Level(levelDef, this._logger);
-        this._level.setup(this._lastValidPlayer, []);
-      } else {
-        this._level = null;
-      }
-    }
-  }
-
-  resetWithLastValid(levelDef: LevelDefinition): boolean {
-    if (!this._lastValidPlayer) return false;
-    this._logger.clear();
-    this._setupError = null;
-    this._runtimeError = null;
-    this._fallbackBoard = this.buildFallbackBoard(levelDef);
-    this._level = new Level(levelDef, this._logger);
-    this._level.setup(this._lastValidPlayer, []);
-    return true;
-  }
-
-  step(): boolean {
-    if (!this._level) return false;
-    try {
-      return this._level.step();
-    } catch (error) {
-      this._runtimeError = formatPythonError(error);
-      this._logger.log({ key: "logs.pythonError", params: { message: this._runtimeError } });
-      return false;
-    }
-  }
-
-  get board(): string {
-    if (!this._level) return this._fallbackBoard;
-    return this._level.floor.character();
-  }
-
-  get entries(): readonly LogEntry[] {
-    return this._logger.entries;
-  }
-
-  get result(): LevelResult | null {
-    if (!this._level) return null;
-    return this._level.result();
-  }
-
-  get samuraiHealth(): number | null {
-    if (!this._level) return null;
-    return this._level.samurai.health;
-  }
-
-  get samuraiMaxHealth(): number | null {
-    if (!this._level) return null;
-    return this._level.samurai.maxHealth;
-  }
-
-  getUnitTileIndexMap(board: string): Map<string, number> {
-    const map = new Map<string, number>();
-    if (!this._level) return map;
-    const raw = board.trimEnd();
-    const sourceLines = raw.length > 0 ? raw.split("\n") : [];
-    const sourceColumns = sourceLines.reduce((max, line) => Math.max(max, line.length), 0);
-    const sourceRows = sourceLines.length;
-    const columns = Math.max(MAX_BOARD_SIZE.columns, sourceColumns);
-    const rows = Math.max(MAX_BOARD_SIZE.rows, sourceRows);
-    const leftPad = Math.floor((columns - sourceColumns) / 2);
-    const topPad = Math.floor((rows - sourceRows) / 2);
-
-    for (const unit of this._level.floor.units) {
-      const candidate = unit as unknown as {
-        unitId?: string;
-        position: { x: number; y: number } | null;
-      };
-      if (typeof candidate.unitId !== "string" || !candidate.position) continue;
-      const boardX = leftPad + candidate.position.x + 1;
-      const boardY = topPad + candidate.position.y + 1;
-      const tileIndex = boardY * columns + boardX;
-      map.set(candidate.unitId.toLowerCase(), tileIndex);
-    }
-
-    return map;
-  }
-
-  /**
-   * unitId (lowercase) → AbsoluteDirection ("north"|"east"|"south"|"west") のマップを返す。
-   * スプライトの向き決定に使用。
-   */
-  getUnitDirectionMap(): Map<string, string> {
-    const map = new Map<string, string>();
-    if (!this._level) return map;
-    for (const unit of this._level.floor.units) {
-      const candidate = unit as unknown as {
-        unitId?: string;
-        position: { x: number; y: number; direction: string } | null;
-      };
-      if (typeof candidate.unitId !== "string" || !candidate.position) continue;
-      map.set(candidate.unitId.toLowerCase(), candidate.position.direction);
-    }
-    return map;
-  }
-
-  get canPlay(): boolean {
-    return this._level !== null && this._setupError === null && this._runtimeError === null;
-  }
-
-  get hasSetupError(): boolean {
-    return this._setupError !== null;
-  }
-
-  get hasLastValidPlayer(): boolean {
-    return this._lastValidPlayer !== null;
-  }
 }
 
 function createCodeEditor(
@@ -533,8 +376,9 @@ export default function App() {
     setSamuraiHealth(session.samuraiHealth);
     setSamuraiMaxHealth(session.samuraiMaxHealth);
     setCanPlay(session.canPlay);
-    unitTileIndexMapRef.current = session.getUnitTileIndexMap(nextBoard);
-    unitDirectionMapRef.current = session.getUnitDirectionMap();
+    const unitSnapshots = session.unitSnapshots;
+    unitTileIndexMapRef.current = buildUnitTileIndexMap(nextBoard, unitSnapshots);
+    unitDirectionMapRef.current = buildUnitDirectionMap(unitSnapshots);
   };
 
   const stopTimer = (): void => {
