@@ -26,6 +26,7 @@ export abstract class BaseUnit implements IUnit {
   protected static readonly SHOOT_POWER: number = 0;
   protected static readonly MAX_HEALTH: number = 0;
   protected static readonly CHARACTER: string = "?";
+  protected static readonly DISPLAY_NAME?: string;
 
   private _unitId: string;
   position: Position | null = null;
@@ -57,7 +58,7 @@ export abstract class BaseUnit implements IUnit {
     return this.unitClass.CHARACTER;
   }
   get name(): string {
-    return this.constructor.name;
+    return this.unitClass.DISPLAY_NAME ?? this.constructor.name;
   }
 
   get unitId(): string {

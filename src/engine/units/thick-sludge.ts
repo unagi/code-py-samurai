@@ -8,12 +8,9 @@ import { Sludge } from "./sludge";
 export class ThickSludge extends Sludge {
   protected static readonly MAX_HEALTH: number = 24;
   protected static readonly CHARACTER: string = "S";
+  protected static readonly DISPLAY_NAME: string = "Thick Sludge";
 
   constructor(logger?: ILogger) {
     super(logger);
-  }
-
-  get name(): string {
-    return "Thick Sludge";
   }
 }
