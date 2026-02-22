@@ -1,247 +1,319 @@
-# Python API リファレンス（ゲーム内クラス）
+# Python API Reference (Player / Warrior / Space)
 
-このドキュメントは、プレイヤーコード（Python）から利用できる主要クラスの参照です。
-現行実装（`src/runtime/python-player.ts` / `src/engine/*.ts`）に合わせて記載しています。
+現行実装（`src/runtime/python-player.ts`, `src/engine/*.ts`）に基づく、Python プレイヤー向け API リファレンスです。
 
-## 対象クラス
+## Conventions
 
-- `Player`（ユーザーが定義するクラス）
-- `Warrior`（各ターンで渡される操作対象）
-- `Space`（周囲のマスを表すオブジェクト）
+- 方向引数は `RelativeDirection = "forward" | "right" | "backward" | "left"`
+- アクションメソッドは 1 ターンに 1 回のみ実行可能
+- 感知メソッドは同一ターン内で複数回呼び出し可能
+- `feel()` / `look()` の空マス（階段含む）は `None` に正規化される
 
-## まず重要なポイント
+## Type Alias
 
-- `warrior.feel()` は `Space` を返すとは限らず、空マス（階段含む）は `None`
-- `Space` を得る主な方法は `feel()` / `look()` / `listen()`
-- 方向引数は `"forward" | "right" | "backward" | "left"`
-- 1ターンに実行できるアクションは 1 つだけ
+### `RelativeDirection`
 
-## 型イメージ（Python）
-
-```python
-from typing import Literal, Optional
-
-RelativeDirection = Literal["forward", "right", "backward", "left"]
-
-class Player:
-    def play_turn(self, warrior: "Warrior") -> None: ...
-
-class Warrior:
-    hp: int
-
-    def walk(self, direction: RelativeDirection = "forward") -> None: ...
-    def attack(self, direction: RelativeDirection = "forward") -> None: ...
-    def rest(self) -> None: ...
-    def rescue(self, direction: RelativeDirection = "forward") -> None: ...
-    def shoot(self, direction: RelativeDirection = "forward") -> None: ...
-    def pivot(self, direction: RelativeDirection = "backward") -> None: ...
-    def bind(self, direction: RelativeDirection = "forward") -> None: ...
-    def detonate(self, direction: RelativeDirection = "forward") -> None: ...
-
-    def feel(self, direction: RelativeDirection = "forward") -> Optional["Space"]: ...
-    def look(self, direction: RelativeDirection = "forward") -> list[Optional["Space"]]: ...
-    def listen(self) -> list["Space"]: ...
-    def direction_of_stairs(self) -> RelativeDirection: ...
-    def direction_of(self, space: "Space") -> RelativeDirection: ...
-    def distance_of(self, space: "Space") -> int: ...
-
-class Space:
-    def is_enemy(self) -> bool: ...
-    def is_captive(self) -> bool: ...
-    def is_stairs(self) -> bool: ...
-    def is_wall(self) -> bool: ...
-    def is_ticking(self) -> bool: ...
+```text
+"forward" | "right" | "backward" | "left"
 ```
 
-## `class Player`
+## Class: `Player`
 
-ユーザーが実装するクラスです。ゲーム側は毎ターン `play_turn()` を呼びます。
-
-### `play_turn(warrior) -> None`
-
-- 引数 `warrior`: そのターンに操作する `Warrior`
-- 戻り値: `None`
-- 役割: 1ターン分の行動を決める
-
-基本形:
-
-```python
-class Player:
-    def play_turn(self, warrior):
-        space = warrior.feel()
-        if space is None:
-            warrior.walk()
-        elif space.is_enemy():
-            warrior.attack()
-        else:
-            warrior.walk()
+```java
+/**
+ * User-defined class executed by the game each turn.
+ * 実装必須メソッドは play_turn(warrior) のみ。
+ */
 ```
 
-## `class Warrior`
+### `play_turn(self, warrior) -> None`
 
-プレイヤーコードから毎ターン渡されるオブジェクトです。行動（action）と感知（sense）を行います。
-
-### 属性
-
-#### `hp: int`
-
-- 現在HP（体力）
-
-例:
-
-```python
-if warrior.hp < 8:
-    warrior.rest()
+```java
+/**
+ * 1ターン分の行動を決定する。
+ * @param warrior Warrior 現在ターンの操作対象。
+ * @return None
+ * @remarks 行動メソッド（walk/attack/rest...）はこのメソッド内で 1 回だけ実行できる。
+ */
 ```
 
-### アクションメソッド（1ターンに1つ）
+## Class: `Warrior`
 
-以下は行動メソッドです。1ターンに複数呼ぶと失敗します。
-
-| メソッド | シグネチャ | 概要 |
-|---|---|---|
-| `walk` | `walk(direction="forward") -> None` | 指定方向へ1マス移動（空いている場合） |
-| `attack` | `attack(direction="forward") -> None` | 隣接マスを近接攻撃 |
-| `rest` | `rest() -> None` | HP回復 |
-| `rescue` | `rescue(direction="forward") -> None` | 捕虜を救出 |
-| `shoot` | `shoot(direction="forward") -> None` | 直線1〜3マス先を射撃（最初の対象に命中） |
-| `pivot` | `pivot(direction="backward") -> None` | 向きを変更（既定は後ろ向き） |
-| `bind` | `bind(direction="forward") -> None` | 隣接ユニットを拘束 |
-| `detonate` | `detonate(direction="forward") -> None` | 爆破攻撃（範囲ダメージ） |
-
-注記:
-
-- 方向引数を省略した場合の既定値はメソッドごとに異なります（`pivot()` だけ `"backward"`）
-- `form()` はエンジン内部にありますが、現行の通常レベル進行では未解放です（このリファレンスでは実戦用 API を優先して省略）
-
-### 感知メソッド（同一ターン内で複数回可）
-
-#### `feel(direction="forward") -> Space | None`
-
-隣接1マスを調べます。
-
-- 敵・捕虜・壁など「対象がある」場合: `Space`
-- 空マス（階段含む）: `None`
-
-安全な書き方:
-
-```python
-space = warrior.feel()
-if space is None:
-    warrior.walk()
-elif space.is_enemy():
-    warrior.attack()
+```java
+/**
+ * Turn-scoped control object passed to Player.play_turn().
+ * 行動（Action）と感知（Sense）APIを提供する。
+ */
 ```
 
-#### `look(direction="forward") -> list[Space | None]`
+### Property: `hp: int`
 
-指定方向の 1〜3 マス先を配列で返します（長さ 3）。
-
-- 各要素は `feel()` と同様に `Space` または `None`
-- 例: `spaces[0]` は1マス先
-
-```python
-spaces = warrior.look("forward")
-first = spaces[0]
-if first is not None and first.is_enemy():
-    warrior.shoot()
+```java
+/**
+ * 現在HP。
+ * @type int
+ * @since GlobalLevel 3
+ */
 ```
 
-#### `listen() -> list[Space]`
+### Action Methods
 
-フロア上の他ユニットの位置を `Space` の配列で返します。
+#### `walk(self, direction: RelativeDirection = "forward") -> None`
 
-- 自分自身は含みません
-- `None` は含みません（ユニットのいるマスだけ返る）
-
-```python
-for unit in warrior.listen():
-    if unit.is_captive():
-        direction = warrior.direction_of(unit)
-        warrior.walk(direction)
-        break
+```java
+/**
+ * 指定方向へ 1 マス移動する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 移動先が空でない場合は移動しない。
+ * @since GlobalLevel 1
+ */
 ```
 
-#### `direction_of_stairs() -> RelativeDirection`
+#### `attack(self, direction: RelativeDirection = "forward") -> None`
 
-階段の方向（相対方向）を返します。
-
-```python
-warrior.walk(warrior.direction_of_stairs())
+```java
+/**
+ * 指定方向の隣接マスを近接攻撃する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 後方攻撃はダメージが低下する（エンジン実装準拠）。
+ * @since GlobalLevel 2
+ */
 ```
 
-#### `direction_of(space) -> RelativeDirection`
+#### `rest(self) -> None`
 
-指定した `Space` がある方向（相対方向）を返します。
-
-- `space` は通常 `listen()` / `look()` / `feel()` で取得したものを渡します
-
-#### `distance_of(space) -> int`
-
-指定した `Space` までの距離を返します。
-
-- 距離はマンハッタン距離です
-- `space` は通常 `listen()` / `look()` / `feel()` で取得したものを渡します
-
-## `class Space`
-
-周囲のマスやユニットの情報を表すオブジェクトです。
-
-### `Space` をどこで得るか
-
-| 取得元 | 戻り値 |
-|---|---|
-| `warrior.feel(...)` | `Space | None` |
-| `warrior.look(...)` | `list[Space | None]` |
-| `warrior.listen()` | `list[Space]` |
-
-### メソッド
-
-#### `is_enemy() -> bool`
-
-そのマスに敵ユニットがいるかどうか。
-
-#### `is_captive() -> bool`
-
-そのマスに捕虜（拘束されたユニット）がいるかどうか。
-
-#### `is_wall() -> bool`
-
-そのマスが壁（場外）かどうか。
-
-#### `is_ticking() -> bool`
-
-時限爆弾つきユニット（爆発カウント中）かどうか。
-
-Lv15（中級6）のような「時限爆弾付き捕虜」対策では、`is_captive()` と組み合わせます。
-
-```python
-space = warrior.feel("left")
-if space is not None and space.is_captive() and space.is_ticking():
-    warrior.rescue("left")
+```java
+/**
+ * HPを回復する。
+ * @return None
+ * @remarks 最大HP時は回復しない。
+ * @since GlobalLevel 3
+ */
 ```
 
-#### `is_stairs() -> bool`
+#### `rescue(self, direction: RelativeDirection = "forward") -> None`
 
-そのマスが階段かどうか。
+```java
+/**
+ * 指定方向の捕虜を救出する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 捕虜でない対象には効果なし。
+ * @since GlobalLevel 5
+ */
+```
 
-注意:
+#### `shoot(self, direction: RelativeDirection = "forward") -> None`
 
-- Python 仕様では空マス（階段含む）は `None` になるため、`feel()` / `look()` では `is_stairs()` を使う機会は少なめです
-- 階段探索は `warrior.direction_of_stairs()` を使うのが基本です
+```java
+/**
+ * 指定方向へ射撃する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 射程は 1〜3 マス。最初に見つかったユニットに命中する。
+ * @since GlobalLevel 8
+ */
+```
 
-### Python では使わない（または非公開）判定
+#### `pivot(self, direction: RelativeDirection = "backward") -> None`
 
-- `is_empty()` は使いません（Python では `space is None` を使う）
-- エンジン内部の `camelCase` 名は Python では `snake_case` に変換されています
+```java
+/**
+ * 向きを変更する。
+ * @param direction RelativeDirection 回転先の相対方向。省略時は "backward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 既定値が "backward" である点に注意。
+ * @since GlobalLevel 7
+ */
+```
 
-## レベル解放（主要 API）
+#### `bind(self, direction: RelativeDirection = "forward") -> None`
 
-メソッドはレベル進行で順次解放されます。特に中級塔はグローバルLv10開始です。
+```java
+/**
+ * 指定方向の隣接ユニットを拘束する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 対象がいない場合は効果なし。
+ * @since GlobalLevel 12
+ */
+```
 
-- 例: 中級6 = グローバルLv15
+#### `detonate(self, direction: RelativeDirection = "forward") -> None`
 
-| グローバルLv | 中級塔ローカルLv | 解放される主な API |
+```java
+/**
+ * 指定方向に爆破攻撃を行う。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return None
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 範囲ダメージ。爆発系ユニットには連鎖爆発が発生する場合がある。
+ * @since GlobalLevel 17
+ */
+```
+
+### Sense Methods
+
+#### `feel(self, direction: RelativeDirection = "forward") -> Space | None`
+
+```java
+/**
+ * 指定方向の隣接 1 マスを感知する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return Space | None 対象（敵/捕虜/壁など）がある場合は Space、空マス（階段含む）は None。
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks Python 仕様では is_empty() ではなく None 判定を使用する。
+ * @since GlobalLevel 2
+ */
+```
+
+#### `look(self, direction: RelativeDirection = "forward") -> list[Space | None]`
+
+```java
+/**
+ * 指定方向の 1〜3 マス先を感知する。
+ * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @return list[Space | None] 長さ 3 の配列。各要素は Space または None。
+ * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @remarks 空マス（階段含む）は None に正規化される。
+ * @since GlobalLevel 8
+ */
+```
+
+#### `listen(self) -> list[Space]`
+
+```java
+/**
+ * フロア上の他ユニットの位置を取得する。
+ * @return list[Space] 他ユニットが存在するマスの Space 配列。None は含まない。
+ * @remarks 自分自身は含まない。
+ * @since GlobalLevel 13
+ */
+```
+
+#### `direction_of_stairs(self) -> RelativeDirection`
+
+```java
+/**
+ * 階段の方向を相対方向で返す。
+ * @return RelativeDirection 階段の方向。
+ * @since GlobalLevel 10
+ */
+```
+
+#### `direction_of(self, space: Space) -> RelativeDirection`
+
+```java
+/**
+ * 指定した Space の方向を相対方向で返す。
+ * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
+ * @return RelativeDirection 対象マスの方向。
+ * @throws RuntimeError None や不正なオブジェクトを渡した場合。
+ * @since GlobalLevel 13
+ */
+```
+
+#### `distance_of(self, space: Space) -> int`
+
+```java
+/**
+ * 指定した Space までの距離を返す。
+ * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
+ * @return int マンハッタン距離。
+ * @throws RuntimeError None や不正なオブジェクトを渡した場合。
+ * @since GlobalLevel 18
+ */
+```
+
+### Not Exposed (Current Python Runtime)
+
+#### `form(self, ...)`
+
+```java
+/**
+ * エンジン内部には能力実装が存在するが、現行の通常レベル進行では Python Warrior API として未公開。
+ * @remarks src/runtime/python-player.ts の ACTION_ENTRIES に未登録。
+ */
+```
+
+## Class: `Space`
+
+```java
+/**
+ * Map cell / target descriptor returned by sense APIs.
+ * 周囲マスやユニットの状態判定に使用する。
+ */
+```
+
+### Acquisition
+
+```java
+/**
+ * 取得元一覧
+ * @source Warrior.feel(...)   -> Space | None
+ * @source Warrior.look(...)   -> list[Space | None]
+ * @source Warrior.listen()    -> list[Space]
+ */
+```
+
+### `is_enemy(self) -> bool`
+
+```java
+/**
+ * マス上の対象が敵ユニットかを判定する。
+ * @return bool 敵ユニットなら True。
+ */
+```
+
+### `is_captive(self) -> bool`
+
+```java
+/**
+ * マス上の対象が捕虜（拘束状態）かを判定する。
+ * @return bool 捕虜なら True。
+ */
+```
+
+### `is_stairs(self) -> bool`
+
+```java
+/**
+ * マスが階段かを判定する。
+ * @return bool 階段なら True。
+ * @remarks 現行 Python 仕様では階段マスは feel()/look() で None に正規化されるため、実運用で呼ぶ機会は少ない。
+ */
+```
+
+### `is_wall(self) -> bool`
+
+```java
+/**
+ * マスが壁（場外）かを判定する。
+ * @return bool 壁なら True。
+ */
+```
+
+### `is_ticking(self) -> bool`
+
+```java
+/**
+ * マス上の対象が時限爆弾状態かを判定する。
+ * @return bool 時限爆弾付きユニットなら True。
+ * @remarks 典型用途は is_captive() と組み合わせた優先救出判定（中級6 / GlobalLevel 15）。
+ */
+```
+
+## Availability Table (Global Level)
+
+| GlobalLevel | Local (Intermediate) | API |
 |---|---:|---|
 | 1 | - | `walk()` |
 | 2 | - | `feel()`, `attack()` |
@@ -255,7 +327,6 @@ if space is not None and space.is_captive() and space.is_ticking():
 | 17 | 8 | `detonate()` |
 | 18 | 9 | `distance_of(space)` |
 
-## 関連ドキュメント
+## Related
 
-- `docs/rubywarrior-to-pythonic.md`（RubyWarrior 由来仕様との差分）
-
+- `docs/rubywarrior-to-pythonic.md`
