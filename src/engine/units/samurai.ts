@@ -9,6 +9,7 @@ export class Samurai extends BaseUnit {
   protected static readonly SHOOT_POWER: number = 3;
   protected static readonly MAX_HEALTH: number = 20;
   protected static readonly CHARACTER: string = "@";
+  protected static readonly NAME_KEY: string = "samurai";
 
   private _score: number = 0;
   private _name: string = "";

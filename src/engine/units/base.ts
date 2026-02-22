@@ -5,19 +5,6 @@ import type { BaseAbility } from "../abilities/base";
 import { Turn } from "../turn";
 
 /**
- * Mapping from unit display name to i18n nameKey (matching tiles.* keys).
- */
-const NAME_TO_KEY: Record<string, string> = {
-  Samurai: "samurai",
-  Sludge: "sludge",
-  "Thick Sludge": "thickSludge",
-  Archer: "archer",
-  Wizard: "wizard",
-  Captive: "captive",
-  Golem: "golem",
-};
-
-/**
  * Base class for all units (samurai, enemies, captives).
  * Ported from RubyWarrior::Units::Base
  */
@@ -27,6 +14,7 @@ export abstract class BaseUnit implements IUnit {
   protected static readonly MAX_HEALTH: number = 0;
   protected static readonly CHARACTER: string = "?";
   protected static readonly DISPLAY_NAME?: string;
+  protected static readonly NAME_KEY?: string;
 
   private _unitId: string;
   position: Position | null = null;
@@ -66,7 +54,11 @@ export abstract class BaseUnit implements IUnit {
   }
 
   get nameKey(): string {
-    return NAME_TO_KEY[this.name] ?? this.name.toLowerCase().replaceAll(/\s+/g, "");
+    if (this.unitClass.NAME_KEY) {
+      return this.unitClass.NAME_KEY;
+    }
+    const metadataName = this.unitClass.DISPLAY_NAME ?? this.constructor.name;
+    return metadataName.toLowerCase().replaceAll(/\s+/g, "");
   }
 
   setUnitId(id: string): void {
