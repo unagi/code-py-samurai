@@ -28,6 +28,13 @@ describe("BaseUnit.nameKey", () => {
     expect(new Captive().nameKey).toBe("captive");
     expect(new Golem().nameKey).toBe("golem");
   });
+
+  it("keeps samurai nameKey stable when playerName changes", () => {
+    const samurai = new Samurai();
+    samurai.playerName = "Hattori";
+    expect(samurai.name).toBe("Hattori");
+    expect(samurai.nameKey).toBe("samurai");
+  });
 });
 
 describe("Space.nameKey", () => {

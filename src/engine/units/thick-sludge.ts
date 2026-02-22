@@ -1,4 +1,3 @@
-import type { ILogger } from "../types";
 import { Sludge } from "./sludge";
 
 /**
@@ -6,19 +5,8 @@ import { Sludge } from "./sludge";
  * Ported from RubyWarrior::Units::ThickSludge
  */
 export class ThickSludge extends Sludge {
-  constructor(logger?: ILogger) {
-    super(logger);
-  }
-
-  get maxHealth(): number {
-    return 24;
-  }
-
-  get character(): string {
-    return "S";
-  }
-
-  get name(): string {
-    return "Thick Sludge";
-  }
+  protected static readonly MAX_HEALTH: number = 24;
+  protected static readonly CHARACTER: string = "S";
+  protected static readonly DISPLAY_NAME: string = "Thick Sludge";
+  protected static readonly NAME_KEY: string = "thickSludge";
 }

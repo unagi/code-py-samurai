@@ -1,7 +1,6 @@
+import { ABSOLUTE_DIRECTIONS } from "@engine/direction";
 import type { AbsoluteDirection } from "@engine/direction";
 import type { LevelDefinition } from "@engine/types";
-
-const VALID_DIRECTIONS: AbsoluteDirection[] = ["north", "east", "south", "west"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";
@@ -48,8 +47,8 @@ function asSamuraiAbilities(value: unknown, path: string): { skills: string[]; s
 
 function asDirection(value: unknown, path: string): AbsoluteDirection {
   const direction = asString(value, path);
-  if (!VALID_DIRECTIONS.includes(direction as AbsoluteDirection)) {
-    throw new TypeError(`${path} must be one of: ${VALID_DIRECTIONS.join(", ")}`);
+  if (!ABSOLUTE_DIRECTIONS.includes(direction as AbsoluteDirection)) {
+    throw new TypeError(`${path} must be one of: ${ABSOLUTE_DIRECTIONS.join(", ")}`);
   }
   return direction as AbsoluteDirection;
 }

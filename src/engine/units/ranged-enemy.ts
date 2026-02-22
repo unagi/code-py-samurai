@@ -9,25 +9,28 @@ const SEARCH_DIRECTIONS = [
   "forward",
   "left",
   "right",
-  "backward",
 ] as const satisfies readonly RelativeDirection[];
 
-export class Sludge extends BaseUnit {
-  protected static readonly ATTACK_POWER: number = 3;
-  protected static readonly MAX_HEALTH: number = 12;
-  protected static readonly CHARACTER: string = "s";
-
+/**
+ * Shared ranged enemy behavior for units that shoot the player on sight.
+ */
+export abstract class RangedEnemy extends BaseUnit {
   constructor(logger?: ILogger) {
     super(logger, createAbility);
-    this.addAbilities("attack!", "feel");
+    this.addAbilities("shoot!", "look");
   }
 
   playTurn(turn: Turn): void {
     for (const direction of SEARCH_DIRECTIONS) {
-      const space = turn.doSense("feel", direction) as Space;
-      if (space.isPlayer()) {
-        turn.doAction("attack!", direction);
-        return;
+      const spaces = turn.doSense("look", direction) as Space[];
+      for (const space of spaces) {
+        if (space.isPlayer()) {
+          turn.doAction("shoot!", direction);
+          return;
+        }
+        if (!space.isEmpty()) {
+          break;
+        }
       }
     }
   }

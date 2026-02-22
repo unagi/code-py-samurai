@@ -4,24 +4,20 @@ import type { IUnit, ILogger } from "../types";
 import type { BaseAbility } from "../abilities/base";
 import { Turn } from "../turn";
 
-/**
- * Mapping from unit display name to i18n nameKey (matching tiles.* keys).
- */
-const NAME_TO_KEY: Record<string, string> = {
-  Samurai: "samurai",
-  Sludge: "sludge",
-  "Thick Sludge": "thickSludge",
-  Archer: "archer",
-  Wizard: "wizard",
-  Captive: "captive",
-  Golem: "golem",
-};
+type AbilityFactory = (name: string, unit: IUnit) => BaseAbility | null;
 
 /**
  * Base class for all units (samurai, enemies, captives).
  * Ported from RubyWarrior::Units::Base
  */
 export abstract class BaseUnit implements IUnit {
+  protected static readonly ATTACK_POWER: number = 0;
+  protected static readonly SHOOT_POWER: number = 0;
+  protected static readonly MAX_HEALTH: number = 0;
+  protected static readonly CHARACTER: string = "?";
+  protected static readonly DISPLAY_NAME?: string;
+  protected static readonly NAME_KEY?: string;
+
   private _unitId: string;
   position: Position | null = null;
   private _health: number | null = null;
@@ -29,27 +25,32 @@ export abstract class BaseUnit implements IUnit {
   private _abilities: Map<string, BaseAbility> = new Map();
   protected _currentTurn: Turn | null = null;
   protected _logger: ILogger;
+  private readonly _abilityFactory: AbilityFactory | null;
 
-  constructor(logger?: ILogger) {
+  constructor(logger?: ILogger, abilityFactory?: AbilityFactory) {
     this._logger = logger ?? { log: () => {} };
+    this._abilityFactory = abilityFactory ?? null;
     this._unitId = this.name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "") || "unit";
   }
 
-  // Override in subclass
+  protected get unitClass(): typeof BaseUnit {
+    return this.constructor as typeof BaseUnit;
+  }
+
   get attackPower(): number {
-    return 0;
+    return this.unitClass.ATTACK_POWER;
   }
   get shootPower(): number {
-    return 0;
+    return this.unitClass.SHOOT_POWER;
   }
   get maxHealth(): number {
-    return 0;
+    return this.unitClass.MAX_HEALTH;
   }
   get character(): string {
-    return "?";
+    return this.unitClass.CHARACTER;
   }
   get name(): string {
-    return this.constructor.name;
+    return this.unitClass.DISPLAY_NAME ?? this.constructor.name;
   }
 
   get unitId(): string {
@@ -57,7 +58,11 @@ export abstract class BaseUnit implements IUnit {
   }
 
   get nameKey(): string {
-    return NAME_TO_KEY[this.name] ?? this.name.toLowerCase().replaceAll(/\s+/g, "");
+    if (this.unitClass.NAME_KEY) {
+      return this.unitClass.NAME_KEY;
+    }
+    const metadataName = this.unitClass.DISPLAY_NAME ?? this.constructor.name;
+    return metadataName.toLowerCase().replaceAll(/\s+/g, "");
   }
 
   setUnitId(id: string): void {
@@ -136,9 +141,8 @@ export abstract class BaseUnit implements IUnit {
     }
   }
 
-  protected createAbility(_name: string): BaseAbility | null {
-    // Override in subclass or use ability registry
-    return null;
+  protected createAbility(name: string): BaseAbility | null {
+    return this._abilityFactory ? this._abilityFactory(name, this) : null;
   }
 
   nextTurn(): Turn {

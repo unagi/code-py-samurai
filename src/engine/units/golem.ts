@@ -1,5 +1,4 @@
 import type { ILogger } from "../types";
-import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
@@ -10,15 +9,14 @@ import { BaseUnit } from "./base";
  * Ported from RubyWarrior::Units::Golem
  */
 export class Golem extends BaseUnit {
+  protected static readonly ATTACK_POWER: number = 3;
+  protected static readonly CHARACTER: string = "G";
+
   private _maxHealth: number = 0;
   private _turnCallback: ((turn: Turn) => void) | null = null;
 
   constructor(logger?: ILogger) {
-    super(logger);
-  }
-
-  get attackPower(): number {
-    return 3;
+    super(logger, createAbility);
   }
 
   get maxHealth(): number {
@@ -27,14 +25,6 @@ export class Golem extends BaseUnit {
 
   set maxHealthValue(value: number) {
     this._maxHealth = value;
-  }
-
-  get character(): string {
-    return "G";
-  }
-
-  get name(): string {
-    return "Golem";
   }
 
   isGolem(): boolean {
@@ -49,9 +39,5 @@ export class Golem extends BaseUnit {
     if (this._turnCallback) {
       this._turnCallback(turn);
     }
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }

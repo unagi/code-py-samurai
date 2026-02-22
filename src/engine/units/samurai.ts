@@ -1,32 +1,21 @@
 import type { ILogger, IPlayer } from "../types";
-import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
 
 export class Samurai extends BaseUnit {
+  protected static readonly ATTACK_POWER: number = 5;
+  protected static readonly SHOOT_POWER: number = 3;
+  protected static readonly MAX_HEALTH: number = 20;
+  protected static readonly CHARACTER: string = "@";
+  protected static readonly NAME_KEY: string = "samurai";
+
   private _score: number = 0;
   private _name: string = "";
   private _player: IPlayer | null = null;
 
   constructor(logger?: ILogger) {
-    super(logger);
-  }
-
-  get attackPower(): number {
-    return 5;
-  }
-
-  get shootPower(): number {
-    return 3;
-  }
-
-  get maxHealth(): number {
-    return 20;
-  }
-
-  get character(): string {
-    return "@";
+    super(logger, createAbility);
   }
 
   get name(): string {
@@ -65,9 +54,5 @@ export class Samurai extends BaseUnit {
       this.say({ key: "engine.idle", params: {} });
     }
     super.performTurn();
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }

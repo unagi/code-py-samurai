@@ -1,19 +1,20 @@
-export type AbsoluteDirection = "north" | "east" | "south" | "west";
-export type RelativeDirection = "forward" | "right" | "backward" | "left";
-
-const ABSOLUTE_DIRECTIONS: AbsoluteDirection[] = [
+export const ABSOLUTE_DIRECTIONS = [
   "north",
   "east",
   "south",
   "west",
-];
+] as const;
 
-const RELATIVE_DIRECTIONS: RelativeDirection[] = [
+export type AbsoluteDirection = (typeof ABSOLUTE_DIRECTIONS)[number];
+
+export const RELATIVE_DIRECTIONS = [
   "forward",
   "right",
   "backward",
   "left",
-];
+] as const;
+
+export type RelativeDirection = (typeof RELATIVE_DIRECTIONS)[number];
 
 export const DIRECTION_OFFSETS: Record<
   AbsoluteDirection,
