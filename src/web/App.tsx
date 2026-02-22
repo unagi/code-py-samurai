@@ -2,8 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { useTranslation } from "react-i18next";
 import { type EditorView } from "codemirror";
 
-import type { LevelResult } from "../engine/level";
-import type { LogEntry } from "../engine/log-entry";
 import type { SamuraiAbilitySet } from "../engine/types";
 import {
   getTowerAndLocalFromGlobal,
@@ -11,11 +9,8 @@ import {
   getSamuraiRank,
   samuraiAbilitiesToEngineAbilities,
 } from "../engine/samurai-abilities";
-import { LevelSession } from "../runtime/level-session";
 import { towers } from "../levels";
 import {
-  createDamagePopupsFromEntries,
-  createSpriteOverridesFromEntries,
   type DamagePopup,
   type SpriteOverride,
 } from "./board-effects";
@@ -41,14 +36,13 @@ import {
   getSamuraiIdleFramePath,
 } from "./sprite-config";
 import { absoluteDirToSpriteDir, resolveSpriteDir, type SpriteDir } from "./sprite-utils";
-import { buildUnitDirectionMap, buildUnitTileIndexMap } from "./unit-maps";
+import { useGameController } from "./use-game-controller";
 
 function buildStarterPlayerCode(comment: string): string {
   return `class Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
 }
 
 const BOARD_TILE_GAP_PX = 2;
-const UI_MAX_TURNS = 1000;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 
 export default function App() {
@@ -69,31 +63,12 @@ export default function App() {
   const [speedMs, setSpeedMs] = useState(450);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [canPlay, setCanPlay] = useState(true);
-  const [board, setBoard] = useState("");
-  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
-  const [result, setResult] = useState<LevelResult | null>(null);
-  const [samuraiHealth, setSamuraiHealth] = useState<number | null>(null);
-  const [samuraiMaxHealth, setSamuraiMaxHealth] = useState<number | null>(null);
-  const [damagePopups, setDamagePopups] = useState<DamagePopup[]>([]);
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
-  const [showResultModal, setShowResultModal] = useState(false);
   const [tileSizePx, setTileSizePx] = useState(20);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
-  const [isCodeDirty, setIsCodeDirty] = useState(false);
-
-  const sessionRef = useRef(new LevelSession());
-  const timerRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
-  const logLineCountRef = useRef(0);
-  const damagePopupIdRef = useRef(1);
-  const unitTileIndexMapRef = useRef(new Map<string, number>());
-  const unitDirectionMapRef = useRef(new Map<string, string>());
-  const [spriteOverrides, setSpriteOverrides] = useState<SpriteOverride[]>([]);
-  const spriteOverrideIdRef = useRef(1);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -108,6 +83,39 @@ export default function App() {
     () => samuraiAbilitiesToEngineAbilities(unlockedSamuraiAbilities),
     [unlockedSamuraiAbilities],
   );
+  const {
+    isPlaying,
+    canPlay,
+    board,
+    logEntries,
+    result,
+    samuraiHealth,
+    samuraiMaxHealth,
+    damagePopups,
+    spriteOverrides,
+    showResultModal,
+    setIsCodeDirty,
+    setShowResultModal,
+    handlePlay,
+    handlePause,
+    handleReset,
+    startLevel,
+    stopTimer,
+    expireDamagePopups,
+    expireSpriteOverrides,
+    unitTileIndexMapRef,
+    unitDirectionMapRef,
+  } = useGameController({
+    level,
+    playerCode,
+    unlockedEngineAbilities,
+    currentGlobalLevel,
+    totalLevels: TOTAL_LEVELS,
+    speedMs,
+    spriteCapableKinds: SPRITE_CAPABLE_KINDS,
+    setSamuraiLevel,
+    onResetVisualState: () => setHoveredEnemyStats(null),
+  });
   const availableMethods = useMemo(
     () => unlockedSamuraiAbilities.skills.map((item) => `samurai.${item}`),
     [unlockedSamuraiAbilities.skills],
@@ -195,115 +203,6 @@ export default function App() {
     return grouped;
   }, [damagePopups]);
 
-  const refreshGameState = (): void => {
-    const session = sessionRef.current;
-    const nextBoard = session.board;
-    const allEntries = session.entries;
-    const prevCount = allEntries.length < logLineCountRef.current ? 0 : logLineCountRef.current;
-    const newEntries = allEntries.slice(prevCount);
-    logLineCountRef.current = allEntries.length;
-
-    const boardForDamage = board.trim().length > 0 ? board : nextBoard;
-    const popups = createDamagePopupsFromEntries(
-      newEntries,
-      boardForDamage,
-      damagePopupIdRef.current,
-      unitTileIndexMapRef.current,
-    );
-    damagePopupIdRef.current += popups.length;
-    setDamagePopups(popups);
-
-    const overrides = createSpriteOverridesFromEntries(
-      newEntries,
-      boardForDamage,
-      spriteOverrideIdRef.current,
-      unitTileIndexMapRef.current,
-      SPRITE_CAPABLE_KINDS,
-    );
-    spriteOverrideIdRef.current += overrides.length;
-    if (overrides.length > 0) {
-      setSpriteOverrides((prev) => [...prev, ...overrides]);
-    }
-
-    setBoard(nextBoard);
-    setLogEntries([...allEntries]);
-    setResult(session.result);
-    setSamuraiHealth(session.samuraiHealth);
-    setSamuraiMaxHealth(session.samuraiMaxHealth);
-    setCanPlay(session.canPlay);
-    const unitSnapshots = session.unitSnapshots;
-    unitTileIndexMapRef.current = buildUnitTileIndexMap(nextBoard, unitSnapshots);
-    unitDirectionMapRef.current = buildUnitDirectionMap(unitSnapshots);
-  };
-
-  const stopTimer = (): void => {
-    if (timerRef.current !== null) {
-      globalThis.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsPlaying(false);
-  };
-
-  const startLevel = (): boolean => {
-    stopTimer();
-    setShowResultModal(false);
-    setHoveredEnemyStats(null);
-    logLineCountRef.current = 0;
-    unitTileIndexMapRef.current = new Map<string, number>();
-    unitDirectionMapRef.current = new Map<string, string>();
-    setDamagePopups([]);
-    setSpriteOverrides([]);
-    sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
-    refreshGameState();
-    setIsCodeDirty(false);
-    return sessionRef.current.canPlay;
-  };
-
-  const handleTick = (): void => {
-    const canContinue = sessionRef.current.step();
-    const currentResult = sessionRef.current.result;
-    refreshGameState();
-    if (canContinue && currentResult && currentResult.turns >= UI_MAX_TURNS) {
-      stopTimer();
-      setLogEntries((prev) => [...prev, { key: "logs.systemTimeout", params: { maxTurns: UI_MAX_TURNS } }]);
-      setShowResultModal(true);
-      return;
-    }
-    if (!canContinue) {
-      stopTimer();
-      if (currentResult?.passed) {
-        setSamuraiLevel((prev) => Math.max(prev, Math.min(currentGlobalLevel + 1, TOTAL_LEVELS)));
-      }
-      setShowResultModal(true);
-    }
-  };
-
-  const handlePlay = (): void => {
-    if (timerRef.current !== null) return;
-    const playable = isCodeDirty ? startLevel() : canPlay;
-    if (!playable) return;
-    setIsPlaying(true);
-    timerRef.current = globalThis.setInterval(handleTick, speedMs);
-  };
-
-  const handlePause = (): void => {
-    stopTimer();
-  };
-
-  const handleReset = (): void => {
-    stopTimer();
-    setShowResultModal(false);
-    setHoveredEnemyStats(null);
-    const session = sessionRef.current;
-    if (session.hasSetupError && session.hasLastValidPlayer) {
-      session.resetWithLastValid(level);
-      refreshGameState();
-      setIsCodeDirty(false);
-      return;
-    }
-    startLevel();
-  };
-
   const goToLevel = (globalLvl: number): void => {
     if (globalLvl < 1 || globalLvl > TOTAL_LEVELS) return;
     if (!isLevelAccessible(globalLvl)) return;
@@ -366,16 +265,6 @@ export default function App() {
     return () => globalThis.clearInterval(animationTimer);
   }, []);
 
-  function expireDamagePopups() {
-    const now = Date.now();
-    setDamagePopups((prev) => prev.filter((p) => p.expiresAt > now));
-  }
-
-  function expireSpriteOverrides() {
-    const now = Date.now();
-    setSpriteOverrides((prev) => prev.filter((o) => o.expiresAt > now));
-  }
-
   // 統合タイマー: ポップアップ/オーバーライド期限切れ + スプライトフレーム更新トリガー
   // spriteRenderTick は参照不要だが、state更新による再レンダリングでフレーム進行させる
   const [, setSpriteRenderTick] = useState(0);
@@ -388,10 +277,6 @@ export default function App() {
     }, SPRITE_FRAME_MS);
     return () => globalThis.clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    startLevel();
-  }, [level]);
 
   useEffect(() => {
     writeProgressStorage(currentGlobalLevel, samuraiLevel);
