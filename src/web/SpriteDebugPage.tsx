@@ -47,8 +47,11 @@ interface EnemyPreviewGroup {
   cards: SpriteDebugCardSpec[];
 }
 
-interface EnemyAnimationTypeSpec {
-  animationType: "Idle" | "Disappear" | "Offence" | "Damaged";
+type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
+type UnitAnimationArtLayout = "single" | "enemy-grid" | "samurai-grid";
+
+interface UnitAnimationTypeSpec {
+  animationType: UnitAnimationType;
   trigger: string;
   spriteFiles: string[];
   frameCountText: string;
@@ -56,10 +59,8 @@ interface EnemyAnimationTypeSpec {
   implementation: string;
   status: "ok" | "ng";
   previewImageSrcs: string[];
+  artLayout: UnitAnimationArtLayout;
 }
-
-type EnemyAnimationType = EnemyAnimationTypeSpec["animationType"];
-type SamuraiAnimationTypeSpec = EnemyAnimationTypeSpec;
 
 const SAMURAI_SLOT_SPECS = [
   { id: "west", label: "WEST", spriteDir: "left" as const },
@@ -83,7 +84,7 @@ function stripSpriteAssetPrefix(src: string): string {
   return src.replace(/^\/assets\/sprites\//, "");
 }
 
-const ENEMY_EXPECTED_FRAMES_BY_KIND: Readonly<Partial<Record<string, Readonly<Record<EnemyAnimationType, number>>>>> = {
+const ENEMY_EXPECTED_FRAMES_BY_KIND: Readonly<Partial<Record<string, Readonly<Record<UnitAnimationType, number>>>>> = {
   sludge: {
     Idle: 3,
     Offence: 4,
@@ -98,53 +99,86 @@ const ENEMY_EXPECTED_FRAMES_BY_KIND: Readonly<Partial<Record<string, Readonly<Re
   },
 };
 
-function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSpec[] {
-  const config = CHAR_SPRITES[group.kind];
-  if (!config) {
-    return [
-      {
-        animationType: "Idle",
-        trigger: "通常時",
-        spriteFiles: ["-"],
-        frameCountText: "-",
-        motionSpec: "sprite idle 表示（WEST/EAST）",
-        implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-        status: "ng",
-        previewImageSrcs: [],
-      },
-      {
-        animationType: "Disappear",
-        trigger: "HPが0になる（death相当）",
-        spriteFiles: ["-"],
-        frameCountText: "-",
-        motionSpec: "sprite death 表示（Disappear相当）",
-        implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-        status: "ng",
-        previewImageSrcs: [],
-      },
-      {
-        animationType: "Offence",
-        trigger: "攻撃行動時（attack/shoot相当）",
-        spriteFiles: ["-"],
-        frameCountText: "-",
-        motionSpec: "sprite attack/shoot 表示（Offence相当）",
-        implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-        status: "ng",
-        previewImageSrcs: [],
-      },
-      {
-        animationType: "Damaged",
-        trigger: "ダメージを受ける",
-        spriteFiles: ["-"],
-        frameCountText: "-",
-        motionSpec: "sprite damaged 表示",
-        implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-        status: "ng",
-        previewImageSrcs: [],
-      },
-    ];
-  }
-  const spriteDirs = group.cards.map((card) => card.spriteDir);
+const EMOJI_FALLBACK_UNIT_ANIMATION_SPECS: readonly UnitAnimationTypeSpec[] = [
+  {
+    animationType: "Idle",
+    trigger: "通常時",
+    spriteFiles: ["-"],
+    frameCountText: "-",
+    motionSpec: "sprite idle 表示（WEST/EAST）",
+    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
+    status: "ng",
+    previewImageSrcs: [],
+    artLayout: "enemy-grid",
+  },
+  {
+    animationType: "Disappear",
+    trigger: "HPが0になる（death相当）",
+    spriteFiles: ["-"],
+    frameCountText: "-",
+    motionSpec: "sprite death 表示（Disappear相当）",
+    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
+    status: "ng",
+    previewImageSrcs: [],
+    artLayout: "enemy-grid",
+  },
+  {
+    animationType: "Offence",
+    trigger: "攻撃行動時（attack/shoot相当）",
+    spriteFiles: ["-"],
+    frameCountText: "-",
+    motionSpec: "sprite attack/shoot 表示（Offence相当）",
+    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
+    status: "ng",
+    previewImageSrcs: [],
+    artLayout: "enemy-grid",
+  },
+  {
+    animationType: "Damaged",
+    trigger: "ダメージを受ける",
+    spriteFiles: ["-"],
+    frameCountText: "-",
+    motionSpec: "sprite damaged 表示",
+    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
+    status: "ng",
+    previewImageSrcs: [],
+    artLayout: "enemy-grid",
+  },
+] as const;
+
+const CAPTIVE_UNIT_ANIMATION_SPECS: readonly UnitAnimationTypeSpec[] = [
+  {
+    animationType: "Idle",
+    trigger: "通常時",
+    spriteFiles: ["tsuru/bound.png"],
+    frameCountText: "3 frames",
+    motionSpec: "等間隔フレーム遷移",
+    implementation: "idle にマッピングされて表示されるが、フレーム遷移は行われず静止表示になっている。",
+    status: "ng",
+    previewImageSrcs: ["/assets/sprites/tsuru/bound.png"],
+    artLayout: "single",
+  },
+  {
+    animationType: "Disappear",
+    trigger: "samurai.rescue()される",
+    spriteFiles: ["tsuru/rescued.png"],
+    frameCountText: "asset exists",
+    motionSpec: "視認可能な専用表示（rescued相当）",
+    implementation: "tsuru/rescued.png の asset は存在するがゲーム表示にマッピングされておらず、専用表示は出ずに即消滅する。",
+    status: "ng",
+    previewImageSrcs: ["/assets/sprites/tsuru/rescued.png"],
+    artLayout: "single",
+  },
+] as const;
+
+function buildSpriteConfigUnitAnimationTypeSpecs(
+  kind: string,
+  cards: readonly SpriteDebugCardSpec[],
+): UnitAnimationTypeSpec[] {
+  const config = CHAR_SPRITES[kind];
+  if (!config) return [...EMOJI_FALLBACK_UNIT_ANIMATION_SPECS];
+
+  const spriteDirs = cards.map((card) => card.spriteDir);
   const uniqueSpriteDirs = Array.from(new Set(spriteDirs));
   const spriteDirLabelText = uniqueSpriteDirs.map((dir) => ENEMY_SLOT_LABEL_BY_DIR[dir]).join(" / ");
 
@@ -169,8 +203,8 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
     return actualFrames > 1;
   };
 
-  const expectedFramesByType = ENEMY_EXPECTED_FRAMES_BY_KIND[group.kind];
-  const resolveStatus = (animationType: EnemyAnimationType, actualFrames: number): "ok" | "ng" => {
+  const expectedFramesByType = ENEMY_EXPECTED_FRAMES_BY_KIND[kind];
+  const resolveStatus = (animationType: UnitAnimationType, actualFrames: number): "ok" | "ng" => {
     const expectedFrames = expectedFramesByType?.[animationType];
     if (animationType === "Idle" && hasAnimatedMotionRequirement(expectedFrames, actualFrames)) {
       return "ng";
@@ -214,6 +248,7 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
       implementation: buildImplementationText("idle", idleFrames, idleExpectedFrames, false),
       status: resolveStatus("Idle", idleFrames),
       previewImageSrcs: buildPreviewImageSrcs("idle"),
+      artLayout: "enemy-grid",
     },
     {
       animationType: "Disappear",
@@ -227,6 +262,7 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
       implementation: buildImplementationText("death", config.death.frames, expectedFramesByType?.Disappear, true),
       status: resolveStatus("Disappear", config.death.frames),
       previewImageSrcs: buildPreviewImageSrcs("death"),
+      artLayout: "enemy-grid",
     },
     {
       animationType: "Offence",
@@ -239,6 +275,7 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
       implementation: buildImplementationText("attack", config.attack.frames, expectedFramesByType?.Offence, true),
       status: resolveStatus("Offence", config.attack.frames),
       previewImageSrcs: buildPreviewImageSrcs("attack"),
+      artLayout: "enemy-grid",
     },
     {
       animationType: "Damaged",
@@ -251,11 +288,12 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
       implementation: buildImplementationText("damaged", config.damaged.frames, expectedFramesByType?.Damaged, true),
       status: resolveStatus("Damaged", config.damaged.frames),
       previewImageSrcs: buildPreviewImageSrcs("damaged"),
+      artLayout: "enemy-grid",
     },
   ];
 }
 
-function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
+function buildSamuraiUnitAnimationTypeSpecs(): UnitAnimationTypeSpec[] {
   const idleSampleFrames = [0, 4, 8, 12];
   const idleSpriteFiles = ["samurai-cat/idle-east-frames/frame_*.png"];
   const idlePreviewImageSrcs = idleSampleFrames.map((frameIndex) => getSamuraiIdleFramePath(frameIndex));
@@ -270,6 +308,7 @@ function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
       implementation: "idle は再生されるが、DIRごとの sprite mapping は未実装で全方向とも east idle frames を表示する。",
       status: "ng",
       previewImageSrcs: idlePreviewImageSrcs,
+      artLayout: "samurai-grid",
     },
     {
       animationType: "Disappear",
@@ -280,6 +319,7 @@ function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
       implementation: "samurai の death sprite mapping は未実装。専用表示は出ない。",
       status: "ng",
       previewImageSrcs: [],
+      artLayout: "samurai-grid",
     },
     {
       animationType: "Offence",
@@ -290,6 +330,7 @@ function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
       implementation: "Offence（attack/shoot）用の samurai sprite mapping は未実装。",
       status: "ng",
       previewImageSrcs: [],
+      artLayout: "samurai-grid",
     },
     {
       animationType: "Damaged",
@@ -300,8 +341,29 @@ function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
       implementation: "damaged 用の samurai sprite mapping は未実装。",
       status: "ng",
       previewImageSrcs: [],
+      artLayout: "samurai-grid",
     },
   ];
+}
+
+function unitAnimationTypeSpecs(source: {
+  kind: string;
+  renderMode?: "sprite" | "emoji";
+  cards?: readonly SpriteDebugCardSpec[];
+}): UnitAnimationTypeSpec[] {
+  if (source.kind === "samurai") {
+    return buildSamuraiUnitAnimationTypeSpecs();
+  }
+  if (source.kind === "captive") {
+    return [...CAPTIVE_UNIT_ANIMATION_SPECS];
+  }
+  if (source.renderMode === "emoji") {
+    return [...EMOJI_FALLBACK_UNIT_ANIMATION_SPECS];
+  }
+  if (source.renderMode === "sprite" && source.cards) {
+    return buildSpriteConfigUnitAnimationTypeSpecs(source.kind, source.cards);
+  }
+  return [];
 }
 
 const DEBUG_STATS_FORMATTER: StatsFormatter = {
@@ -677,15 +739,83 @@ export default function SpriteDebugPage() {
     );
   };
 
-  const renderEnemyGroupFooter = (group: EnemyPreviewGroup) => {
-    const specs = enemyAnimationTypeSpecs(group);
-    if (specs.length === 0) return null;
+  const renderUnitAnimationSpecArt = (spec: UnitAnimationTypeSpec, keyPrefix: string) => {
+    if (spec.artLayout === "enemy-grid") {
+      return (
+        <div className="sprite-debug-captive-spec-art">
+          <div className="sprite-debug-enemy-spec-art-grid">
+            {spec.previewImageSrcs.length > 0 ? (
+              spec.previewImageSrcs.map((src) => (
+                <img
+                  key={`${keyPrefix}-${spec.animationType}-${src}`}
+                  src={src}
+                  alt=""
+                  aria-hidden="true"
+                  className="sprite-debug-motion-file-preview"
+                />
+              ))
+            ) : (
+              <>
+                <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
+                <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (spec.artLayout === "samurai-grid") {
+      return (
+        <div className="sprite-debug-captive-spec-art">
+          <div className="sprite-debug-samurai-spec-art-grid">
+            {spec.previewImageSrcs.length > 0 ? (
+              spec.previewImageSrcs.map((src) => (
+                <img
+                  key={`${keyPrefix}-${spec.animationType}-${src}`}
+                  src={src}
+                  alt=""
+                  aria-hidden="true"
+                  className="sprite-debug-motion-file-preview"
+                />
+              ))
+            ) : (
+              <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
+            )}
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <div className="sprite-debug-motion-coverage" aria-label={`${group.kind} enemy game motion coverage`}>
+      <div className="sprite-debug-captive-spec-art">
+        {spec.previewImageSrcs.length > 0 ? (
+          spec.previewImageSrcs.map((src) => (
+            <img
+              key={`${keyPrefix}-${spec.animationType}-${src}`}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              className="sprite-debug-motion-file-preview"
+            />
+          ))
+        ) : (
+          <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
+        )}
+      </div>
+    );
+  };
+
+  const renderUnitFooter = (
+    specs: readonly UnitAnimationTypeSpec[],
+    ariaLabel: string,
+    keyPrefix: string,
+  ) => {
+    return (
+      <div className="sprite-debug-motion-coverage" aria-label={ariaLabel}>
         <ul className="sprite-debug-captive-spec-list">
           {specs.map((spec) => (
-            <li key={`${group.kind}-${spec.animationType}`} className="sprite-debug-captive-spec-item">
+            <li key={`${keyPrefix}-${spec.animationType}`} className="sprite-debug-captive-spec-item">
               <div className="sprite-debug-captive-spec-header">
                 <code>{spec.animationType.toLowerCase()}</code>
                 <span
@@ -702,7 +832,7 @@ export default function SpriteDebugPage() {
                 <dt>sprite file</dt>
                 <dd>
                   <div className="sprite-debug-enemy-spec-file-list">
-                    {spec.spriteFiles.map((file) => <code key={`${group.kind}-${spec.animationType}-${file}`}>{file}</code>)}
+                    {spec.spriteFiles.map((file) => <code key={`${keyPrefix}-${spec.animationType}-${file}`}>{file}</code>)}
                   </div>
                 </dd>
                 <dt>Frame count</dt>
@@ -712,26 +842,7 @@ export default function SpriteDebugPage() {
                 <dt>実装</dt>
                 <dd>{spec.implementation}</dd>
               </dl>
-              <div className="sprite-debug-captive-spec-art">
-                <div className="sprite-debug-enemy-spec-art-grid">
-                  {spec.previewImageSrcs.length > 0 ? (
-                    spec.previewImageSrcs.map((src) => (
-                      <img
-                        key={`${group.kind}-${spec.animationType}-${src}`}
-                        src={src}
-                        alt=""
-                        aria-hidden="true"
-                        className="sprite-debug-motion-file-preview"
-                      />
-                    ))
-                  ) : (
-                    <>
-                      <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
-                      <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
-                    </>
-                  )}
-                </div>
-              </div>
+              {renderUnitAnimationSpecArt(spec, keyPrefix)}
             </li>
           ))}
         </ul>
@@ -809,147 +920,6 @@ export default function SpriteDebugPage() {
           </div>
         </div>
       </div>
-    );
-  };
-
-  const renderSamuraiFooter = () => {
-    const specs = samuraiAnimationTypeSpecs();
-
-    return (
-      <div className="sprite-debug-motion-coverage" aria-label="samurai game motion coverage">
-        <ul className="sprite-debug-captive-spec-list">
-          {specs.map((spec) => (
-            <li key={`samurai-${spec.animationType}`} className="sprite-debug-captive-spec-item">
-              <div className="sprite-debug-captive-spec-header">
-                <code>{spec.animationType.toLowerCase()}</code>
-                <span
-                  className={`sprite-debug-coverage-chip ${
-                    spec.status === "ok" ? "sprite-debug-coverage-chip-ok" : "sprite-debug-coverage-chip-ng"
-                  }`}
-                >
-                  {spec.status.toUpperCase()}
-                </span>
-              </div>
-              <dl className="sprite-debug-captive-spec-grid">
-                <dt>trigger</dt>
-                <dd>{spec.trigger}</dd>
-                <dt>sprite file</dt>
-                <dd>
-                  <div className="sprite-debug-enemy-spec-file-list">
-                    {spec.spriteFiles.map((file) => <code key={`samurai-${spec.animationType}-${file}`}>{file}</code>)}
-                  </div>
-                </dd>
-                <dt>Frame count</dt>
-                <dd>{spec.frameCountText}</dd>
-                <dt>モーション要求仕様</dt>
-                <dd>{spec.motionSpec}</dd>
-                <dt>実装</dt>
-                <dd>{spec.implementation}</dd>
-              </dl>
-              <div className="sprite-debug-captive-spec-art">
-                <div className="sprite-debug-samurai-spec-art-grid">
-                  {spec.previewImageSrcs.length > 0 ? (
-                    spec.previewImageSrcs.map((src) => (
-                      <img
-                        key={`samurai-${spec.animationType}-${src}`}
-                        src={src}
-                        alt=""
-                        aria-hidden="true"
-                        className="sprite-debug-motion-file-preview"
-                      />
-                    ))
-                  ) : (
-                    <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-
-  const renderOtherUnitCardFooter = (
-    card: SpriteDebugCardSpec,
-    _captiveLocalState: CaptiveLocalState | null,
-  ) => {
-    if (card.kind === "captive") {
-      return (
-        <>
-          <div className="sprite-debug-motion-coverage" aria-label={`${card.id} captive game motion coverage`}>
-            <ul className="sprite-debug-captive-spec-list">
-              <li className="sprite-debug-captive-spec-item">
-                <div className="sprite-debug-captive-spec-header">
-                  <code>idle</code>
-                  <span className="sprite-debug-coverage-chip sprite-debug-coverage-chip-ng">NG</span>
-                </div>
-                <dl className="sprite-debug-captive-spec-grid">
-                  <dt>trigger</dt>
-                  <dd>通常時</dd>
-                  <dt>sprite file</dt>
-                  <dd><code>tsuru/bound.png</code></dd>
-                  <dt>Frame count</dt>
-                  <dd>3 frames</dd>
-                  <dt>モーション要求仕様</dt>
-                  <dd>等間隔フレーム遷移</dd>
-                  <dt>実装</dt>
-                  <dd>idle にマッピングされて表示されるが、フレーム遷移は行われず静止表示になっている。</dd>
-                </dl>
-                <div className="sprite-debug-captive-spec-art">
-                  <img
-                    src="/assets/sprites/tsuru/bound.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="sprite-debug-motion-file-preview"
-                  />
-                </div>
-              </li>
-              <li className="sprite-debug-captive-spec-item">
-                <div className="sprite-debug-captive-spec-header">
-                  <code>disappear</code>
-                  <span className="sprite-debug-coverage-chip sprite-debug-coverage-chip-ng">NG</span>
-                </div>
-                <dl className="sprite-debug-captive-spec-grid">
-                  <dt>trigger</dt>
-                  <dd><code>samurai.rescue()</code>される</dd>
-                  <dt>sprite file</dt>
-                  <dd><code>tsuru/rescued.png</code></dd>
-                  <dt>Frame count</dt>
-                  <dd>asset exists</dd>
-                  <dt>モーション要求仕様</dt>
-                  <dd>視認可能な専用表示（rescued相当）</dd>
-                  <dt>実装</dt>
-                  <dd><code>tsuru/rescued.png</code> の asset は存在するがゲーム表示にマッピングされておらず、専用表示は出ずに即消滅する。</dd>
-                </dl>
-                <div className="sprite-debug-captive-spec-art">
-                  <img
-                    src="/assets/sprites/tsuru/rescued.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="sprite-debug-motion-file-preview"
-                  />
-                </div>
-              </li>
-            </ul>
-          </div>
-        </>
-      );
-    }
-
-    return (
-      <ul className="sprite-debug-meta-list">
-        <>
-          <li>対応: {card.supportedStates.join(", ")}</li>
-          <li>
-            不足:
-            {" "}
-            {card.unsupportedStates.length > 0 ? card.unsupportedStates.join(", ") : "なし"}
-          </li>
-        </>
-        {card.note ? <li>注記: {card.note}</li> : null}
-        <li>状態操作: 専用UI（敵キャラカードの `Play Animation` とは別扱い）</li>
-      </ul>
     );
   };
 
@@ -1046,7 +1016,11 @@ export default function SpriteDebugPage() {
                     </span>
                   </header>
                   {renderSamuraiPreviewPanel(visibleSamuraiCards, currentState)}
-                  {renderSamuraiFooter()}
+                  {renderUnitFooter(
+                    unitAnimationTypeSpecs({ kind: "samurai" }),
+                    "samurai game motion coverage",
+                    "samurai",
+                  )}
                 </article>
               );
             })() : null}
@@ -1072,7 +1046,15 @@ export default function SpriteDebugPage() {
                     </span>
                   </header>
                   {renderEnemyPreviewPanel(group, currentState)}
-                  {renderEnemyGroupFooter(group)}
+                  {renderUnitFooter(
+                    unitAnimationTypeSpecs({
+                      kind: group.kind,
+                      renderMode: group.renderMode,
+                      cards: group.cards,
+                    }),
+                    `${group.kind} enemy game motion coverage`,
+                    group.kind,
+                  )}
                 </article>
               );
             })}
@@ -1101,7 +1083,11 @@ export default function SpriteDebugPage() {
                   </header>
 
                   {renderCaptivePreviewPanel(card, captiveLocalState)}
-                  {renderOtherUnitCardFooter(card, captiveLocalState)}
+                  {renderUnitFooter(
+                    unitAnimationTypeSpecs({ kind: card.kind }),
+                    `${card.id} captive game motion coverage`,
+                    card.id,
+                  )}
                 </article>
               );
             })}

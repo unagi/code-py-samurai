@@ -519,8 +519,7 @@
   border-radius: 6px;
 }
 
-.sprite-debug-card-captive .tile-captive,
-.sprite-debug-card-captive .tile-floor {
+.sprite-debug-card-captive .tile-captive {
   background: linear-gradient(180deg, #857d6d, #766e5f);
 }
 
@@ -1108,8 +1107,7 @@
     linear-gradient(180deg, rgba(135, 126, 107, 0.28), rgba(103, 97, 82, 0.22));
 }
 
-.sprite-debug-captive-preview-box .tile-captive,
-.sprite-debug-captive-preview-box .tile-floor {
+.sprite-debug-captive-preview-box .tile-captive {
   background: linear-gradient(180deg, #8a816f, #756d5e);
 }
 
