@@ -4,17 +4,21 @@
 
 ## Conventions
 
-- 方向引数は `RelativeDirection = "forward" | "right" | "backward" | "left"`
+- 方向引数は Enum 相当の文字列値（`"forward" | "right" | "backward" | "left"`）
 - アクションメソッドは 1 ターンに 1 回のみ実行可能
 - 感知メソッドは同一ターン内で複数回呼び出し可能
 - `feel()` / `look()` の空マス（階段含む）は `None` に正規化される
 
-## Type Alias
+## Direction Values (Enum-like)
 
-### `RelativeDirection`
-
-```text
-"forward" | "right" | "backward" | "left"
+```java
+/**
+ * Relative direction values accepted by Warrior APIs.
+ * @type string
+ * @enumLike true
+ * @values "forward" | "right" | "backward" | "left"
+ * @implNote 現行 Python API は Enum クラスではなく文字列値を受け付ける。
+ */
 ```
 
 ## Class: `Player`
@@ -69,12 +73,13 @@
  */
 ```
 
-#### `walk(self, direction: RelativeDirection = "forward") -> None`
+#### `walk(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向へ 1 マス移動する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -84,12 +89,13 @@
  */
 ```
 
-#### `attack(self, direction: RelativeDirection = "forward") -> None`
+#### `attack(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向の隣接マスを近接攻撃する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -112,12 +118,13 @@
  */
 ```
 
-#### `rescue(self, direction: RelativeDirection = "forward") -> None`
+#### `rescue(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向の捕虜を救出する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -127,12 +134,13 @@
  */
 ```
 
-#### `shoot(self, direction: RelativeDirection = "forward") -> None`
+#### `shoot(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向へ射撃する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -142,12 +150,13 @@
  */
 ```
 
-#### `pivot(self, direction: RelativeDirection = "backward") -> None`
+#### `pivot(self, direction: str = "backward") -> None`
 
 ```java
 /**
  * 向きを変更する。
- * @param direction RelativeDirection 回転先の相対方向。省略時は "backward"。
+ * @param direction str 回転先の相対方向の列挙値。省略時は "backward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -157,12 +166,13 @@
  */
 ```
 
-#### `bind(self, direction: RelativeDirection = "forward") -> None`
+#### `bind(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向の隣接ユニットを拘束する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -172,12 +182,13 @@
  */
 ```
 
-#### `detonate(self, direction: RelativeDirection = "forward") -> None`
+#### `detonate(self, direction: str = "forward") -> None`
 
 ```java
 /**
  * 指定方向に爆破攻撃を行う。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return None
  * @category action
  * @constraint one-action-per-turn
@@ -198,12 +209,13 @@
  */
 ```
 
-#### `feel(self, direction: RelativeDirection = "forward") -> Space | None`
+#### `feel(self, direction: str = "forward") -> Space | None`
 
 ```java
 /**
  * 指定方向の隣接 1 マスを感知する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return Space | None 対象（敵/捕虜/壁など）がある場合は Space、空マス（階段含む）は None。
  * @category sense
  * @throws RuntimeError 不正な方向文字列を指定した場合。
@@ -212,12 +224,13 @@
  */
 ```
 
-#### `look(self, direction: RelativeDirection = "forward") -> list[Space | None]`
+#### `look(self, direction: str = "forward") -> list[Space | None]`
 
 ```java
 /**
  * 指定方向の 1〜3 マス先を感知する。
- * @param direction RelativeDirection 相対方向。省略時は "forward"。
+ * @param direction str 相対方向の列挙値。省略時は "forward"。
+ * @values "forward" | "right" | "backward" | "left"
  * @return list[Space | None] 長さ 3 の配列。各要素は Space または None。
  * @category sense
  * @throws RuntimeError 不正な方向文字列を指定した場合。
@@ -238,24 +251,26 @@
  */
 ```
 
-#### `direction_of_stairs(self) -> RelativeDirection`
+#### `direction_of_stairs(self) -> str`
 
 ```java
 /**
  * 階段の方向を相対方向で返す。
- * @return RelativeDirection 階段の方向。
+ * @return str 階段の方向の列挙値。
+ * @values "forward" | "right" | "backward" | "left"
  * @category sense
  * @since GlobalLevel 10
  */
 ```
 
-#### `direction_of(self, space: Space) -> RelativeDirection`
+#### `direction_of(self, space: Space) -> str`
 
 ```java
 /**
  * 指定した Space の方向を相対方向で返す。
  * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
- * @return RelativeDirection 対象マスの方向。
+ * @return str 対象マスの方向の列挙値。
+ * @values "forward" | "right" | "backward" | "left"
  * @category sense
  * @throws RuntimeError None や不正なオブジェクトを渡した場合。
  * @since GlobalLevel 13
