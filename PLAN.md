@@ -282,6 +282,11 @@ class Player:
    - Python構文エラー → ユーザーフレンドリーなメッセージ
    - 実行時エラー → スタックトレース表示
    - 複数アクション実行の検出 → 警告
+7. （追加TODO・別PR）Python API契約への実装追随:
+   - 学習者向け API 契約の SoT は `docs/python-api-reference.md` とする
+   - Skulpt 制約により内部実装表現は多少異なってよいが、公開契約（名前・意味・使い方）は維持
+   - 大きな runtime/engine 変更は docs PR と分離して実施する
+   - 互換維持（既存テスト/プレイ）を確認しながら段階的に移行する
 
 **完了条件** (`npm test` 全Pass):
 - [x] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
@@ -387,20 +392,31 @@ class Player:
    - 翻訳ファイル: `public/locales/{ja,en}/translation.json`
    - UI文字列全般 (メニュー、ボタン、通知等)
    - レベル説明・ヒント・clueの多言語化
+   - Python API リファレンス（要約/詳細）の文言多言語化
    - 言語切り替えUI
-3. チュートリアルシステム（ASCII表示のまま実装）:
+3. Python API リファレンスのゲーム内統合（docs仕様をUIへ戻す）:
+   - ゲーム画面に「現在レベルで使えるAPI要約」を表示
+   - 詳細は別タブで開ける Javadoc 風リファレンスページを用意
+   - 要約と詳細で情報密度を分ける（段階的開示）
+   - `docs/python-api-reference.md` を基準に内容を統一（必要なら構造化データを SoT に再編）
+   - API識別子（例: `walk`, `Direction.LEFT`）は原則非翻訳、説明文のみ翻訳
+   - まずは UI導線PR（要約 + 詳細リンク）を先行し、詳細ページ本体は別PRでも可
+4. チュートリアルシステム（ASCII表示のまま実装）:
    - レベル1の対話的チュートリアル
    - Python基礎構文のガイド
-4. 進行管理（先行実施）:
+5. 進行管理（先行実施）:
    - localStorage保存/読み込み
    - プロファイル管理
-5. 音声・BGM (optional):
+6. 音声・BGM (optional):
    - SE (攻撃、移動、レベルクリア)
    - BGM (ゲームプレイ中)
 
 **完了条件** (手動確認):
 - [ ] 日本語⇔英語切り替えで全UIテキストが切り替わる
 - [ ] レベル説明/ヒント/clueが多言語対応
+- [ ] ゲーム画面に「現在レベルで使えるAPI要約」が表示される
+- [ ] API要約から詳細リファレンスを別タブで開ける
+- [ ] 詳細リファレンス（Javadoc風）が `ja` / `en` で読める
 - [ ] レスポンシブ: モバイル幅でレイアウト崩れなし
 - [ ] ダークモード切り替え動作
 - [ ] 既定コードが自動入力されず、テンプレート開始 or 空入力エラーになる
@@ -408,6 +424,8 @@ class Player:
 - [ ] Epic Mode: 全レベル連続プレイ → 最終グレード表示
 
 ## Python API Reference (ユーザー向け)
+
+> メモ: 学習者向け API 契約の最新仕様は `docs/python-api-reference.md` を参照すること（この節のコード例は追随更新が必要になる場合がある）。
 
 ```python
 class Player:
