@@ -28,6 +28,7 @@ import {
   writePlayerCodeStorage,
   writeProgressStorage,
 } from "./progress-storage";
+import { ResultModal } from "./ResultModal";
 import {
   SAMURAI_IDLE_FRAME_COUNT,
   SAMURAI_IDLE_FRAME_MS,
@@ -454,44 +455,20 @@ export default function App() {
         </div>
       </section>
 
-      {showResultModal && result ? (
-        <dialog className="modal-backdrop" open aria-label={t("result.heading")}>
-          <article className="modal-card">
-            <h3>🏁 {t("result.heading")}</h3>
-            <p className="result-status">{result.passed ? t("result.clear") : t("result.failed")}</p>
-            <ul>
-              <li>{t("result.turns")}: {result.turns}</li>
-              <li>{t("result.totalScore")}: {result.totalScore}</li>
-              <li>{t("result.timeBonus")}: {result.timeBonus}</li>
-              <li>{t("result.grade")}: {result.grade ?? "-"}</li>
-            </ul>
-            {!result.passed && hasClue ? (
-              <p className="clue-box">
-                <strong>{t("result.clue")}</strong> {t(levelClueKey)}
-              </p>
-            ) : null}
-            <div className="controls">
-              <button
-                onClick={() => {
-                  setShowResultModal(false);
-                  startLevel();
-                }}
-              >
-                <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("result.retry")}</span>
-              </button>
-              {result.passed && hasNextLevel ? (
-                <button onClick={() => goToLevel(currentGlobalLevel + 1)}>
-                  <span className="icon-label"><i className="bi bi-skip-forward-fill" />{t("result.next")}</span>
-                </button>
-              ) : (
-                <button onClick={() => setShowResultModal(false)}>
-                  <span className="icon-label"><i className="bi bi-check2-circle" />{t("result.close")}</span>
-                </button>
-              )}
-            </div>
-          </article>
-        </dialog>
-      ) : null}
+      <ResultModal
+        isOpen={showResultModal}
+        result={result}
+        t={t}
+        hasClue={hasClue}
+        levelClueKey={levelClueKey}
+        hasNextLevel={hasNextLevel}
+        onRetry={() => {
+          setShowResultModal(false);
+          startLevel();
+        }}
+        onNextLevel={() => goToLevel(currentGlobalLevel + 1)}
+        onClose={() => setShowResultModal(false)}
+      />
     </main>
   );
 }
