@@ -162,11 +162,20 @@ Both tiles seamlessly tile with copies of themselves.
 
 ## キャラクタースプライト生成戦略
 
-### SPRITE_SPEC.md の基本仕様
+### ゲームエンジン仕様 vs Geminiプロンプト仕様（★混同注意）
 
-- キャンバス: 80×80px、有効描画エリア: 中央寄り 48×48px
-- 右下 20×20px は空白（ウォーターマーク対策）
-- 透過PNG必須、全フレーム横並びスプライトシート
+SPRITE_SPEC.md のゲームエンジン仕様と、Geminiプロンプトに含める仕様は**別物**。
+
+| 項目 | ゲームエンジン仕様 | Geminiプロンプトに含めるか |
+|------|------------------|------------------------|
+| フレーム 80×80px | ○ | ○ セルサイズとして指定 |
+| 有効描画エリア 48×48px | ○ | **✕ 含めない** — Geminiにセル内レイアウト制約を与えると不自然になる |
+| 右下 20×20px 空白 | ○ | **✕ 含めない** — 切り出し後の除去が困難。WM対策はグリッド列数で行う |
+| 透過PNG | ○ | **✕ Gemini不可** — シアン背景で代替 |
+| スプライトシート横並び | ○ | ○ グリッドの1行が1スプライトシートに対応 |
+
+> **原則**: Geminiには「セル内にキャラをセンタリングして描く」とだけ指示する。
+> 48×48制約やWM空白は後処理（リサイズ・配置）で対応する。
 
 ### 方向数の整理
 
@@ -200,7 +209,54 @@ Both tiles seamlessly tile with copies of themselves.
 
 攻撃エフェクト（紫液など）の向きも反転後に自然に逆向きになるため問題なし。
 
-### グリッド形式の問題と対処方針
+### グリッドサイジングの公式（★重要）
+
+```
+行数 = アニメーション状態の数
+列数 = max(各状態のフレーム数) + 1
+```
+
+**+1列の理由**: Geminiは画像の右下にウォーターマーク（WM）を配置する。
+最終行の末尾に空セルを設けることで、WMがキャラセルに被るのを防ぐ。
+
+**実績のあるグリッドサイズ:**
+
+| キャラ | 状態数 | フレーム数 | max | グリッド | 結果 |
+|--------|-------|-----------|-----|---------|------|
+| ガマ | 4 (IDLE/ATK/DMG/DEATH) | 3/4/2/5 | 5 | **4×6** | ✅ 採用 |
+| 大蛇 | 4 (IDLE/ATK/DMG/DEATH) | 3/4/2/4 | 4 | **4×5** | ✅ 採用 |
+| ツル | 2 (BOUND/RESCUED) | 3/6 | — | **3×4** | ✅ 採用（行分割方式） |
+
+### 行分割方式（フレーム数が偏るキャラ用）
+
+状態ごとのフレーム数に大きな偏りがある場合、**1つの状態を複数行に分割**してグリッドを正方形に近づける。
+
+**例: ツル（bound:3f / rescued:6f = 合計9f）**
+
+公式通りだと `2×7` → 横長で過去実績と乖離。
+→ rescued を2行に分割: `3×4` → ほぼ正方形。
+
+```
+Row 1 — BOUND:      F1, F2, F3, EMPTY
+Row 2 — RESCUED①:   F1, F2, F3, EMPTY
+Row 3 — RESCUED②:   F4, F5, F6, EMPTY  ← WM吸収
+```
+
+**後処理:** Row 2-3 のフレームを結合して1本のスプライトシートにする。
+
+### 空セルの扱い
+
+フレーム数が最大列数に満たない行では空セルが生じる。
+
+**空セルの指示方法:**
+```
+F4-F5: EMPTY — flat cyan fill only.
+```
+
+- 「EMPTY」と明記し、シアン単色塗りを指示する
+- グリッド最終セル（右下）は必ず空にする → WM吸収用
+
+### グリッド形式の制約と対処方針
 
 グリッド形式（複数行×複数列）には以下の制約がある：
 - 列数増加 → Gemini が全体を縮小 → キャラが小さくなる
@@ -221,29 +277,51 @@ Both tiles seamlessly tile with copies of themselves.
 
 **後処理方針:**
 - セル境界をまたいだエフェクトは切り出し時にクリッピングして許容
-- ウォーターマークが被るセルは最大フレーム数+1列で右下を空ける
+- WM対策は +1列 で右下セルを空ける（セル内の20×20空白指示はしない）
 
 ### キャラクタースプライト一括依頼テンプレート（グリッド形式）
 
 ```
-[スタイル定義（キャラ名・色・体型・参照スタイル）]
+[スタイル参照（GBA-era pixel art style 等）]
+
+CHARACTER DESIGN — [キャラ名] ([役割]):
+- [体型・サイズ感の説明]
+- [配色の説明（具体的な色名を使う）]
+- [顔・目・表情の特徴]
+- [その他の特徴的なディテール]
+- Style: [輪郭線スタイル], [塗りスタイル].
+  [参照イメージ（"think X, not Y" 形式）]
 
 Create a full sprite sheet grid for [キャラ名].
-Layout: [状態数] rows × [最大フレーム数+1] columns grid.
+Layout: [状態数] rows × [max(フレーム数)+1] columns grid.
 White background. Bright red 2px lines separating ALL cells (rows and columns).
 Label each row on the left. Label below: "[キャラ名]". 40px blank padding at bottom.
 
-Per frame: 80×80px. Solid CYAN (#00FFFF) background.
-Character fills upper-center 48×48px area.
+Per cell: 80×80px. Solid CYAN (#00FFFF) background.
+Character centered in the cell.
 
 Row 1 — [状態名] ([フレーム数] frames):
-  F1: [説明]
-  F2: [説明]
+  F1: [ポーズ・表情の具体的説明]
+  F2: [前フレームからの変化を説明]
   ...
+  F[N+1]-F[max+1]: EMPTY — flat cyan fill only.
 
-CRITICAL: Keep ALL frames consistent — same [色指定], same character size,
-same line weight throughout the entire sheet.
+[他の行も同様]
+
+CRITICAL RULES:
+- Keep ALL frames consistent — same color palette, same character size,
+  same line weight throughout the entire sheet.
+- The [キャラ] should look like the SAME creature in every cell.
+- Each cell has a flat CYAN background — NOT a scene or environment.
+- NO ground lines, NO shadows on ground, NO background elements.
+- Think "game sprite on solid color key" not "illustration with setting".
 ```
+
+**テンプレート使用上の注意:**
+- `Character centered in the cell` とだけ指示する（48×48制約やWM空白はGeminiに伝えない）
+- 空セルは `EMPTY — flat cyan fill only` で統一
+- CRITICAL RULES はタイル用とは異なる（キャラ用は一貫性・背景排除が主）
+- 方向指定はしない（左右対称キャラは反転で対応）
 
 ### ⚠️ Gemini固有の制約（2026-02 確認済み）
 
@@ -273,10 +351,23 @@ Geminiへの画像添付は **使用禁止**。
 
 ## 成功・失敗事例ログ
 
-| 日付 | 依頼内容 | 結果 | 備考 |
-|------|---------|------|------|
-| 2026-02 | 洞窟4タイル一括（2×2グリッド） | ✅ FLOOR・STAIRS 成功、WALL は再制作必要 | 一括依頼は有効 |
-| 2026-02 | 壁2タイル個別（CRITICAL RULES省略） | ❌ 失敗 | CRITICAL RULESの省略が原因と推定 |
-| 2026-02 | ガマ デザイン確定シート（テキストのみ） | ✅ 成功 | 画像添付なしで良質なデザインが得られた |
-| - | 画像添付によるキャラ再現依頼 | ❌ 非推奨 | AIが画像を加工してしまい指示が効かなくなる |
-| 2026-02 | ガマ全状態一括（5列・80px帯・F4説明変更） | ✅ 採用 | ウォーターマーク解消・一貫性確保・F4残影なし。シアン背景指定がマゼンタで出力、毒液が青系に変色（背景との混同）は許容 |
+| 日付 | 依頼内容 | グリッド | 結果 | 学び |
+|------|---------|---------|------|------|
+| 2026-02 | 洞窟4タイル一括 | 2×2 | ✅ FLOOR・STAIRS 成功、WALL は再制作必要 | 一括依頼は有効 |
+| 2026-02 | 壁2タイル個別（CRITICAL RULES省略） | 1×2 | ❌ 失敗 | CRITICAL RULES は省略不可 |
+| 2026-02 | ガマ デザイン確定シート（テキストのみ） | — | ✅ 成功 | 画像添付なしで良質なデザインが得られた |
+| - | 画像添付によるキャラ再現依頼 | — | ❌ 非推奨 | AIが画像を加工してしまい指示が効かなくなる |
+| 2026-02 | ガマ全状態一括 | **4×6** | ✅ **採用** | 4状態(3/4/2/5f)→max5+1=6列。WM解消・一貫性確保。シアン指定がマゼンタで出力されたが許容。毒液が青系に変色（背景との色混同）も許容 |
+| 2026-02 | 大蛇全状態一括 | **4×5** | ✅ **採用** | 4状態(3/4/2/4f)→max4+1=5列。ボールパイソンデザイン。WM右下に落ちて問題なし |
+| 2026-02 | ツル全状態一括 | **3×4** | ✅ **採用** | 2状態(3/6f)だが行分割方式で3行化: BOUND(3f) / RESCUED①(3f) / RESCUED②(3f)。列数=3+1=4。WM右下に落ちて問題なし。rescued F4にシアン残り微少 |
+| 2026-02 | サル全状態一括 | **3×5** | ✅ **採用** | 6状態を各最大2fに削減し、行内ペア配置: Row1=IDLE(2f)+SHOOT-R(2f), Row2=SHOOT-L(2f)+DEATH(2f), Row3=PROJ(2f)+DAMAGED(2f)。DAMAGED最終行でWM吸収。SHOOTは左右反転不可のため明示的左右生成。PROJECTILE別セル方式 |
+| 2026-02 | タヌキ全状態一括 | **3×5** | ✅ **採用** | サルと同じ3×5ペア配置: Row1=IDLE(2f)+CAST(2f), Row2=DEATH(2f)+PROJ(2f), Row3=DAMAGED(2f)。CASTは両手術→反転可能（サルSHOOTとは異なる）。PROJ-F2がEMPTY判定→1fのみ |
+
+### ガマ成功事例の詳細（再現性のための記録）
+
+**グリッド構成**: 4行 × 6列（IDLE:3f / ATTACK:4f / DAMAGED:2f / DEATH:5f + 各行の空セル）
+**セル仕様**: 80×80px、シアン背景、赤線2pxセパレーター
+**WM対策**: 6列目（+1列）により右下セルが空 → WMがそこに落ちた
+**方向**: 指定なし → Geminiが右向きで出力 → 水平反転で左向きを生成
+**空セル**: `EMPTY — flat cyan fill only` と指示 → 正常にシアン単色で出力
+**CRITICAL RULES**: キャラ用（一貫性・背景排除）を使用
