@@ -9,7 +9,7 @@
 ## 方針
 
 - Ruby 由来の表現より、Python で読みやすい表現を優先する
-- 「空かどうか」の判定は `None` で統一する
+- 判定メソッドの列挙より、型と属性で読めるクラス設計を優先する
 - 旧仕様のメソッドチェーン依存を減らす
 
 ## ドキュメント方針（学習者向け）
@@ -31,51 +31,74 @@
 
 ## 主な差分
 
-### 1. `feel()` の戻り値
+### 1. 方向の表現（`Direction` の導入）
 
 - 旧（RubyWarrior 的）:
-  - `warrior.feel()` は常に `Space` を返す
-  - 例: `warrior.feel().is_empty()`
-- 現在（Pythonic）:
-  - 空マス（階段含む）なら `None`
-  - 敵/捕虜/壁など対象があるときは `Space` 相当オブジェクト
+  - 方向は文字列表現（Ruby 側ではシンボル相当）を直接渡して扱う
+  - 例: `warrior.walk(:left)` / `warrior.feel(:forward)`
+- 現在（Pythonic 仕様）:
+  - `Direction` を使って方向を表す
+  - 例: `warrior.walk(Direction.LEFT)` / `warrior.feel(Direction.FORWARD)`
+
+狙い:
+
+- 「取りうる値の集合」をコード上で明示する
+- 学習者に型安全な書き方を先に提示する
+
+### 2. `Space` のモデル（地形 + 占有ユニット）
+
+- 旧（RubyWarrior 的）:
+  - `Space` に対する判定メソッドで状態を読む（例: `is_empty?`, `is_wall?`, `is_enemy?`）
+- 現在（Pythonic 仕様）:
+  - `Space` は「マス（セル）」として扱う
+  - 地形は `space.terrain`
+  - ユニットは `space.unit`
+
+これにより、複合状態を自然に表現できる:
+
+- 例: 階段の上に敵がいる
+  - `space.terrain == Terrain.STAIRS`
+  - `space.unit is not None`
+  - `space.unit.kind == UnitKind.ENEMY`
+
+### 3. 空判定・対象判定の書き方
+
+- 旧（RubyWarrior 的）:
+  - `space.is_empty?`
+  - `space.is_enemy?`
+  - `space.is_captive?`
+- 現在（Pythonic 仕様）:
+  - 空判定: `space.unit is None`
+  - 対象判定: `space.unit.kind == UnitKind.ENEMY` など
+  - 状態判定: `space.unit.ticking`
 
 推奨例:
 
 ```python
-space = warrior.feel()
-if space is None:
-    warrior.walk()
-else:
-    warrior.attack()
+space = warrior.feel(Direction.FORWARD)
+if space.unit is None:
+    warrior.walk(Direction.FORWARD)
+elif space.unit.kind == UnitKind.ENEMY:
+    warrior.attack(Direction.FORWARD)
 ```
 
-### 2. 空判定 API
-
-- 旧:
-  - `space.is_empty()`
-- 現在:
-  - `space is None`
-
-注意:
-
-- `warrior.feel().is_empty()` は使用しない
-- `space` が `None` でないことを確認してから `space.is_enemy()` などを呼ぶ
-
-### 3. 命名
+### 4. 命名
 
 - Python 側は `snake_case` を使用
   - 例: `warrior.direction_of_stairs()`
+- 型・列挙は Python らしい `PascalCase` / `UPPER_CASE` を使用
+  - 例: `Direction.LEFT`, `Terrain.STAIRS`, `UnitKind.CAPTIVE`
 - エンジン内部の camelCase はランタイム層で吸収する
 
 ## 実装・教材上のガイドライン
 
-- 新しいレベル文・Tips・サンプルコードは `is None` を使う
-- `is_empty()` 前提の説明は追加しない
+- 新しいレベル文・Tips・サンプルコードは `Direction` / `Terrain` / `UnitKind` を使う
+- `Space` の説明は `terrain` と `unit` を中心に行う
+- `is_empty()` / `is_enemy()` など判定メソッド前提の説明は追加しない
 - 条件分岐は次の順を推奨する
-  1. `space = warrior.feel()`
-  2. `if space is None:`
-  3. `elif space.is_enemy():` のように対象別に分岐
+  1. `space = warrior.feel(Direction.FORWARD)`
+  2. `if space.unit is None:`
+  3. `elif space.unit.kind == UnitKind.ENEMY:` のように対象別に分岐
 
 ## 互換性メモ
 
