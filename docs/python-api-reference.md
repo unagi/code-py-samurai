@@ -1,23 +1,20 @@
 # Python API Reference (Player / Warrior / Space)
 
-現行実装（`src/runtime/python-player.ts`, `src/engine/*.ts`）に基づく、Python プレイヤー向け API リファレンスです。
+Python プレイヤー向け API リファレンスです。
 
 ## Conventions
 
-- 方向引数は Enum 相当の文字列値（`"forward" | "right" | "backward" | "left"`）
+- 方向引数には `Direction` を使用する（`forward`, `right`, `backward`, `left`）
 - アクションメソッドは 1 ターンに 1 回のみ実行可能
 - 感知メソッドは同一ターン内で複数回呼び出し可能
-- `feel()` / `look()` の空マス（階段含む）は `None` に正規化される
+- `feel()` / `look()` の空マス（階段を含む）は `None` として扱う
 
-## Direction Values (Enum-like)
+## Enum: `Direction`
 
 ```java
 /**
- * Relative direction values accepted by Warrior APIs.
- * @type string
- * @enumLike true
- * @values "forward" | "right" | "backward" | "left"
- * @implNote 現行 Python API は Enum クラスではなく文字列値を受け付ける。
+ * Warrior API で使用する方向。
+ * @values forward | right | backward | left
  */
 ```
 
@@ -68,39 +65,35 @@
  * @category action
  * @constraint one-action-per-turn
  * @apiNote 同一ターン内で複数の action メソッドを呼び出してはならない。
- * @implNote 現行実装は Python デコレーターではなく、ランタイム/エンジン側のターン状態管理
- *           （主に `src/engine/turn.ts` の `doAction()`）で制約を適用する。
  */
 ```
 
-#### `walk(self, direction: str = "forward") -> None`
+#### `walk(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向へ 1 マス移動する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 移動先が空でない場合は移動しない。
  * @since GlobalLevel 1
  */
 ```
 
-#### `attack(self, direction: str = "forward") -> None`
+#### `attack(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向の隣接マスを近接攻撃する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
- * @remarks 後方攻撃はダメージが低下する（エンジン実装準拠）。
+ * @throws RuntimeError 無効な方向を指定した場合。
+ * @remarks 後方攻撃はダメージが低下する。
  * @since GlobalLevel 2
  */
 ```
@@ -118,81 +111,76 @@
  */
 ```
 
-#### `rescue(self, direction: str = "forward") -> None`
+#### `rescue(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向の捕虜を救出する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 捕虜でない対象には効果なし。
  * @since GlobalLevel 5
  */
 ```
 
-#### `shoot(self, direction: str = "forward") -> None`
+#### `shoot(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向へ射撃する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 射程は 1〜3 マス。最初に見つかったユニットに命中する。
  * @since GlobalLevel 8
  */
 ```
 
-#### `pivot(self, direction: str = "backward") -> None`
+#### `pivot(self, direction: Direction = "backward") -> None`
 
 ```java
 /**
  * 向きを変更する。
- * @param direction str 回転先の相対方向の列挙値。省略時は "backward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 回転先の相対方向。省略時は `backward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 既定値が "backward" である点に注意。
  * @since GlobalLevel 7
  */
 ```
 
-#### `bind(self, direction: str = "forward") -> None`
+#### `bind(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向の隣接ユニットを拘束する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 対象がいない場合は効果なし。
  * @since GlobalLevel 12
  */
 ```
 
-#### `detonate(self, direction: str = "forward") -> None`
+#### `detonate(self, direction: Direction = "forward") -> None`
 
 ```java
 /**
  * 指定方向に爆破攻撃を行う。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return None
  * @category action
  * @constraint one-action-per-turn
- * @throws RuntimeError 不正な方向文字列を指定した場合。
+ * @throws RuntimeError 無効な方向を指定した場合。
  * @remarks 範囲ダメージ。爆発系ユニットには連鎖爆発が発生する場合がある。
  * @since GlobalLevel 17
  */
@@ -205,36 +193,33 @@
  * Sense methods may be called multiple times within a turn.
  * @category sense
  * @constraint repeatable-within-turn
- * @implNote 現行実装では action と sense を別系統で管理し、sense 呼び出し回数に制限は設けていない。
  */
 ```
 
-#### `feel(self, direction: str = "forward") -> Space | None`
+#### `feel(self, direction: Direction = "forward") -> Space | None`
 
 ```java
 /**
  * 指定方向の隣接 1 マスを感知する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return Space | None 対象（敵/捕虜/壁など）がある場合は Space、空マス（階段含む）は None。
  * @category sense
- * @throws RuntimeError 不正な方向文字列を指定した場合。
- * @remarks Python 仕様では is_empty() ではなく None 判定を使用する。
+ * @throws RuntimeError 無効な方向を指定した場合。
+ * @remarks この API では `is_empty()` ではなく `None` 判定を使用する。
  * @since GlobalLevel 2
  */
 ```
 
-#### `look(self, direction: str = "forward") -> list[Space | None]`
+#### `look(self, direction: Direction = "forward") -> list[Space | None]`
 
 ```java
 /**
  * 指定方向の 1〜3 マス先を感知する。
- * @param direction str 相対方向の列挙値。省略時は "forward"。
- * @values "forward" | "right" | "backward" | "left"
+ * @param direction Direction 相対方向。省略時は `forward`。
  * @return list[Space | None] 長さ 3 の配列。各要素は Space または None。
  * @category sense
- * @throws RuntimeError 不正な方向文字列を指定した場合。
- * @remarks 空マス（階段含む）は None に正規化される。
+ * @throws RuntimeError 無効な方向を指定した場合。
+ * @remarks 空マス（階段を含む）は `None` を返す。
  * @since GlobalLevel 8
  */
 ```
@@ -251,26 +236,24 @@
  */
 ```
 
-#### `direction_of_stairs(self) -> str`
+#### `direction_of_stairs(self) -> Direction`
 
 ```java
 /**
  * 階段の方向を相対方向で返す。
- * @return str 階段の方向の列挙値。
- * @values "forward" | "right" | "backward" | "left"
+ * @return Direction 階段の方向。
  * @category sense
  * @since GlobalLevel 10
  */
 ```
 
-#### `direction_of(self, space: Space) -> str`
+#### `direction_of(self, space: Space) -> Direction`
 
 ```java
 /**
  * 指定した Space の方向を相対方向で返す。
  * @param space Space 対象マス。通常は feel()/look()/listen() の戻り値を使用する。
- * @return str 対象マスの方向の列挙値。
- * @values "forward" | "right" | "backward" | "left"
+ * @return Direction 対象マスの方向。
  * @category sense
  * @throws RuntimeError None や不正なオブジェクトを渡した場合。
  * @since GlobalLevel 13
@@ -287,17 +270,6 @@
  * @category sense
  * @throws RuntimeError None や不正なオブジェクトを渡した場合。
  * @since GlobalLevel 18
- */
-```
-
-### Not Exposed (Current Python Runtime)
-
-#### `form(self, ...)`
-
-```java
-/**
- * エンジン内部には能力実装が存在するが、現行の通常レベル進行では Python Warrior API として未公開。
- * @remarks src/runtime/python-player.ts の ACTION_ENTRIES に未登録。
  */
 ```
 
@@ -345,7 +317,7 @@
 /**
  * マスが階段かを判定する。
  * @return bool 階段なら True。
- * @remarks 現行 Python 仕様では階段マスは feel()/look() で None に正規化されるため、実運用で呼ぶ機会は少ない。
+ * @remarks 階段マスは feel()/look() では `None` として扱われるため、直接使う場面は少ない。
  */
 ```
 
@@ -383,7 +355,3 @@
 | 13 | 4 | `listen()`, `direction_of(space)` |
 | 17 | 8 | `detonate()` |
 | 18 | 9 | `distance_of(space)` |
-
-## Related
-
-- `docs/rubywarrior-to-pythonic.md`
