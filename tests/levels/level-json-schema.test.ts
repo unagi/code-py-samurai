@@ -13,8 +13,8 @@ describe("level json schema", () => {
 
   it("fails when required fields are missing", () => {
     const invalid = {
-      description: "x",
-      tip: "y",
+      timeBonus: 10,
+      aceScore: 10,
       floor: { width: 8, height: 1 },
       samurai: { x: 0, y: 0, direction: "east" },
       units: [],
@@ -25,9 +25,8 @@ describe("level json schema", () => {
 
   it("parses abilities and unit metadata", () => {
     const parsed = parseLevelDefinitionJson({
-      description: "x",
-      tip: "y",
-      clue: "z",
+
+
       timeBonus: 10,
       aceScore: 20,
       floor: { width: 4, height: 1 },
@@ -60,8 +59,7 @@ describe("level json schema", () => {
   it("fails when direction is invalid", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -75,8 +73,7 @@ describe("level json schema", () => {
   it("fails when integer/string array constraints are violated", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2.5, height: 1 },
@@ -88,8 +85,7 @@ describe("level json schema", () => {
 
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -115,8 +111,7 @@ describe("level json schema", () => {
   it("fails when floor is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: "bad",
@@ -130,8 +125,7 @@ describe("level json schema", () => {
   it("fails when samurai is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -145,8 +139,7 @@ describe("level json schema", () => {
   it("fails when units is not an array", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -160,8 +153,7 @@ describe("level json schema", () => {
   it("fails when a unit entry is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -175,8 +167,6 @@ describe("level json schema", () => {
   it("fails when a number field receives non-number", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
         timeBonus: "bad",
         aceScore: 1,
         floor: { width: 2, height: 1 },
@@ -190,13 +180,11 @@ describe("level json schema", () => {
   it("fails when a string field receives non-string", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: 123,
-        tip: "y",
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: 999, x: 0, y: 0, direction: "east" },
         units: [],
       }),
     ).toThrow(/must be a string/i);
@@ -205,8 +193,7 @@ describe("level json schema", () => {
   it("fails when samurai.abilities is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
-        description: "x",
-        tip: "y",
+
         timeBonus: 1,
         aceScore: 1,
         floor: { width: 2, height: 1 },

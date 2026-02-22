@@ -1,7 +1,4 @@
 {
-  "description": "Your ears become more in tune with the surroundings. Listen to find enemies and captives!",
-  "tip": "Use samurai.listen() to find spaces with other units, and samurai.direction_of(space) to determine what direction they're in.",
-  "clue": "Walk towards an enemy or captive with samurai.walk(samurai.direction_of(samurai.listen()[0])). Once samurai.listen() is empty then head for the stairs.",
   "timeBonus": 55,
   "aceScore": 144,
   "floor": {

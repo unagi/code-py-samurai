@@ -12,9 +12,6 @@ import type { Space } from "@engine/space";
  */
 function createTestTower(): Tower {
   const level1: LevelDefinition = {
-    description: "Walk to stairs",
-    tip: "",
-    clue: "",
     timeBonus: 10,
     aceScore: 10,
     floor: { width: 4, height: 1 },
@@ -24,9 +21,6 @@ function createTestTower(): Tower {
   };
 
   const level2: LevelDefinition = {
-    description: "Fight a sludge",
-    tip: "",
-    clue: "",
     timeBonus: 15,
     aceScore: 20,
     floor: { width: 5, height: 1 },
@@ -36,9 +30,6 @@ function createTestTower(): Tower {
   };
 
   const level3: LevelDefinition = {
-    description: "Fight and walk",
-    tip: "",
-    clue: "",
     timeBonus: 20,
     aceScore: 30,
     floor: { width: 6, height: 1 },

@@ -84,9 +84,6 @@ export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
   }
 
   return {
-    description: asString(value.description, "description"),
-    tip: asString(value.tip, "tip"),
-    clue: value.clue === undefined ? undefined : asString(value.clue, "clue"),
     timeBonus: asNumber(value.timeBonus, "timeBonus"),
     aceScore: asNumber(value.aceScore, "aceScore"),
     floor: {

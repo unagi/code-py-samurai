@@ -1,6 +1,4 @@
 {
-  "description": "You feel a wall right in front of you and an opening behind you.",
-  "tip": "You are not as effective at attacking backward. Use samurai.feel().is_wall() and samurai.pivot() to turn around.",
   "timeBonus": 30,
   "aceScore": 50,
   "floor": {

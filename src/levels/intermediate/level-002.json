@@ -1,7 +1,4 @@
 {
-  "description": "Another large room, but with several enemies blocking your way to the stairs.",
-  "tip": "Just like walking, you can attack and feel in multiple directions (forward, left, right, backward).",
-  "clue": "Call samurai.feel(direction).is_enemy() in each direction to make sure there isn't an enemy beside you (attack if there is). Call samurai.rest() if you're low on health when there are no enemies around.",
   "timeBonus": 40,
   "aceScore": 84,
   "floor": {
