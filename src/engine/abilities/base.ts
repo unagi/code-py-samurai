@@ -1,13 +1,7 @@
+import { RELATIVE_DIRECTIONS } from "../direction";
 import type { RelativeDirection } from "../direction";
 import type { Space } from "../space";
 import type { IUnit } from "../types";
-
-const VALID_DIRECTIONS: RelativeDirection[] = [
-  "forward",
-  "right",
-  "backward",
-  "left",
-];
 
 /**
  * Base class for all abilities.
@@ -79,9 +73,10 @@ export abstract class BaseAbility {
    * Validate that a direction is valid.
    */
   verifyDirection(direction: RelativeDirection): void {
-    if (!VALID_DIRECTIONS.includes(direction)) {
+    if (!RELATIVE_DIRECTIONS.includes(direction)) {
+      const expectedDirections = RELATIVE_DIRECTIONS.map((d) => `"${d}"`).join(" or ");
       throw new TypeError(
-        `Unknown direction "${direction}". Should be "forward", "backward", "left" or "right".`
+        `Unknown direction "${direction}". Should be ${expectedDirections}.`
       );
     }
   }

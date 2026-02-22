@@ -6,11 +6,11 @@ import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
 
-const SEARCH_DIRECTIONS: RelativeDirection[] = [
+const SEARCH_DIRECTIONS = [
   "forward",
   "left",
   "right",
-];
+] as const satisfies readonly RelativeDirection[];
 
 /**
  * Wizard - deadly ranged enemy with high shoot damage.

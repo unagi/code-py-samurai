@@ -6,12 +6,12 @@ import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
 
-const SEARCH_DIRECTIONS: RelativeDirection[] = [
+const SEARCH_DIRECTIONS = [
   "forward",
   "left",
   "right",
   "backward",
-];
+] as const satisfies readonly RelativeDirection[];
 
 export class Sludge extends BaseUnit {
   protected static readonly ATTACK_POWER: number = 3;

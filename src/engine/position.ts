@@ -1,17 +1,10 @@
 import {
-  AbsoluteDirection,
-  RelativeDirection,
+  ABSOLUTE_DIRECTIONS,
   absoluteToRelative,
 } from "./direction";
+import type { AbsoluteDirection, RelativeDirection } from "./direction";
 import type { Space } from "./space";
 import type { IFloor } from "./types";
-
-const ABSOLUTE_DIRECTIONS: AbsoluteDirection[] = [
-  "north",
-  "east",
-  "south",
-  "west",
-];
 
 export class Position {
   readonly floor: IFloor;
