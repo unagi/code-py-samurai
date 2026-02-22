@@ -12,8 +12,6 @@ import { Level, type LevelResult } from "../engine/level";
 import type { LogEntry } from "../engine/log-entry";
 import type { ILogger, IPlayer, LevelDefinition, SamuraiAbilitySet } from "../engine/types";
 import {
-  getGlobalLevelFromTowerLevel,
-  getMaxSamuraiLevel,
   getTowerAndLocalFromGlobal,
   getSamuraiAbilitiesAtGlobalLevel,
   getSamuraiRank,
@@ -23,6 +21,15 @@ import { formatPythonError } from "../runtime/errors";
 import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
 import { buildBoardGrid, MAX_BOARD_SIZE } from "./board-grid";
+import {
+  buildSamuraiLevel,
+  clearStoredAppData,
+  migrateToGlobalLevel,
+  readPlayerCodeStorage,
+  readProgressStorage,
+  writePlayerCodeStorage,
+  writeProgressStorage,
+} from "./progress-storage";
 import { absoluteDirToSpriteDir, resolveSpriteDir, type SpriteDir } from "./sprite-utils";
 
 function buildStarterPlayerCode(comment: string): string {
@@ -41,8 +48,6 @@ const UI_MAX_TURNS = 1000;
 const SAMURAI_IDLE_FRAME_COUNT = 16;
 const SAMURAI_IDLE_FRAME_MS = 140;
 const DAMAGE_POPUP_MS = 820;
-const STORAGE_KEY_PROGRESS = "py-samurai:progress";
-const STORAGE_KEY_PLAYER_CODE = "py-samurai:player-code";
 
 const UNIT_ID_PREFIX_TO_KIND: Record<string, string> = {
   samurai: "samurai",
@@ -107,58 +112,7 @@ const SPRITE_OVERRIDE_MS = 700;
 /** スプライトフレームあたりの表示時間 (ms) */
 const SPRITE_FRAME_MS = 160;
 
-interface ProgressStorageData {
-  // new format
-  globalLevel?: number;
-  // legacy fields
-  towerName?: string;
-  levelNumber?: number;
-  samuraiLevel?: number;
-  samuraiLevelByTower?: Record<string, number>;
-}
-
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
-
-function clampGlobalLevel(value: number): number {
-  return Math.min(Math.max(1, Math.floor(value)), TOTAL_LEVELS);
-}
-
-function readProgressStorage(): ProgressStorageData {
-  try {
-    const raw = globalThis.localStorage.getItem(STORAGE_KEY_PROGRESS);
-    if (!raw) return {};
-    return JSON.parse(raw) as ProgressStorageData;
-  } catch {
-    return {};
-  }
-}
-
-function buildSamuraiLevel(data: ProgressStorageData): number {
-  const maxLv = getMaxSamuraiLevel();
-  if (typeof data.samuraiLevel === "number") {
-    return Math.min(Math.max(1, Math.floor(data.samuraiLevel)), maxLv);
-  }
-
-  let migrated = 1;
-  if (data.samuraiLevelByTower && typeof data.samuraiLevelByTower === "object") {
-    for (const [towerName, local] of Object.entries(data.samuraiLevelByTower)) {
-      if (typeof local !== "number") continue;
-      migrated = Math.max(migrated, getGlobalLevelFromTowerLevel(towerName, Math.floor(local)));
-    }
-  }
-
-  return Math.min(Math.max(1, migrated), maxLv);
-}
-
-function migrateToGlobalLevel(data: ProgressStorageData): number {
-  if (typeof data.globalLevel === "number") {
-    return clampGlobalLevel(data.globalLevel);
-  }
-  if (data.towerName && typeof data.levelNumber === "number") {
-    return clampGlobalLevel(getGlobalLevelFromTowerLevel(data.towerName, data.levelNumber));
-  }
-  return 1;
-}
 
 function getSamuraiIdleFramePath(frameIndex: number): string {
   const frame = String((frameIndex % SAMURAI_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
@@ -611,7 +565,7 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const initialProgress = readProgressStorage();
   const [currentGlobalLevel, setCurrentGlobalLevel] = useState(() => {
-    return migrateToGlobalLevel(initialProgress);
+    return migrateToGlobalLevel(initialProgress, TOTAL_LEVELS);
   });
   const [samuraiLevel, setSamuraiLevel] = useState<number>(() => {
     return buildSamuraiLevel(initialProgress);
@@ -624,17 +578,7 @@ export default function App() {
   const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= samuraiLevel;
   const [speedMs, setSpeedMs] = useState(450);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
-  const [playerCode, setPlayerCode] = useState(() => {
-    try {
-      const saved = globalThis.localStorage.getItem(STORAGE_KEY_PLAYER_CODE);
-      if (typeof saved === "string" && saved.length > 0) {
-        return saved;
-      }
-    } catch {
-      // ignore storage errors (private mode, quota, etc.)
-    }
-    return starterCode;
-  });
+  const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
   const [isPlaying, setIsPlaying] = useState(false);
   const [canPlay, setCanPlay] = useState(true);
   const [board, setBoard] = useState("");
@@ -897,12 +841,7 @@ export default function App() {
     stopTimer();
     setShowResultModal(false);
     setHoveredEnemyStats(null);
-    try {
-      globalThis.localStorage.removeItem(STORAGE_KEY_PROGRESS);
-      globalThis.localStorage.removeItem(STORAGE_KEY_PLAYER_CODE);
-    } catch {
-      // ignore storage errors
-    }
+    clearStoredAppData();
 
     setCurrentGlobalLevel(1);
     setSamuraiLevel(1);
@@ -963,22 +902,11 @@ export default function App() {
   }, [level]);
 
   useEffect(() => {
-    try {
-      globalThis.localStorage.setItem(
-        STORAGE_KEY_PROGRESS,
-        JSON.stringify({ globalLevel: currentGlobalLevel, samuraiLevel }),
-      );
-    } catch {
-      // ignore storage errors (private mode, quota, etc.)
-    }
+    writeProgressStorage(currentGlobalLevel, samuraiLevel);
   }, [currentGlobalLevel, samuraiLevel]);
 
   useEffect(() => {
-    try {
-      globalThis.localStorage.setItem(STORAGE_KEY_PLAYER_CODE, playerCode);
-    } catch {
-      // ignore storage errors (private mode, quota, etc.)
-    }
+    writePlayerCodeStorage(playerCode);
   }, [playerCode]);
 
   useEffect(() => {
