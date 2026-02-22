@@ -22,7 +22,7 @@ Ruby Warrior のゲーム性をベースに、Python で遊べるように移植
 ## 開発
 
 ```bash
-npm ci
+npm ci --ignore-scripts
 npm test
 npm run dev
 ```

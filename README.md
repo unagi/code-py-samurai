@@ -23,7 +23,7 @@ The upstream project, [ryanb/ruby-warrior](https://github.com/ryanb/ruby-warrior
 ## Development
 
 ```bash
-npm ci
+npm ci --ignore-scripts
 npm test
 npm run dev
 ```

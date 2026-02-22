@@ -67,6 +67,47 @@ export function getGlobalLevelFromTowerLevel(towerName: string, localLevel: numb
   return start + Math.max(0, localLevel - 1);
 }
 
+export interface TowerLocalLevel {
+  towerName: string;
+  localLevel: number;
+}
+
+/** Reverse mapping: global level → { towerName, localLevel }. */
+export function getTowerAndLocalFromGlobal(globalLevel: number): TowerLocalLevel {
+  const entries = Object.entries(TOWER_START_LEVEL).sort(
+    ([, a], [, b]) => b - a,
+  );
+  for (const [name, startLevel] of entries) {
+    if (globalLevel >= startLevel) {
+      return { towerName: name, localLevel: globalLevel - startLevel + 1 };
+    }
+  }
+  return { towerName: entries[entries.length - 1][0], localLevel: 1 };
+}
+
+export interface WarriorRank {
+  key: string;
+  minLevel: number;
+  maxLevel: number;
+}
+
+const WARRIOR_RANKS: WarriorRank[] = [
+  { key: "ranks.novice", minLevel: 1, maxLevel: 4 },
+  { key: "ranks.apprentice", minLevel: 5, maxLevel: 9 },
+  { key: "ranks.journeyman", minLevel: 10, maxLevel: 13 },
+  { key: "ranks.veteran", minLevel: 14, maxLevel: 16 },
+  { key: "ranks.master", minLevel: 17, maxLevel: 18 },
+];
+
+/** Get RPG-style rank for the given global warrior level. */
+export function getWarriorRank(globalLevel: number): WarriorRank {
+  const clamped = Math.max(1, Math.floor(globalLevel));
+  for (let i = WARRIOR_RANKS.length - 1; i >= 0; i--) {
+    if (clamped >= WARRIOR_RANKS[i].minLevel) return WARRIOR_RANKS[i];
+  }
+  return WARRIOR_RANKS[0];
+}
+
 export function getMaxWarriorLevel(): number {
   return Math.max(1, ...Object.keys(WARRIOR_ABILITY_INCREMENTS).map(Number));
 }

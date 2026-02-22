@@ -14,7 +14,7 @@ This file describes the minimum working conventions for contributors and coding 
 ## Local Setup
 
 ```bash
-npm ci
+npm ci --ignore-scripts
 ```
 
 ## Build and Test

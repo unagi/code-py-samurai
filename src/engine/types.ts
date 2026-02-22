@@ -1,4 +1,5 @@
 import type { AbsoluteDirection } from "./direction";
+import type { LogEntry } from "./log-entry";
 import type { Position } from "./position";
 import type { Space } from "./space";
 import type { BaseAbility } from "./abilities/base";
@@ -36,7 +37,8 @@ export interface IUnit {
   toString(): string;
   takeDamage(amount: number): void;
   earnPoints(points: number): void;
-  say(msg: string): void;
+  readonly nameKey: string;
+  say(entry: LogEntry): void;
   unbind(): void;
   bind(): void;
   setUnitId(id: string): void;
@@ -50,7 +52,7 @@ export interface IUnit {
  * Log collector for game messages.
  */
 export interface ILogger {
-  log(msg: string): void;
+  log(entry: LogEntry): void;
 }
 
 /**

@@ -37,7 +37,8 @@
     "heading": "システムログ",
     "empty": "（ログなし）",
     "systemFallback": "[system] 前回の有効なコードを使用しています。構文を修正して再試行してください。",
-    "systemTimeout": "[system] {{maxTurns}} ターンでタイムアウトしました。"
+    "systemTimeout": "[system] {{maxTurns}} ターンでタイムアウトしました。",
+    "pythonError": "[error] {{message}}"
   },
   "result": {
     "heading": "結果",
@@ -54,8 +55,15 @@
   },
   "nav": {
     "levelProgress": "レベル進捗",
-    "course": "コース",
+    "levelLocked": "Lv.{{level}}（未解放）",
     "language": "言語"
+  },
+  "ranks": {
+    "novice": "かけだし",
+    "apprentice": "みならい",
+    "journeyman": "一人前",
+    "veteran": "すごうで",
+    "master": "達人"
   },
   "towers": {
     "beginner": "ビギナー",
@@ -72,7 +80,42 @@
     "wizard": "ウィザード",
     "captive": "捕虜",
     "golem": "ゴーレム",
+    "wall": "壁",
+    "nothing": "何もない",
     "unknown": "不明なユニット"
+  },
+  "directions": {
+    "forward": "前方",
+    "backward": "後方",
+    "left": "左",
+    "right": "右"
+  },
+  "engine": {
+    "turn": "- ターン {{turn}} -",
+    "walk": "{{direction}}に歩く",
+    "bump": "{{target}}にぶつかる",
+    "attackHit": "{{direction}}に攻撃、{{target}}に命中",
+    "attackMiss": "{{direction}}に攻撃、空振り",
+    "shootHit": "{{direction}}に射撃、{{target}}に命中",
+    "shootMiss": "射撃するが何にも当たらない",
+    "restHeal": "休息で{{amount}}回復（残HP {{health}}）",
+    "restFull": "すでに万全の状態",
+    "rescueHit": "{{direction}}の{{target}}を救出",
+    "rescueMiss": "{{direction}}の拘束を解くが誰もいない",
+    "bindHit": "{{direction}}の{{target}}を拘束",
+    "bindMiss": "{{direction}}を拘束するが誰もいない",
+    "pivot": "{{direction}}に方向転換",
+    "detonate": "{{direction}}に爆弾を起爆",
+    "bombChain": "爆弾の炎に巻き込まれ起爆",
+    "explode": "自爆、全ユニットに100ダメージ",
+    "ticking": "カチカチ鳴っている",
+    "formSuccess": "{{direction}}にゴーレム生成、HP半分({{amount}})を分与",
+    "formBlocked": "障害物がありゴーレム生成失敗",
+    "takeDamage": "{{amount}}ダメージ（残HP {{health}}）",
+    "dies": "倒れた",
+    "released": "拘束解除",
+    "earnPoints": "{{points}}ポイント獲得",
+    "idle": "何もしない"
   },
   "starterCode": {
     "comment": "# ここに1ターン分の処理を書く"

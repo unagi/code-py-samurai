@@ -83,7 +83,7 @@ export class Level {
     if (this.passed() || this.failed()) return false;
 
     this._turnCount += 1;
-    this._logger.log(`- turn ${this._turnCount} -`);
+    this._logger.log({ key: "engine.turn", params: { turn: this._turnCount } });
 
     // Prepare all units' turns (calls playTurn which records actions)
     const aliveUnits = this.floor.units;

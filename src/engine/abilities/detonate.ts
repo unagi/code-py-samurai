@@ -5,9 +5,7 @@ export class Detonate extends BaseAbility {
   perform(direction: RelativeDirection = "forward"): void {
     this.verifyDirection(direction);
     if (this._unit.position) {
-      this._unit.say(
-        `detonates a bomb ${direction} launching a deadly explosion`
-      );
+      this._unit.say({ key: "engine.detonate", params: { direction } });
       this.bomb(direction, 1, 0, 8);
       this.bomb(direction, 1, 1, 4);
       this.bomb(direction, 1, -1, 4);
@@ -27,7 +25,7 @@ export class Detonate extends BaseAbility {
     const receiver = sp.unit;
     if (receiver) {
       if (receiver.hasAbility("explode!")) {
-        receiver.say("caught in bomb's flames which detonates ticking explosive");
+        receiver.say({ key: "engine.bombChain", params: {} });
         const explodeAbility = receiver.abilities.get("explode!");
         if (explodeAbility) {
           explodeAbility.perform();

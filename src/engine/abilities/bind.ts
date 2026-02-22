@@ -6,10 +6,10 @@ export class Bind extends BaseAbility {
     this.verifyDirection(direction);
     const receiver = this.unitAt(direction);
     if (receiver) {
-      this._unit.say(`binds ${direction} and restricts ${receiver}`);
+      this._unit.say({ key: "engine.bindHit", params: { direction, target: receiver.nameKey } });
       receiver.bind();
     } else {
-      this._unit.say(`binds ${direction} and restricts nothing`);
+      this._unit.say({ key: "engine.bindMiss", params: { direction } });
     }
   }
 }

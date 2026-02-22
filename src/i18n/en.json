@@ -37,7 +37,8 @@
     "heading": "System Logs",
     "empty": "(No logs)",
     "systemFallback": "[system] Using last valid player code. Fix syntax and retry to apply new code.",
-    "systemTimeout": "[system] Stopped at {{maxTurns}} turns (timeout)."
+    "systemTimeout": "[system] Stopped at {{maxTurns}} turns (timeout).",
+    "pythonError": "[error] {{message}}"
   },
   "result": {
     "heading": "Result",
@@ -54,8 +55,15 @@
   },
   "nav": {
     "levelProgress": "Level Progress",
-    "course": "Course",
+    "levelLocked": "Lv.{{level}} (Locked)",
     "language": "Language"
+  },
+  "ranks": {
+    "novice": "Novice",
+    "apprentice": "Apprentice",
+    "journeyman": "Journeyman",
+    "veteran": "Veteran",
+    "master": "Master"
   },
   "towers": {
     "beginner": "Beginner",
@@ -72,7 +80,42 @@
     "wizard": "wizard",
     "captive": "captive",
     "golem": "golem",
+    "wall": "wall",
+    "nothing": "nothing",
     "unknown": "unknown unit"
+  },
+  "directions": {
+    "forward": "forward",
+    "backward": "backward",
+    "left": "left",
+    "right": "right"
+  },
+  "engine": {
+    "turn": "- turn {{turn}} -",
+    "walk": "walks {{direction}}",
+    "bump": "bumps into {{target}}",
+    "attackHit": "attacks {{direction}} and hits {{target}}",
+    "attackMiss": "attacks {{direction}} and hits nothing",
+    "shootHit": "shoots {{direction}} and hits {{target}}",
+    "shootMiss": "shoots and hits nothing",
+    "restHeal": "receives {{amount}} health from resting, up to {{health}} health",
+    "restFull": "is already fit as a fiddle",
+    "rescueHit": "unbinds {{direction}} and rescues {{target}}",
+    "rescueMiss": "unbinds {{direction}} and rescues nothing",
+    "bindHit": "binds {{direction}} and restricts {{target}}",
+    "bindMiss": "binds {{direction}} and restricts nothing",
+    "pivot": "pivots {{direction}}",
+    "detonate": "detonates a bomb {{direction}} launching a deadly explosion",
+    "bombChain": "caught in bomb's flames which detonates ticking explosive",
+    "explode": "explodes, dealing 100 damage to every unit on the floor",
+    "ticking": "is ticking",
+    "formSuccess": "forms a golem {{direction}} and gives half of health ({{amount}})",
+    "formBlocked": "fails to form golem because something is blocking the way",
+    "takeDamage": "takes {{amount}} damage, {{health}} health power left",
+    "dies": "dies",
+    "released": "released from bonds",
+    "earnPoints": "earns {{points}} points",
+    "idle": "does nothing"
   },
   "starterCode": {
     "comment": "# Write your turn logic here"
