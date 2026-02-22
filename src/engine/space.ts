@@ -40,33 +40,23 @@ export class Space {
   }
 
   isPlayer(): boolean {
-    const u = this.unit;
-    if (!u) return false;
-    return u.isSamurai() || u.isGolem();
+    return this.unitMatches((u) => u.isSamurai() || u.isGolem());
   }
 
   isEnemy(): boolean {
-    const u = this.unit;
-    if (!u) return false;
-    return !this.isPlayer() && !this.isCaptive();
+    return this.unitMatches((u) => !u.isSamurai() && !u.isGolem() && !u.isBound());
   }
 
   isCaptive(): boolean {
-    const u = this.unit;
-    if (!u) return false;
-    return u.isBound();
+    return this.unitMatches((u) => u.isBound());
   }
 
   isTicking(): boolean {
-    const u = this.unit;
-    if (!u) return false;
-    return u.hasAbility("explode!");
+    return this.unitMatches((u) => u.hasAbility("explode!"));
   }
 
   isGolem(): boolean {
-    const u = this.unit;
-    if (!u) return false;
-    return u.isGolem();
+    return this.unitMatches((u) => u.isGolem());
   }
 
   get nameKey(): string {
@@ -81,5 +71,10 @@ export class Space {
     if (u) return u.toString();
     if (this.isWall()) return "wall";
     return "nothing";
+  }
+
+  private unitMatches(predicate: (unit: IUnit) => boolean): boolean {
+    const unit = this.unit;
+    return unit ? predicate(unit) : false;
   }
 }
