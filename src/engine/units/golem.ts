@@ -10,15 +10,14 @@ import { BaseUnit } from "./base";
  * Ported from RubyWarrior::Units::Golem
  */
 export class Golem extends BaseUnit {
+  protected static readonly ATTACK_POWER: number = 3;
+  protected static readonly CHARACTER: string = "G";
+
   private _maxHealth: number = 0;
   private _turnCallback: ((turn: Turn) => void) | null = null;
 
   constructor(logger?: ILogger) {
     super(logger);
-  }
-
-  get attackPower(): number {
-    return 3;
   }
 
   get maxHealth(): number {
@@ -27,10 +26,6 @@ export class Golem extends BaseUnit {
 
   set maxHealthValue(value: number) {
     this._maxHealth = value;
-  }
-
-  get character(): string {
-    return "G";
   }
 
   get name(): string {

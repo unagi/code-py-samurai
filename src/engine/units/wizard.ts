@@ -17,21 +17,13 @@ const SEARCH_DIRECTIONS: RelativeDirection[] = [
  * Ported from RubyWarrior::Units::Wizard
  */
 export class Wizard extends BaseUnit {
+  protected static readonly SHOOT_POWER: number = 11;
+  protected static readonly MAX_HEALTH: number = 3;
+  protected static readonly CHARACTER: string = "w";
+
   constructor(logger?: ILogger) {
     super(logger);
     this.addAbilities("shoot!", "look");
-  }
-
-  get shootPower(): number {
-    return 11;
-  }
-
-  get maxHealth(): number {
-    return 3;
-  }
-
-  get character(): string {
-    return "w";
   }
 
   get name(): string {

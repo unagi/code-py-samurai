@@ -6,16 +6,11 @@ import { Sludge } from "./sludge";
  * Ported from RubyWarrior::Units::ThickSludge
  */
 export class ThickSludge extends Sludge {
+  protected static readonly MAX_HEALTH: number = 24;
+  protected static readonly CHARACTER: string = "S";
+
   constructor(logger?: ILogger) {
     super(logger);
-  }
-
-  get maxHealth(): number {
-    return 24;
-  }
-
-  get character(): string {
-    return "S";
   }
 
   get name(): string {

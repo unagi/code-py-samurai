@@ -8,17 +8,12 @@ import { BaseUnit } from "./base";
  * Ported from RubyWarrior::Units::Captive
  */
 export class Captive extends BaseUnit {
+  protected static readonly MAX_HEALTH: number = 1;
+  protected static readonly CHARACTER: string = "C";
+
   constructor(logger?: ILogger) {
     super(logger);
     this.bind();
-  }
-
-  get maxHealth(): number {
-    return 1;
-  }
-
-  get character(): string {
-    return "C";
   }
 
   get name(): string {

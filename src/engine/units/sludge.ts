@@ -14,21 +14,13 @@ const SEARCH_DIRECTIONS: RelativeDirection[] = [
 ];
 
 export class Sludge extends BaseUnit {
+  protected static readonly ATTACK_POWER: number = 3;
+  protected static readonly MAX_HEALTH: number = 12;
+  protected static readonly CHARACTER: string = "s";
+
   constructor(logger?: ILogger) {
     super(logger);
     this.addAbilities("attack!", "feel");
-  }
-
-  get attackPower(): number {
-    return 3;
-  }
-
-  get maxHealth(): number {
-    return 12;
-  }
-
-  get character(): string {
-    return "s";
   }
 
   get name(): string {

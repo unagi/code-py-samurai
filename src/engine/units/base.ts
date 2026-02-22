@@ -22,6 +22,11 @@ const NAME_TO_KEY: Record<string, string> = {
  * Ported from RubyWarrior::Units::Base
  */
 export abstract class BaseUnit implements IUnit {
+  protected static readonly ATTACK_POWER: number = 0;
+  protected static readonly SHOOT_POWER: number = 0;
+  protected static readonly MAX_HEALTH: number = 0;
+  protected static readonly CHARACTER: string = "?";
+
   private _unitId: string;
   position: Position | null = null;
   private _health: number | null = null;
@@ -35,18 +40,21 @@ export abstract class BaseUnit implements IUnit {
     this._unitId = this.name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "") || "unit";
   }
 
-  // Override in subclass
+  protected get unitClass(): typeof BaseUnit {
+    return this.constructor as typeof BaseUnit;
+  }
+
   get attackPower(): number {
-    return 0;
+    return this.unitClass.ATTACK_POWER;
   }
   get shootPower(): number {
-    return 0;
+    return this.unitClass.SHOOT_POWER;
   }
   get maxHealth(): number {
-    return 0;
+    return this.unitClass.MAX_HEALTH;
   }
   get character(): string {
-    return "?";
+    return this.unitClass.CHARACTER;
   }
   get name(): string {
     return this.constructor.name;

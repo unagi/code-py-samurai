@@ -17,21 +17,13 @@ const SEARCH_DIRECTIONS: RelativeDirection[] = [
  * Ported from RubyWarrior::Units::Archer
  */
 export class Archer extends BaseUnit {
+  protected static readonly SHOOT_POWER: number = 3;
+  protected static readonly MAX_HEALTH: number = 7;
+  protected static readonly CHARACTER: string = "a";
+
   constructor(logger?: ILogger) {
     super(logger);
     this.addAbilities("shoot!", "look");
-  }
-
-  get shootPower(): number {
-    return 3;
-  }
-
-  get maxHealth(): number {
-    return 7;
-  }
-
-  get character(): string {
-    return "a";
   }
 
   get name(): string {

@@ -5,28 +5,17 @@ import { Turn } from "../turn";
 import { BaseUnit } from "./base";
 
 export class Samurai extends BaseUnit {
+  protected static readonly ATTACK_POWER: number = 5;
+  protected static readonly SHOOT_POWER: number = 3;
+  protected static readonly MAX_HEALTH: number = 20;
+  protected static readonly CHARACTER: string = "@";
+
   private _score: number = 0;
   private _name: string = "";
   private _player: IPlayer | null = null;
 
   constructor(logger?: ILogger) {
     super(logger);
-  }
-
-  get attackPower(): number {
-    return 5;
-  }
-
-  get shootPower(): number {
-    return 3;
-  }
-
-  get maxHealth(): number {
-    return 20;
-  }
-
-  get character(): string {
-    return "@";
   }
 
   get name(): string {
