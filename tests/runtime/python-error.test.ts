@@ -25,12 +25,14 @@ class FakeTurn {
 
 describe("python error handling", () => {
   it("returns syntax error for invalid source", () => {
+    // Missing play_turn method → PythonSyntaxError
     expect(() => compilePythonPlayer("class Player:\n    pass")).toThrow(PythonSyntaxError);
 
     try {
       compilePythonPlayer("class Player:\n    pass");
     } catch (error) {
       expect(formatPythonError(error)).toMatch(/^Python syntax error:/);
+      expect(formatPythonError(error)).toMatch(/play_turn/);
     }
   });
 
@@ -43,7 +45,9 @@ describe("python error handling", () => {
     try {
       player.playTurn(new FakeTurn() as never);
     } catch (error) {
-      expect(formatPythonError(error)).toContain("Unknown variable: hp");
+      // Skulpt error message: "name 'hp' is not defined"
+      expect(formatPythonError(error)).toMatch(/hp/);
+      expect(formatPythonError(error)).toMatch(/not defined|unknown/i);
       expect(formatPythonError(error)).toMatch(/^Python runtime error:/);
     }
   });

@@ -103,11 +103,6 @@ body {
   border-color: #4a6b42;
 }
 
-.progress-step.cleared::after {
-  content: " \2713";
-  font-weight: 700;
-}
-
 .progress-step.locked {
   opacity: 0.4;
   cursor: not-allowed;
@@ -394,7 +389,10 @@ button:disabled {
   margin: 0;
   min-height: 18rem;
   max-height: 60vh;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
   padding: 0.75rem;
   border-radius: 10px;
   border: 1px solid #4f6e41;
