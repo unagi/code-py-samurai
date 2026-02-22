@@ -28,10 +28,6 @@ export class Golem extends BaseUnit {
     this._maxHealth = value;
   }
 
-  get name(): string {
-    return "Golem";
-  }
-
   isGolem(): boolean {
     return true;
   }

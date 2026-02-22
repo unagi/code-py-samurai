@@ -23,10 +23,6 @@ export class Sludge extends BaseUnit {
     this.addAbilities("attack!", "feel");
   }
 
-  get name(): string {
-    return "Sludge";
-  }
-
   playTurn(turn: Turn): void {
     for (const direction of SEARCH_DIRECTIONS) {
       const space = turn.doSense("feel", direction) as Space;

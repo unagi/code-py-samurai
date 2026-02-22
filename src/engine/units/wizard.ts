@@ -26,10 +26,6 @@ export class Wizard extends BaseUnit {
     this.addAbilities("shoot!", "look");
   }
 
-  get name(): string {
-    return "Wizard";
-  }
-
   playTurn(turn: Turn): void {
     for (const direction of SEARCH_DIRECTIONS) {
       const spaces = turn.doSense("look", direction) as Space[];

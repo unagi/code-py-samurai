@@ -16,10 +16,6 @@ export class Captive extends BaseUnit {
     this.bind();
   }
 
-  get name(): string {
-    return "Captive";
-  }
-
   protected createAbility(name: string): BaseAbility | null {
     return createAbility(name, this);
   }
