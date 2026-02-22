@@ -46,7 +46,7 @@ const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
     altKey: "tiles.samurai",
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
-  s: { kind: "sludge", altKey: "tiles.sludge", emoji: "\u{1F9DF}" },         // 🧟
+  s: { kind: "sludge", altKey: "tiles.sludge", assetPath: "/assets/sprites/gama/idle-right.png" },
   S: { kind: "thick-sludge", altKey: "tiles.thickSludge", emoji: "\u{1F47E}" }, // 👾
   a: { kind: "archer", altKey: "tiles.archer", emoji: "\u{1F3F9}" },         // 🏹
   w: { kind: "wizard", altKey: "tiles.wizard", emoji: "\u{1F9D9}" },         // 🧙
@@ -103,6 +103,35 @@ const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }>
   wizard: { hp: 3, atk: 11 },
   captive: { hp: 1, atk: 0 },
 };
+
+// ── スプライト設定 ─────────────────────────────────────────────────────────
+
+interface SpriteStateConfig {
+  path: string;
+  frames: number;
+}
+
+interface CharSpriteConfig {
+  idle: SpriteStateConfig;
+  attack: SpriteStateConfig;
+  damaged: SpriteStateConfig;
+  death: SpriteStateConfig;
+}
+
+/** キャラ種別 → スプライトシート定義 */
+const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
+  sludge: {
+    idle:    { path: "/assets/sprites/gama/idle-right.png",    frames: 1 },
+    attack:  { path: "/assets/sprites/gama/attack-right.png",  frames: 1 },
+    damaged: { path: "/assets/sprites/gama/damaged-right.png", frames: 2 },
+    death:   { path: "/assets/sprites/gama/death-right.png",   frames: 4 },
+  },
+};
+
+/** スプライト状態の表示時間 (ms) — ターン速度と同程度 */
+const SPRITE_OVERRIDE_MS = 700;
+/** スプライトフレームあたりの表示時間 (ms) */
+const SPRITE_FRAME_MS = 160;
 
 interface ProgressStorageData {
   // new format
@@ -375,6 +404,69 @@ function createDamagePopupsFromEntries(
   }
 
   return popups;
+}
+
+// ── スプライト状態オーバーライド ─────────────────────────────────────────────
+
+type SpriteState = "attack" | "damaged" | "death";
+
+interface SpriteOverride {
+  id: number;
+  tileIndex: number;
+  kind: string;
+  state: SpriteState;
+  startedAt: number;
+  expiresAt: number;
+}
+
+/**
+ * ログエントリからスプライト状態オーバーライドを生成する。
+ * ダメージポップアップと同じパターンで、該当ユニットのタイル位置に対して
+ * 一時的にスプライトを切り替える。
+ */
+function createSpriteOverridesFromEntries(
+  entries: LogEntry[],
+  board: string,
+  idSeed: number,
+  unitTileIndexByLabel: Map<string, number>,
+): SpriteOverride[] {
+  if (entries.length === 0) return [];
+
+  const resolver = buildTileIndexResolver(unitTileIndexByLabel, buildBoardGrid(board));
+  const overrides: SpriteOverride[] = [];
+  let nextId = idSeed;
+  const now = Date.now();
+
+  for (const entry of entries) {
+    if (!entry.unitId) continue;
+    const unitId = entry.unitId.toLowerCase();
+    const kind = resolveUnitKind(unitId);
+    if (!kind || !CHAR_SPRITES[kind]) continue;
+
+    let state: SpriteState | null = null;
+    if (entry.key === "engine.attackHit" || entry.key === "engine.attackMiss") {
+      state = "attack";
+    } else if (entry.key === "engine.takeDamage") {
+      state = "damaged";
+    } else if (entry.key === "engine.dies") {
+      state = "death";
+    }
+    if (!state) continue;
+
+    const tileIndex = resolver.directLookup(unitId) ?? resolver.kindLookup(unitId);
+    if (tileIndex === undefined) continue;
+
+    overrides.push({
+      id: nextId++,
+      tileIndex,
+      kind,
+      state,
+      startedAt: now,
+      expiresAt: now + SPRITE_OVERRIDE_MS,
+    });
+  }
+
+  return overrides;
 }
 
 interface StatsFormatter {
@@ -657,6 +749,8 @@ export default function App() {
   const logLineCountRef = useRef(0);
   const damagePopupIdRef = useRef(1);
   const unitTileIndexMapRef = useRef(new Map<string, number>());
+  const [spriteOverrides, setSpriteOverrides] = useState<SpriteOverride[]>([]);
+  const spriteOverrideIdRef = useRef(1);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -721,6 +815,16 @@ export default function App() {
       gap: `${BOARD_TILE_GAP_PX}px`,
     } as CSSProperties;
   }, [boardGrid.columns, boardGrid.rows, tileSizePx]);
+  /** タイルインデックス → 最新のスプライトオーバーライド */
+  const spriteOverrideByTile = useMemo(() => {
+    const map = new Map<number, SpriteOverride>();
+    // 同じタイルに複数オーバーライドがある場合、最新のもの（後ろ）を優先
+    for (const o of spriteOverrides) {
+      map.set(o.tileIndex, o);
+    }
+    return map;
+  }, [spriteOverrides]);
+
   const damagePopupsByTile = useMemo(() => {
     const grouped = new Map<number, DamagePopup[]>();
     for (const popup of damagePopups) {
@@ -752,6 +856,17 @@ export default function App() {
     damagePopupIdRef.current += popups.length;
     setDamagePopups(popups);
 
+    const overrides = createSpriteOverridesFromEntries(
+      newEntries,
+      boardForDamage,
+      spriteOverrideIdRef.current,
+      unitTileIndexMapRef.current,
+    );
+    spriteOverrideIdRef.current += overrides.length;
+    if (overrides.length > 0) {
+      setSpriteOverrides((prev) => [...prev, ...overrides]);
+    }
+
     setBoard(nextBoard);
     setLogEntries([...allEntries]);
     setResult(session.result);
@@ -776,6 +891,7 @@ export default function App() {
     logLineCountRef.current = 0;
     unitTileIndexMapRef.current = new Map<string, number>();
     setDamagePopups([]);
+    setSpriteOverrides([]);
     sessionRef.current.setup(level, playerCode, unlockedEngineAbilities);
     refreshGameState();
     setIsCodeDirty(false);
@@ -899,8 +1015,21 @@ export default function App() {
     setDamagePopups((prev) => prev.filter((p) => p.expiresAt > now));
   }
 
+  function expireSpriteOverrides() {
+    const now = Date.now();
+    setSpriteOverrides((prev) => prev.filter((o) => o.expiresAt > now));
+  }
+
+  // 統合タイマー: ポップアップ/オーバーライド期限切れ + スプライトフレーム更新トリガー
+  // spriteRenderTick は参照不要だが、state更新による再レンダリングでフレーム進行させる
+  const [, setSpriteRenderTick] = useState(0);
+
   useEffect(() => {
-    const timer = globalThis.setInterval(expireDamagePopups, 120);
+    const timer = globalThis.setInterval(() => {
+      expireDamagePopups();
+      expireSpriteOverrides();
+      setSpriteRenderTick((prev) => (prev + 1) % 1000);
+    }, SPRITE_FRAME_MS);
     return () => globalThis.clearInterval(timer);
   }, []);
 
@@ -1013,11 +1142,47 @@ export default function App() {
               >
                 {boardGrid.tiles.map((tile, index) => {
                   const displaySymbol = tile.emoji ?? (tile.symbol === " " ? "\u00a0" : tile.symbol);
-                  const tileImageSrc =
-                    tile.kind === "samurai" ? getSamuraiIdleFramePath(samuraiFrame) : tile.assetPath;
                   const tilePopups = damagePopupsByTile.get(index) ?? [];
                   const tileStats = buildTileStatsText(tile.kind, samuraiHealth, samuraiMaxHealth, statsFmt);
                   const tileAlt = t(tile.altKey);
+
+                  // スプライトオーバーライド判定
+                  const override = spriteOverrideByTile.get(index);
+                  const overrideSpriteConfig = override ? CHAR_SPRITES[override.kind] : undefined;
+                  const ownSpriteConfig = CHAR_SPRITES[tile.kind];
+
+                  // ベースタイル画像 (床・壁・idle スプライト等)
+                  let baseTileImageSrc: string | undefined;
+                  if (tile.kind === "samurai") {
+                    baseTileImageSrc = getSamuraiIdleFramePath(samuraiFrame);
+                  } else if (!override && ownSpriteConfig) {
+                    // オーバーライドなし & 自身がスプライト対応キャラ → idle
+                    baseTileImageSrc = tile.assetPath;
+                  } else if (override && ownSpriteConfig) {
+                    // オーバーライドあり & タイルがキャラ本人 → オーバーライドで上書き（下にベース不要）
+                    baseTileImageSrc = undefined;
+                  } else {
+                    // 通常タイル（床・壁等）
+                    baseTileImageSrc = tile.assetPath;
+                  }
+
+                  // オーバーライドスプライト (attack / damaged / death)
+                  let overlaySrc: string | undefined;
+                  let overlayFrames = 1;
+                  let overlayCurrentFrame = 0;
+                  if (override && overrideSpriteConfig) {
+                    const stateConfig = overrideSpriteConfig[override.state];
+                    overlaySrc = stateConfig.path;
+                    overlayFrames = stateConfig.frames;
+                    if (overlayFrames > 1) {
+                      const elapsed = Date.now() - override.startedAt;
+                      overlayCurrentFrame = Math.min(
+                        Math.floor(elapsed / SPRITE_FRAME_MS),
+                        overlayFrames - 1,
+                      );
+                    }
+                  }
+
                   return (
                     <div
                       key={`${index}-${tile.kind}-${tile.symbol}`}
@@ -1037,11 +1202,28 @@ export default function App() {
                       }}
                       onBlur={() => setHoveredEnemyStats(null)}
                     >
-                      {tileImageSrc ? (
-                        <img src={tileImageSrc} alt={tileAlt} className="tile-image" />
-                      ) : (
+                      {/* ベースタイル（床・壁・idle スプライト） */}
+                      {baseTileImageSrc ? (
+                        <img src={baseTileImageSrc} alt={tileAlt} className="tile-image" />
+                      ) : !overlaySrc ? (
                         <span className="tile-fallback" style={{ fontSize: `${Math.round(tileSizePx * 0.7)}px` }} aria-hidden="true">{displaySymbol}</span>
-                      )}
+                      ) : null}
+
+                      {/* オーバーレイ: スプライト状態 (attack / damaged / death) */}
+                      {overlaySrc && overlayFrames <= 1 ? (
+                        <img src={overlaySrc} alt={tileAlt} className="tile-image tile-sprite-overlay" />
+                      ) : overlaySrc && overlayFrames > 1 ? (
+                        <div
+                          className="tile-sprite-sheet tile-sprite-overlay"
+                          role="img"
+                          aria-label={tileAlt}
+                          style={{
+                            backgroundImage: `url(${overlaySrc})`,
+                            backgroundSize: `${overlayFrames * 100}% 100%`,
+                            backgroundPositionX: `${(overlayCurrentFrame / (overlayFrames - 1)) * 100}%`,
+                          }}
+                        />
+                      ) : null}
                       {tilePopups.map((popup) => (
                         <span key={popup.id} className="damage-popup" aria-hidden="true">
                           {popup.text}

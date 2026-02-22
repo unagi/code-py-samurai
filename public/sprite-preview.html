@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sprite Preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #eee;
+      font-family: monospace;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 18px;
+      color: #a0c4ff;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+
+    .character-section {
+      margin-bottom: 40px;
+    }
+
+    .character-title {
+      font-size: 14px;
+      color: #ffd6a5;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .state-card {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .state-label {
+      font-size: 11px;
+      color: #90e0ef;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .state-label span { color: #666; }
+
+    .frame-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* チェッカーボード背景（透過確認用） */
+    .canvas-wrap {
+      background-image:
+        linear-gradient(45deg, #444 25%, transparent 25%),
+        linear-gradient(-45deg, #444 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #444 75%),
+        linear-gradient(-45deg, transparent 75%, #444 75%);
+      background-size: 10px 10px;
+      background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+      background-color: #222;
+      display: inline-flex;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+
+    .canvas-wrap canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      width: 80px;
+      height: 80px;
+    }
+
+    .strip-wrap {
+      background-image:
+        linear-gradient(45deg, #444 25%, transparent 25%),
+        linear-gradient(-45deg, #444 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #444 75%),
+        linear-gradient(-45deg, transparent 75%, #444 75%);
+      background-size: 10px 10px;
+      background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+      background-color: #222;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .strip-wrap img {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      height: 80px;
+      width: auto;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .controls button {
+      background: #2a2a4a;
+      border: 1px solid #444;
+      color: #aaa;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 11px;
+    }
+
+    .controls button:hover { background: #3a3a6a; color: #fff; }
+    .controls button.active { background: #4a4a8a; color: #a0c4ff; border-color: #6a6aaa; }
+
+    .fps-label { color: #555; }
+
+    .frame-counter {
+      color: #666;
+      font-size: 11px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .error-card {
+      color: #ff6b6b;
+      font-size: 11px;
+      padding: 8px;
+      background: #2a1a1a;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 SPRITE PREVIEW</h1>
+  <div id="root"></div>
+
+  <script>
+    const FRAME_SIZE = 80;
+    const FPS = 6;
+
+    const CHARACTERS = [
+      {
+        id: 'gama',
+        label: 'GAMA（ガマ）',
+        states: [
+          { name: 'idle',    frames: 1 },
+          { name: 'attack',  frames: 1 },
+          { name: 'damaged', frames: 2 },
+          { name: 'death',   frames: 4 },
+        ],
+        directions: ['right', 'left'],
+      },
+    ];
+
+    // ── フレームアニメーション管理 ───────────────────────────────
+    const timers = {};
+
+    function startAnimation(id, canvas, img, frameCount, fps) {
+      if (timers[id]) clearInterval(timers[id]);
+      let frame = 0;
+      const ctx = canvas.getContext('2d');
+      canvas.width = FRAME_SIZE;
+      canvas.height = FRAME_SIZE;
+
+      function draw() {
+        ctx.clearRect(0, 0, FRAME_SIZE, FRAME_SIZE);
+        ctx.drawImage(img, frame * FRAME_SIZE, 0, FRAME_SIZE, FRAME_SIZE, 0, 0, FRAME_SIZE, FRAME_SIZE);
+        const counter = document.getElementById(`counter-${id}`);
+        if (counter) counter.textContent = `${frame + 1}/${frameCount}`;
+        frame = (frame + 1) % frameCount;
+      }
+
+      draw();
+      timers[id] = setInterval(draw, 1000 / fps);
+    }
+
+    function stopAnimation(id) {
+      if (timers[id]) { clearInterval(timers[id]); delete timers[id]; }
+    }
+
+    // ── カード生成 ───────────────────────────────────────────────
+    function createStateCard(charId, stateName, frameCount, direction) {
+      const id = `${charId}-${stateName}-${direction}`;
+      const path = `/assets/sprites/${charId}/${stateName}-${direction}.png`;
+
+      const card = document.createElement('div');
+      card.className = 'state-card';
+      card.innerHTML = `
+        <div class="state-label">
+          <strong>${stateName}-${direction}</strong>
+          <span>${frameCount}f</span>
+        </div>
+        <div class="frame-display">
+          <div class="canvas-wrap">
+            <canvas id="canvas-${id}"></canvas>
+          </div>
+        </div>
+        <div class="strip-wrap">
+          <img id="strip-${id}" src="${path}" alt="${id}" />
+        </div>
+        <div class="controls" style="margin-top:8px;">
+          <button id="btn-${id}" class="active">▶ PLAY</button>
+          <span class="frame-counter" id="counter-${id}">-</span>
+          <span class="fps-label">${FPS}fps</span>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // ── 初期化 ───────────────────────────────────────────────────
+    function init() {
+      const root = document.getElementById('root');
+
+      CHARACTERS.forEach(char => {
+        const section = document.createElement('div');
+        section.className = 'character-section';
+        section.innerHTML = `<div class="character-title">${char.label}</div>`;
+
+        const grid = document.createElement('div');
+        grid.className = 'states-grid';
+
+        char.states.forEach(state => {
+          char.directions.forEach(dir => {
+            const card = createStateCard(char.id, state.name, state.frames, dir);
+            grid.appendChild(card);
+          });
+        });
+
+        section.appendChild(grid);
+        root.appendChild(section);
+
+        // 画像ロード後にアニメーション開始
+        char.states.forEach(state => {
+          char.directions.forEach(dir => {
+            const id = `${char.id}-${state.name}-${dir}`;
+            const img = document.getElementById(`strip-${id}`);
+            const canvas = document.getElementById(`canvas-${id}`);
+            const btn = document.getElementById(`btn-${id}`);
+
+            let playing = true;
+
+            img.onload = () => {
+              startAnimation(id, canvas, img, state.frames, FPS);
+            };
+
+            img.onerror = () => {
+              const wrap = canvas.closest('.canvas-wrap');
+              wrap.innerHTML = `<div class="error-card">NOT FOUND</div>`;
+            };
+
+            btn.addEventListener('click', () => {
+              playing = !playing;
+              if (playing) {
+                btn.textContent = '▶ PLAY';
+                btn.classList.add('active');
+                startAnimation(id, canvas, img, state.frames, FPS);
+              } else {
+                btn.textContent = '⏸ PAUSE';
+                btn.classList.remove('active');
+                stopAnimation(id);
+              }
+            });
+          });
+        });
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
