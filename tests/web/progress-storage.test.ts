@@ -46,19 +46,37 @@ describe("migrateToGlobalLevel", () => {
     const expected = getGlobalLevelFromTowerLevel("beginner", 3);
     expect(migrateToGlobalLevel({ towerName: "beginner", levelNumber: 3 }, 99)).toBe(expected);
   });
+
+  it("falls back to level 1 when no usable progress data exists", () => {
+    expect(migrateToGlobalLevel({}, 18)).toBe(1);
+    expect(migrateToGlobalLevel({ towerName: "beginner" }, 18)).toBe(1);
+  });
 });
 
 describe("buildSamuraiLevel", () => {
+  it("prefers direct samuraiLevel and clamps/floors it", () => {
+    const maxLv = getMaxSamuraiLevel();
+    expect(buildSamuraiLevel({ samuraiLevel: 0 })).toBe(1);
+    expect(buildSamuraiLevel({ samuraiLevel: 3.9 })).toBe(3);
+    expect(buildSamuraiLevel({ samuraiLevel: maxLv + 99 })).toBe(maxLv);
+  });
+
   it("migrates legacy samuraiLevelByTower to the highest global level and clamps", () => {
     const maxLv = getMaxSamuraiLevel();
     const migrated = buildSamuraiLevel({
       samuraiLevelByTower: {
         beginner: 2,
         intermediate: 999,
+        advanced: "nope" as unknown as number,
       },
     });
 
     expect(migrated).toBe(maxLv);
+  });
+
+  it("returns level 1 when no legacy progress map is available", () => {
+    expect(buildSamuraiLevel({})).toBe(1);
+    expect(buildSamuraiLevel({ samuraiLevelByTower: null as unknown as Record<string, number> })).toBe(1);
   });
 });
 
@@ -70,6 +88,13 @@ describe("storage wrappers", () => {
       removeItem: () => {},
     });
     expect(readProgressStorage()).toEqual({ globalLevel: 2, samuraiLevel: 3 });
+
+    installLocalStorageMock({
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    expect(readProgressStorage()).toEqual({});
 
     installLocalStorageMock({
       getItem: () => "{broken-json",
@@ -94,6 +119,8 @@ describe("storage wrappers", () => {
     expect(readPlayerCodeStorage("fallback")).toBe("fallback");
     writePlayerCodeStorage("print('hi')");
     expect(readPlayerCodeStorage("fallback")).toBe("print('hi')");
+    writePlayerCodeStorage("");
+    expect(readPlayerCodeStorage("fallback")).toBe("fallback");
     writeProgressStorage(5, 6);
     expect(readProgressStorage()).toEqual({ globalLevel: 5, samuraiLevel: 6 });
     clearStoredAppData();

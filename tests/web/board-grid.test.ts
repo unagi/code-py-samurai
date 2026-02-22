@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest";
 import { buildBoardGrid } from "../../src/web/board-grid";
 
 describe("buildBoardGrid", () => {
+  it("returns a fully void grid when board is empty", () => {
+    const grid = buildBoardGrid("");
+
+    expect(grid.tiles).toHaveLength(grid.columns * grid.rows);
+    expect(grid.tiles.every((tile) => tile.kind === "void")).toBe(true);
+  });
+
   it("returns a rectangular grid padded to at least the source board size", () => {
     const board = "@>\n s";
     const grid = buildBoardGrid(board);
@@ -39,5 +46,12 @@ describe("buildBoardGrid", () => {
     expect(nonVoid.some((tile) => tile.kind === "captive")).toBe(true);
     expect(nonVoid.some((tile) => tile.kind === "unknown")).toBe(true);
     expect(nonVoid.some((tile) => tile.kind === "floor")).toBe(true);
+  });
+
+  it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
+    const grid = buildBoardGrid("@x");
+    const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
+
+    expect(nonVoid.some((tile) => tile.symbol === "x" && tile.kind === "unknown")).toBe(true);
   });
 });

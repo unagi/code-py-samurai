@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { buildUnitDirectionMap, buildUnitTileIndexMap } from "../../src/web/unit-maps";
 
 describe("unit map helpers", () => {
+  it("returns empty maps when no snapshots are provided", () => {
+    expect(buildUnitTileIndexMap("@s", [])).toEqual(new Map());
+    expect(buildUnitDirectionMap([])).toEqual(new Map());
+  });
+
   it("builds unitId -> direction map", () => {
     const map = buildUnitDirectionMap([
       { unitId: "samurai", x: 0, y: 0, direction: "east" },
@@ -26,5 +31,13 @@ describe("unit map helpers", () => {
     expect(samuraiIndex).toBeTypeOf("number");
     expect(sludgeIndex).toBeTypeOf("number");
     expect(sludgeIndex).toBe((samuraiIndex as number) + 1);
+  });
+
+  it("handles empty board string while still projecting snapshot coordinates", () => {
+    const map = buildUnitTileIndexMap("", [
+      { unitId: "samurai", x: 0, y: 0, direction: "east" },
+    ]);
+
+    expect(map.get("samurai")).toBeTypeOf("number");
   });
 });
