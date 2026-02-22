@@ -6,8 +6,10 @@ import "./web/styles.css";
 import "./i18n/config";
 import App from "./web/App";
 import ReferencePage from "./web/ReferencePage";
+import SpriteDebugPage from "./web/SpriteDebugPage";
 
 const API_REFERENCE_PATH = "/reference/python-api";
+const SPRITE_DEBUG_PATH = "/_debug";
 
 const container = document.querySelector<HTMLDivElement>("#app");
 if (!container) {
@@ -23,7 +25,12 @@ const normalizePathname = (pathname: string): string => {
 };
 
 const pathname = normalizePathname(globalThis.location.pathname);
-const rootNode = pathname === API_REFERENCE_PATH ? <ReferencePage /> : <App />;
+let rootNode = <App />;
+if (pathname === API_REFERENCE_PATH) {
+  rootNode = <ReferencePage />;
+} else if (pathname === SPRITE_DEBUG_PATH) {
+  rootNode = <SpriteDebugPage />;
+}
 
 createRoot(container).render(
   <StrictMode>
