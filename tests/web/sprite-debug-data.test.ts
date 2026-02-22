@@ -4,7 +4,6 @@ import {
   DEBUG_SPRITE_TRIGGER_STATES,
   buildSpriteDebugCardSpecs,
   buildSpriteDebugDirectionCoverageSpecs,
-  buildSamuraiSkillCoverageSpecs,
   buildSpriteDebugUnsupportedUnitSpecs,
 } from "../../src/web/sprite-debug-data";
 
@@ -71,26 +70,5 @@ describe("sprite debug data", () => {
       { kind: "thick-sludge", requiredDirs: ["left", "right"], missingDirs: [] },
       { kind: "captive", requiredDirs: ["none"], missingDirs: [] },
     ]);
-  });
-
-  it("lists implemented samurai skills and classifies sprite-debug coverage", () => {
-    const skills = buildSamuraiSkillCoverageSpecs();
-    const walk = skills.find((item) => item.skillName === "walk");
-    const attack = skills.find((item) => item.skillName === "attack");
-    const feel = skills.find((item) => item.skillName === "feel");
-
-    expect(walk?.skillSignature).toContain("direction: Direction");
-    expect(walk?.category).toBe("action");
-    expect(walk?.acceptsDirection).toBe(true);
-    expect(walk?.acceptedDirections).toEqual(["FORWARD", "RIGHT", "BACKWARD", "LEFT"]);
-    expect(walk?.derivedMotionSequence).toEqual(["walk", "idle"]);
-    expect(walk?.missingSpriteModes).toEqual(["walk"]);
-
-    expect(attack?.derivedMotionSequence).toEqual(["attack", "idle"]);
-    expect(attack?.missingSpriteModes).toEqual(["attack"]);
-
-    expect(feel?.category).toBe("sense");
-    expect(feel?.derivedMotionSequence).toEqual(["idle"]);
-    expect(feel?.missingSpriteModes).toEqual([]);
   });
 });

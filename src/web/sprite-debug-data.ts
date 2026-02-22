@@ -1,6 +1,6 @@
 import { towers } from "../levels";
 import type { SpriteState } from "./board-effects";
-import { apiReferenceDocument, type ReferenceItem, type ReferenceTag } from "./reference/reference-data";
+import { apiReferenceDocument, type ReferenceItem } from "./reference/reference-data";
 import { SPRITE_CAPABLE_KINDS } from "./sprite-config";
 import { absoluteDirToSpriteDir, type SpriteDir } from "./sprite-utils";
 
@@ -31,21 +31,6 @@ export interface SpriteDebugDirectionCoverageSpec {
   missingDirs: DebugSpritePreviewDir[];
 }
 
-export type SamuraiApiMethodCategory = "action" | "sense" | "unknown";
-
-export interface SamuraiSkillCoverageSpec {
-  skillSignature: string;
-  skillName: string;
-  category: SamuraiApiMethodCategory;
-  acceptsDirection: boolean;
-  acceptedDirections: string[];
-  derivedMotionSequence: string[];
-  motionDefinitionStatus: "derived-from-api-no-explicit-motion-definition";
-  implementedSpriteModes: string[];
-  missingSpriteModes: string[];
-  note: string;
-}
-
 export const DEBUG_SPRITE_TRIGGER_STATES = ["attack", "damaged", "death"] as const satisfies readonly SpriteState[];
 export const DEBUG_SPRITE_BUTTON_STATES = ["idle", ...DEBUG_SPRITE_TRIGGER_STATES] as const;
 
@@ -56,8 +41,6 @@ const DEBUG_DIR_SORT_ORDER: Readonly<Record<DebugSpritePreviewDir, number>> = {
   right: 1,
   none: 2,
 };
-const DIRECTION_ENUM_VALUES = ["FORWARD", "RIGHT", "BACKWARD", "LEFT"] as const;
-const SAMURAI_IMPLEMENTED_SPRITE_MODES: readonly string[] = ["idle"];
 
 function getSamuraiReferenceMethodItems(): ReferenceItem[] {
   const samuraiSection = apiReferenceDocument.sections.find((section) => section.id === "samurai-class");
@@ -75,63 +58,6 @@ function parseSamuraiSkillName(skillSignature: string): string {
   const trimmed = skillSignature.trim();
   const parenIndex = trimmed.indexOf("(");
   return parenIndex >= 0 ? trimmed.slice(0, parenIndex).trim() : trimmed;
-}
-
-function findTagEnValue(tags: ReferenceTag[] | undefined, name: string): string | undefined {
-  if (!tags) return undefined;
-  const tag = tags.find((item) => item.name === name);
-  return tag?.value.en;
-}
-
-function resolveSamuraiMethodCategory(item: ReferenceItem): SamuraiApiMethodCategory {
-  const category = findTagEnValue(item.tags, "@category");
-  if (category === "action" || category === "sense") return category;
-  return "unknown";
-}
-
-function signatureAcceptsDirection(signature: string): boolean {
-  return signature.includes("direction: Direction");
-}
-
-function deriveMotionSequence(skillName: string, category: SamuraiApiMethodCategory): string[] {
-  if (category === "sense") {
-    return ["idle"];
-  }
-  if (category === "action") {
-    return [skillName, "idle"];
-  }
-  return ["idle"];
-}
-
-function deriveSamuraiSkillCoverage(item: ReferenceItem): SamuraiSkillCoverageSpec {
-  const skillSignature = item.signature ?? item.name;
-  const skillName = item.name;
-  const category = resolveSamuraiMethodCategory(item);
-  const acceptsDirection = signatureAcceptsDirection(skillSignature);
-  const acceptedDirections = acceptsDirection ? [...DIRECTION_ENUM_VALUES] : [];
-  const derivedMotionSequence = deriveMotionSequence(skillName, category);
-  const implementedSpriteModes = [...SAMURAI_IMPLEMENTED_SPRITE_MODES];
-  const missingSpriteModes = derivedMotionSequence.filter((mode) => !implementedSpriteModes.includes(mode));
-
-  let note = "API signatureはReference準拠。必要モーションはAPIからの派生（専用定義データ未整備）";
-  if (category === "sense") {
-    note = "API signatureはReference準拠。Sense APIは専用モーション不要として idle 維持を想定";
-  } else if (missingSpriteModes.length > 0) {
-    note = "API signatureはReference準拠。必要モーション派生に対し samurai は現在 idle sprite のみ";
-  }
-
-  return {
-    skillSignature,
-    skillName,
-    category,
-    acceptsDirection,
-    acceptedDirections,
-    derivedMotionSequence,
-    motionDefinitionStatus: "derived-from-api-no-explicit-motion-definition",
-    implementedSpriteModes,
-    missingSpriteModes,
-    note,
-  };
 }
 
 function normalizeLevelUnitTypeToPreviewKind(levelUnitType: string): string {
@@ -255,8 +181,4 @@ export function buildSpriteDebugDirectionCoverageSpecs(): SpriteDebugDirectionCo
     const missingDirs = requiredDirs.filter((dir) => !previewSet.has(dir));
     return { kind, requiredDirs, previewDirs, missingDirs };
   });
-}
-
-export function buildSamuraiSkillCoverageSpecs(): SamuraiSkillCoverageSpec[] {
-  return getSamuraiReferenceMethodItems().map((item) => deriveSamuraiSkillCoverage(item));
 }

@@ -126,6 +126,18 @@
 - `Disappear` は「消える/退場する」という事実ベースの抽象名であり、`death` と `rescued` を同列に扱えるようにするための分類
 - `walk`, `rest`, `rescue`（Samurai能力としての演出）, `victory` などはこの4分類の対象外で、個別名をそのまま使う
 
+#### Samurai への適用ルール（`/_debug` 運用メモ）
+
+- Samurai も `/_debug` の横断比較では **上記4分類（`Idle` / `Disappear` / `Offence` / `Damaged`）** に揃える
+- `Offence` は **`attack()` と `shoot()` を共通モーション分類として扱う**
+  - `shoot()` 固有差分（飛翔物・エフェクト等）が必要な場合は、Samurai本体スプライトとは別レイヤーで表現する
+- `Disappear` は Samurai では **`death`（0HPでの退場）** を指す
+- `Damaged` は **被弾時の受動イベント** として扱う
+- `pivot()` は **アニメーションタイプではない**
+  - `pivot()` は向き変更（DirChange）のみで、`/_debug` では方向更新 + `idle` 表示として扱う
+- Samurai API の action methods（`walk`, `rest`, `rescue`, `bind`, `detonate` など）は、上記4分類と **1対1対応しない**
+  - 上記4分類は「Sprite Debug の横断比較用ラベル」であり、Samurai API の全メソッド分類を置き換えるものではない
+
 ---
 
 ## キャラクター一覧

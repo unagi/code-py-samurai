@@ -16,10 +16,10 @@ import {
   SAMURAI_IDLE_FRAME_MS,
   SPRITE_FRAME_MS,
   CHAR_SPRITES,
+  getSamuraiIdleFramePath,
 } from "./sprite-config";
 import {
   type DebugSpriteButtonState,
-  buildSamuraiSkillCoverageSpecs,
   type SpriteDebugCardSpec,
   buildSpriteDebugCardSpecs,
   buildSpriteDebugUnsupportedUnitSpecs,
@@ -59,6 +59,14 @@ interface EnemyAnimationTypeSpec {
 }
 
 type EnemyAnimationType = EnemyAnimationTypeSpec["animationType"];
+type SamuraiAnimationTypeSpec = EnemyAnimationTypeSpec;
+
+const SAMURAI_SLOT_SPECS = [
+  { id: "west", label: "WEST", spriteDir: "left" as const },
+  { id: "east", label: "EAST", spriteDir: "right" as const },
+  { id: "north", label: "NORTH", spriteDir: "right" as const },
+  { id: "south", label: "SOUTH", spriteDir: "left" as const },
+] as const;
 
 function getAnimationTypeLabelFromDebugState(state: DebugSpriteButtonState): "Idle" | "Offence" | "Damaged" | "Disappear" {
   if (state === "idle") return "Idle";
@@ -247,6 +255,55 @@ function enemyAnimationTypeSpecs(group: EnemyPreviewGroup): EnemyAnimationTypeSp
   ];
 }
 
+function samuraiAnimationTypeSpecs(): SamuraiAnimationTypeSpec[] {
+  const idleSampleFrames = [0, 4, 8, 12];
+  const idleSpriteFiles = ["samurai-cat/idle-east-frames/frame_*.png"];
+  const idlePreviewImageSrcs = idleSampleFrames.map((frameIndex) => getSamuraiIdleFramePath(frameIndex));
+
+  return [
+    {
+      animationType: "Idle",
+      trigger: "通常時",
+      spriteFiles: idleSpriteFiles,
+      frameCountText: `${SAMURAI_IDLE_FRAME_COUNT} frames`,
+      motionSpec: "等間隔フレーム遷移（WEST / EAST / NORTH / SOUTH）",
+      implementation: "idle は再生されるが、DIRごとの sprite mapping は未実装で全方向とも east idle frames を表示する。",
+      status: "ng",
+      previewImageSrcs: idlePreviewImageSrcs,
+    },
+    {
+      animationType: "Disappear",
+      trigger: "HPが0になる（death相当）",
+      spriteFiles: ["-"],
+      frameCountText: "-",
+      motionSpec: "sprite death 表示（Disappear相当）",
+      implementation: "samurai の death sprite mapping は未実装。専用表示は出ない。",
+      status: "ng",
+      previewImageSrcs: [],
+    },
+    {
+      animationType: "Offence",
+      trigger: "攻撃行動時（attack/shoot相当）",
+      spriteFiles: ["-"],
+      frameCountText: "-",
+      motionSpec: "sprite attack/shoot 表示（Offence相当）",
+      implementation: "Offence（attack/shoot）用の samurai sprite mapping は未実装。",
+      status: "ng",
+      previewImageSrcs: [],
+    },
+    {
+      animationType: "Damaged",
+      trigger: "ダメージを受ける",
+      spriteFiles: ["-"],
+      frameCountText: "-",
+      motionSpec: "sprite damaged 表示",
+      implementation: "damaged 用の samurai sprite mapping は未実装。",
+      status: "ng",
+      previewImageSrcs: [],
+    },
+  ];
+}
+
 const DEBUG_STATS_FORMATTER: StatsFormatter = {
   hp: (current, max) => `HP ${current}/${max}`,
   atk: (value) => `ATK ${value}`,
@@ -292,7 +349,6 @@ export default function SpriteDebugPage() {
   const { t } = useTranslation();
   const cardSpecs = useMemo(() => buildSpriteDebugCardSpecs(), []);
   const unsupportedUnits = useMemo(() => buildSpriteDebugUnsupportedUnitSpecs(), []);
-  const samuraiSkillCoverage = useMemo(() => buildSamuraiSkillCoverageSpecs(), []);
   const boardGridByKind = useMemo(() => {
     return new Map<string, BoardGridData>(
       cardSpecs.map((card) => [card.kind, buildSingleTileBoardGrid(card.kind)]),
@@ -400,13 +456,27 @@ export default function SpriteDebugPage() {
     if (filter === "unsupported-only") return [] as SpriteDebugCardSpec[];
     return otherUnitCards;
   }, [otherUnitCards, filter]);
+  const visibleSamuraiCards = useMemo(() => {
+    const sortOrder: Readonly<Record<SpriteDebugCardSpec["dir"], number>> = {
+      left: 0,
+      right: 1,
+      none: 2,
+    };
+    return visibleOtherUnitCards
+      .filter((card) => card.kind === "samurai")
+      .sort((a, b) => sortOrder[a.dir] - sortOrder[b.dir]);
+  }, [visibleOtherUnitCards]);
+  const visibleCaptiveCards = useMemo(
+    () => visibleOtherUnitCards.filter((card) => card.kind === "captive"),
+    [visibleOtherUnitCards],
+  );
   const visibleUnsupportedUnits = useMemo(() => (
     unsupportedUnits.filter((unit) => !ENEMY_EMOJI_KINDS.has(unit.kind))
   ), [unsupportedUnits]);
   const showUnsupportedSection = filter !== "preview-only";
   const showPreviewSection = filter !== "unsupported-only";
 
-  const handleTriggerEnemyStateForKind = (cards: readonly SpriteDebugCardSpec[], state: DebugSpriteButtonState): void => {
+  const handleTriggerStateForCards = (cards: readonly SpriteDebugCardSpec[], state: DebugSpriteButtonState): void => {
     const targetCardIds = new Set(cards.map((card) => card.id));
     setCardOverrides((prev) => {
       const next: Record<string, SpriteOverride> = {};
@@ -592,7 +662,7 @@ export default function SpriteDebugPage() {
                 key={`${group.kind}-anim-${state}`}
                 type="button"
                 className={currentState === state ? "sprite-debug-button-active" : undefined}
-                onClick={() => handleTriggerEnemyStateForKind(group.cards, state)}
+                onClick={() => handleTriggerStateForCards(group.cards, state)}
                 disabled={isEmojiFallbackGroup}
               >
                 <span className="icon-label">
@@ -659,6 +729,137 @@ export default function SpriteDebugPage() {
                       <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
                       <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
                     </>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  const renderSamuraiPreviewPanel = (cards: readonly SpriteDebugCardSpec[], currentState: DebugSpriteButtonState) => {
+    const boardGrid = boardGridByKind.get("samurai");
+    if (!boardGrid) return null;
+
+    return (
+      <div className="sprite-debug-samurai-preview-panel">
+        <div className="sprite-debug-samurai-preview-top">
+          <div className="sprite-debug-captive-preview-row">
+            {SAMURAI_SLOT_SPECS.map((slot) => {
+              const card = cards.find((item) => item.spriteDir === slot.spriteDir) ?? null;
+              const spriteDirByTile = new Map<number, SpriteDir>();
+              if (card) {
+                spriteDirByTile.set(0, card.spriteDir);
+              }
+              const spriteOverrideByTile = new Map<number, SpriteOverride>();
+              if (card) {
+                const override = cardOverrides[card.id];
+                if (override) {
+                  spriteOverrideByTile.set(0, override);
+                }
+              }
+
+              return (
+                <div key={`samurai-slot-${slot.id}`} className="sprite-debug-captive-preview-col">
+                  <div className="sprite-debug-captive-preview-box sprite-debug-captive-preview-box-active">
+                    {card ? (
+                      <BoardGridView
+                        boardGrid={boardGrid}
+                        boardGridStyle={captivePreviewBoardGridStyle}
+                        t={boardTranslate}
+                        damagePopupsByTile={EMPTY_DAMAGE_POPUPS}
+                        spriteOverrideByTile={spriteOverrideByTile}
+                        spriteDirByTile={spriteDirByTile}
+                        samuraiFrame={samuraiFrame}
+                        samuraiHealth={20}
+                        samuraiMaxHealth={20}
+                        statsFmt={DEBUG_STATS_FORMATTER}
+                        tileSizePx={captivePreviewTileSizePx}
+                        onHoveredEnemyStatsChange={NOOP_HOVER}
+                      />
+                    ) : (
+                      <div className="sprite-debug-captive-preview-placeholder" aria-hidden="true" />
+                    )}
+                    <div className="sprite-debug-captive-preview-caption">{slot.label}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="sprite-debug-samurai-animation-buttons" role="group" aria-label="samurai animation buttons">
+            {DEBUG_ANIMATION_BUTTON_ORDER.map((state) => {
+              const enabled = state === "idle";
+              return (
+                <button
+                  key={`samurai-anim-${state}`}
+                  type="button"
+                  className={currentState === state ? "sprite-debug-button-active" : undefined}
+                  onClick={() => handleTriggerStateForCards(cards, state)}
+                  disabled={!enabled}
+                >
+                  <span className="icon-label">
+                    <i className="bi bi-play-fill" aria-hidden="true" />
+                    {getAnimationTypeLabelFromDebugState(state)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSamuraiFooter = () => {
+    const specs = samuraiAnimationTypeSpecs();
+
+    return (
+      <div className="sprite-debug-motion-coverage" aria-label="samurai game motion coverage">
+        <ul className="sprite-debug-captive-spec-list">
+          {specs.map((spec) => (
+            <li key={`samurai-${spec.animationType}`} className="sprite-debug-captive-spec-item">
+              <div className="sprite-debug-captive-spec-header">
+                <code>{spec.animationType.toLowerCase()}</code>
+                <span
+                  className={`sprite-debug-coverage-chip ${
+                    spec.status === "ok" ? "sprite-debug-coverage-chip-ok" : "sprite-debug-coverage-chip-ng"
+                  }`}
+                >
+                  {spec.status.toUpperCase()}
+                </span>
+              </div>
+              <dl className="sprite-debug-captive-spec-grid">
+                <dt>trigger</dt>
+                <dd>{spec.trigger}</dd>
+                <dt>sprite file</dt>
+                <dd>
+                  <div className="sprite-debug-enemy-spec-file-list">
+                    {spec.spriteFiles.map((file) => <code key={`samurai-${spec.animationType}-${file}`}>{file}</code>)}
+                  </div>
+                </dd>
+                <dt>Frame count</dt>
+                <dd>{spec.frameCountText}</dd>
+                <dt>モーション要求仕様</dt>
+                <dd>{spec.motionSpec}</dd>
+                <dt>実装</dt>
+                <dd>{spec.implementation}</dd>
+              </dl>
+              <div className="sprite-debug-captive-spec-art">
+                <div className="sprite-debug-samurai-spec-art-grid">
+                  {spec.previewImageSrcs.length > 0 ? (
+                    spec.previewImageSrcs.map((src) => (
+                      <img
+                        key={`samurai-${spec.animationType}-${src}`}
+                        src={src}
+                        alt=""
+                        aria-hidden="true"
+                        className="sprite-debug-motion-file-preview"
+                      />
+                    ))
+                  ) : (
+                    <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
                   )}
                 </div>
               </div>
@@ -823,12 +1024,33 @@ export default function SpriteDebugPage() {
       {showPreviewSection ? (
         <section className="sprite-debug-panel" aria-labelledby="sprite-debug-preview-title">
           <div className="sprite-debug-panel-header">
-            <h2 id="sprite-debug-preview-title">敵キャラ</h2>
-            <p>
-              各キャラカード内の `Play Animation` ボタンで、方向枠（WEST/EAST）に対してモーションを確認します。
-            </p>
+            <h2 id="sprite-debug-preview-title">スプライト確認</h2>
           </div>
           <div className="sprite-debug-grid sprite-debug-grid-wide-cards">
+            {visibleSamuraiCards.length > 0 ? (() => {
+              const currentOverride = visibleSamuraiCards
+                .map((card) => cardOverrides[card.id])
+                .find((override) => Boolean(override));
+              const currentState: DebugSpriteButtonState = currentOverride ? currentOverride.state : "idle";
+
+              return (
+                <article key="samurai-group" className="sprite-debug-card sprite-debug-card-samurai">
+                  <header className="sprite-debug-card-header">
+                    <div>
+                      <h3>samurai</h3>
+                    </div>
+                    <span
+                      className={`sprite-debug-state-chip${currentState === "idle" ? "" : " sprite-debug-state-chip-active"}`}
+                    >
+                      {currentState}
+                    </span>
+                  </header>
+                  {renderSamuraiPreviewPanel(visibleSamuraiCards, currentState)}
+                  {renderSamuraiFooter()}
+                </article>
+              );
+            })() : null}
+
             {visibleEnemyGroups.map((group) => {
               const currentOverride = group.cards
                 .map((card) => cardOverrides[card.id])
@@ -854,20 +1076,7 @@ export default function SpriteDebugPage() {
                 </article>
               );
             })}
-          </div>
-        </section>
-      ) : null}
-
-      {showPreviewSection ? (
-        <section className="sprite-debug-panel" aria-labelledby="sprite-debug-other-units-title">
-          <div className="sprite-debug-panel-header">
-            <h2 id="sprite-debug-other-units-title">その他ユニット（Samurai / Captive）</h2>
-            <p>
-              `samurai` / `captive` は敵キャラと操作要件が異なるため、専用UIで確認します。
-            </p>
-          </div>
-          <div className="sprite-debug-grid sprite-debug-grid-wide-cards">
-            {visibleOtherUnitCards.map((card) => {
+            {visibleCaptiveCards.map((card) => {
               const override = cardOverrides[card.id];
               let captiveLocalState: CaptiveLocalState | null = null;
               if (card.kind === "captive") {
@@ -877,26 +1086,12 @@ export default function SpriteDebugPage() {
               if (card.kind === "captive") {
                 currentStateLabel = captiveLocalState === "rescued" ? "disappear" : "idle";
               }
-              const spriteOverrideByTile = new Map<number, SpriteOverride>();
-              if (override) {
-                spriteOverrideByTile.set(0, override);
-              }
-              const spriteDirByTile = new Map<number, SpriteDir>();
-              spriteDirByTile.set(0, card.spriteDir);
-              const boardGrid = card.kind === "captive" && captiveLocalState === "rescued"
-                ? { columns: 1, rows: 1, tiles: [TILE_SPEC_BY_KIND.floor] }
-                : boardGridByKind.get(card.kind);
-              if (!boardGrid) return null;
 
               return (
-                <article
-                  key={card.id}
-                  className={`sprite-debug-card${card.kind === "captive" ? " sprite-debug-card-captive" : ""}`}
-                >
+                <article key={card.id} className="sprite-debug-card sprite-debug-card-captive">
                   <header className="sprite-debug-card-header">
                     <div>
                       <h3>{card.kind}</h3>
-                      {card.kind === "captive" ? null : <p className="sprite-debug-card-subtitle">dir: {card.dir}</p>}
                     </div>
                     <span
                       className={`sprite-debug-state-chip${currentStateLabel === "idle" ? "" : " sprite-debug-state-chip-active"}`}
@@ -905,48 +1100,11 @@ export default function SpriteDebugPage() {
                     </span>
                   </header>
 
-                  {card.kind === "captive" ? (
-                    renderCaptivePreviewPanel(card, captiveLocalState)
-                  ) : (
-                    <div className="sprite-debug-preview-frame">
-                      <BoardGridView
-                        boardGrid={boardGrid}
-                        boardGridStyle={boardGridStyle}
-                        t={boardTranslate}
-                        damagePopupsByTile={EMPTY_DAMAGE_POPUPS}
-                        spriteOverrideByTile={spriteOverrideByTile}
-                        spriteDirByTile={spriteDirByTile}
-                        samuraiFrame={samuraiFrame}
-                        samuraiHealth={20}
-                        samuraiMaxHealth={20}
-                        statsFmt={DEBUG_STATS_FORMATTER}
-                        tileSizePx={tileSizePx}
-                        onHoveredEnemyStatsChange={NOOP_HOVER}
-                      />
-                    </div>
-                  )}
+                  {renderCaptivePreviewPanel(card, captiveLocalState)}
                   {renderOtherUnitCardFooter(card, captiveLocalState)}
                 </article>
               );
             })}
-          </div>
-          <div className="sprite-debug-subpanel">
-            <h3>Samurai API / Sprite Debug Scope</h3>
-            <p>
-              `samurai` はレベル初期配置だけでは不足するため、API Reference 定義（docs-first）を基準に、
-              このデバッグ画面で確認できるスプライト観点の範囲を整理しています。
-            </p>
-            <ul className="sprite-debug-samurai-skill-list">
-              {samuraiSkillCoverage.map((item) => (
-                <li key={`samurai-skill-${item.skillSignature}`}>
-                  <code>{`samurai.${item.skillSignature}`}</code>
-                  <span>{`API: ${item.category}${item.acceptsDirection ? " / dir=ALL" : ""}`}</span>
-                  <span>{`派生motion: ${item.derivedMotionSequence.join(" -> ")}`}</span>
-                  <span>{`不足sprite mode: ${item.missingSpriteModes.length > 0 ? item.missingSpriteModes.join(", ") : "なし"}`}</span>
-                  <span>{item.note}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </section>
       ) : null}
