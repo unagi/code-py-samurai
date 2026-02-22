@@ -58,17 +58,17 @@ describe("Space.nameKey", () => {
   });
 });
 
-describe("LogEntry emission", () => {
-  function setupWarrior(): { logger: CapturingLogger; warrior: Warrior; floor: Floor } {
-    const logger = new CapturingLogger();
-    const warrior = new Warrior(logger);
-    const floor = new Floor(8, 1);
-    floor.placeStairs(7, 0);
-    floor.add(warrior, 0, 0, "east");
-    warrior.addAbilities("walk!", "attack!", "rest!");
-    return { logger, warrior, floor };
-  }
+function setupWarrior(): { logger: CapturingLogger; warrior: Warrior; floor: Floor } {
+  const logger = new CapturingLogger();
+  const warrior = new Warrior(logger);
+  const floor = new Floor(8, 1);
+  floor.placeStairs(7, 0);
+  floor.add(warrior, 0, 0, "east");
+  warrior.addAbilities("walk!", "attack!", "rest!");
+  return { logger, warrior, floor };
+}
 
+describe("LogEntry emission", () => {
   it("walk emits engine.walk", () => {
     const { logger, warrior } = setupWarrior();
     warrior.abilities.get("walk!")!.perform("forward");

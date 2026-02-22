@@ -417,7 +417,7 @@ class LevelSession {
   private _runtimeError: string | null = null;
   private _fallbackBoard = "";
   private _lastValidPlayer: IPlayer | null = null;
-  private _fallbackMessageKey = "logs.systemFallback";
+  private readonly _fallbackMessageKey = "logs.systemFallback";
 
   private buildFallbackBoard(levelDef: LevelDefinition): string {
     const previewPlayer: IPlayer = {
