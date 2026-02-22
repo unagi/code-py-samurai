@@ -22,6 +22,7 @@ import {
 import { formatPythonError } from "../runtime/errors";
 import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
+import { absoluteDirToSpriteDir, resolveSpriteDir, type SpriteDir } from "./sprite-utils";
 
 function buildStarterPlayerCode(comment: string): string {
   return `class Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
@@ -127,20 +128,20 @@ const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
     damaged: { pathTemplate: "/assets/sprites/gama/damaged-{dir}.png", frames: 2 },
     death:   { pathTemplate: "/assets/sprites/gama/death-{dir}.png",   frames: 4 },
   },
+  "thick-sludge": {
+    idle:    { pathTemplate: "/assets/sprites/orochi/idle-{dir}.png",    frames: 3 },
+    attack:  { pathTemplate: "/assets/sprites/orochi/attack-{dir}.png",  frames: 4 },
+    damaged: { pathTemplate: "/assets/sprites/orochi/damaged-{dir}.png", frames: 2 },
+    death:   { pathTemplate: "/assets/sprites/orochi/death-{dir}.png",   frames: 4 },
+  },
+  captive: {
+    idle:    { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
+    attack:  { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
+    damaged: { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
+    death:   { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
+  },
 };
 
-type SpriteDir = "left" | "right";
-
-/** pathTemplate 内の {dir} を実際の方向に置換 */
-function resolveSpriteDir(template: string, dir: SpriteDir): string {
-  return template.replace("{dir}", dir);
-}
-
-/** AbsoluteDirection (engine) → スプライト左右 */
-function absoluteDirToSpriteDir(absDir: string): SpriteDir {
-  // east / north → right,  west / south → left
-  return absDir === "west" || absDir === "south" ? "left" : "right";
-}
 
 /** スプライト状態の表示時間 (ms) — ターン速度と同程度 */
 const SPRITE_OVERRIDE_MS = 700;
@@ -640,11 +641,10 @@ class LevelSession {
     for (const unit of this._level.floor.units) {
       const candidate = unit as unknown as {
         unitId?: string;
-        position: { x: number; y: number } | null;
-        direction: string;
+        position: { x: number; y: number; direction: string } | null;
       };
       if (typeof candidate.unitId !== "string" || !candidate.position) continue;
-      map.set(candidate.unitId.toLowerCase(), candidate.direction);
+      map.set(candidate.unitId.toLowerCase(), candidate.position.direction);
     }
     return map;
   }

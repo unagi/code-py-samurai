@@ -171,6 +171,26 @@
         ],
         directions: ['right', 'left'],
       },
+      {
+        id: 'orochi',
+        label: 'OROCHI（大蛇）',
+        states: [
+          { name: 'idle',    frames: 3 },
+          { name: 'attack',  frames: 4 },
+          { name: 'damaged', frames: 2 },
+          { name: 'death',   frames: 4 },
+        ],
+        directions: ['right', 'left'],
+      },
+      {
+        id: 'tsuru',
+        label: 'TSURU（ツル）',
+        states: [
+          { name: 'bound',   frames: 3 },
+          { name: 'rescued', frames: 6 },
+        ],
+        directions: [null],
+      },
     ];
 
     // ── フレームアニメーション管理 ───────────────────────────────
@@ -201,14 +221,17 @@
 
     // ── カード生成 ───────────────────────────────────────────────
     function createStateCard(charId, stateName, frameCount, direction) {
-      const id = `${charId}-${stateName}-${direction}`;
-      const path = `/assets/sprites/${charId}/${stateName}-${direction}.png`;
+      const id = direction ? `${charId}-${stateName}-${direction}` : `${charId}-${stateName}`;
+      const path = direction
+        ? `/assets/sprites/${charId}/${stateName}-${direction}.png`
+        : `/assets/sprites/${charId}/${stateName}.png`;
+      const displayLabel = direction ? `${stateName}-${direction}` : stateName;
 
       const card = document.createElement('div');
       card.className = 'state-card';
       card.innerHTML = `
         <div class="state-label">
-          <strong>${stateName}-${direction}</strong>
+          <strong>${displayLabel}</strong>
           <span>${frameCount}f</span>
         </div>
         <div class="frame-display">
@@ -254,7 +277,7 @@
         // 画像ロード後にアニメーション開始
         char.states.forEach(state => {
           char.directions.forEach(dir => {
-            const id = `${char.id}-${state.name}-${dir}`;
+            const id = dir ? `${char.id}-${state.name}-${dir}` : `${char.id}-${state.name}`;
             const img = document.getElementById(`strip-${id}`);
             const canvas = document.getElementById(`canvas-${id}`);
             const btn = document.getElementById(`btn-${id}`);
