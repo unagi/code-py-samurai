@@ -1,13 +1,13 @@
 {
   "app": {
-    "title": "Py Samurai",
+    "title": "Python侍",
     "clearData": "データ消去",
     "clearDataConfirm": "保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？"
   },
   "board": {
     "heading": "ボード",
     "ariaLabel": "ボード {{rows}}x{{columns}}",
-    "warrior": "ウォリアー",
+    "samurai": "侍",
     "lv": "Lv.{{level}}",
     "hp": "HP {{current}}/{{max}}",
     "atk": "ATK {{value}}"
@@ -73,7 +73,7 @@
     "empty": "空きマス",
     "frame": "壁",
     "stairs": "階段",
-    "warrior": "ウォリアー",
+    "samurai": "侍",
     "sludge": "スライム",
     "thickSludge": "厚いスライム",
     "archer": "アーチャー",
@@ -124,40 +124,40 @@
     "beginner": {
       "1": {
         "description": "長い廊下の先に階段が見えます。道には何もありません。",
-        "tip": "Player の play_turn メソッド内で warrior.walk() を呼んで前進しましょう。"
+        "tip": "Player の play_turn メソッド内で samurai.walk() を呼んで前進しましょう。"
       },
       "2": {
         "description": "暗くて何も見えませんが、近くにスライムの匂いがします。",
-        "tip": "warrior.feel() で前方を確認しましょう。None なら歩き、そうでなければ攻撃します。1ターンに1つのアクションしかできません。",
-        "clue": "`space = warrior.feel()` と `if space is None:` で warrior.attack() か warrior.walk() を判定する if/else 条件を追加しましょう。"
+        "tip": "samurai.feel() で前方を確認しましょう。None なら歩き、そうでなければ攻撃します。1ターンに1つのアクションしかできません。",
+        "clue": "`space = samurai.feel()` と `if space is None:` で samurai.attack() か samurai.walk() を判定する if/else 条件を追加しましょう。"
       },
       "3": {
         "description": "空気が以前より重く感じます。スライムの群れがいるに違いありません。",
-        "tip": "死なないように注意！warrior.hp で体力を確認し、warrior.rest() で最大HPの10%を回復できます。",
-        "clue": "前方に敵がいないときは、体力が満タンになるまで warrior.rest() を呼んでから前進しましょう。"
+        "tip": "死なないように注意！samurai.hp で体力を確認し、samurai.rest() で最大HPの10%を回復できます。",
+        "clue": "前方に敵がいないときは、体力が満タンになるまで samurai.rest() を呼んでから前進しましょう。"
       },
       "4": {
         "description": "弓の弦が引かれる音が聞こえます。",
         "tip": "今回は新しいアビリティはありませんが、ダメージを受けている間は回復しないように注意。前回のHPを変数（例: prev_hp）に保存して毎ターン比較しましょう。",
-        "clue": "毎ターン終了時に prev_hp = warrior.hp を設定します。前ターンより warrior.hp が下がっていたらダメージを受けているので回復しないようにしましょう。"
+        "clue": "毎ターン終了時に prev_hp = samurai.hp を設定します。前ターンより samurai.hp が下がっていたらダメージを受けているので回復しないようにしましょう。"
       },
       "5": {
         "description": "助けを求める声が聞こえます。捕虜を救出しなければ。",
-        "tip": "space = warrior.feel() で space が None でなく space.is_captive() が True なら warrior.rescue() を呼びましょう。捕虜を攻撃しないように。",
+        "tip": "space = samurai.feel() で space が None でなく space.is_captive() が True なら samurai.rescue() を呼びましょう。捕虜を攻撃しないように。",
         "clue": "常にダメージを受けているかチェックすることを忘れずに。ダメージを受けていなければ体力が満タンになるまで回復しましょう。"
       },
       "6": {
         "description": "背後の壁がこの部屋では少し遠くに感じます。さらに助けを求める声も聞こえます。",
         "tip": "walk() に 'backward' を渡すと後ろに歩けます。feel()、rescue()、attack() も同様です。アーチャーの射程には限りがあります。",
-        "clue": "遠距離からダメージを受けていて攻撃できるほど体力がないなら後退しましょう。warrior.feel('backward').is_wall() になるまで後退することも検討してください。"
+        "clue": "遠距離からダメージを受けていて攻撃できるほど体力がないなら後退しましょう。samurai.feel('backward').is_wall() になるまで後退することも検討してください。"
       },
       "7": {
         "description": "目の前に壁があり、背後に通路が開いています。",
-        "tip": "後方への攻撃は効果が低いです。warrior.feel().is_wall() と warrior.pivot() で向きを変えましょう。"
+        "tip": "後方への攻撃は効果が低いです。samurai.feel().is_wall() と samurai.pivot() で向きを変えましょう。"
       },
       "8": {
         "description": "ウィザードのつぶやきが聞こえます。恐ろしい杖に注意！幸い弓を見つけました。",
-        "tip": "warrior.look() で周囲を確認し、warrior.shoot() で矢を放ちましょう。",
+        "tip": "samurai.look() で周囲を確認し、samurai.shoot() で矢を放ちましょう。",
         "clue": "ウィザードは強力ですが体力が低いです。攻撃される前に倒しましょう。"
       },
       "9": {
@@ -169,32 +169,32 @@
     "intermediate": {
       "1": {
         "description": "静寂。部屋は広いですが空っぽです。幸い、このタワーの地図があるので階段を見つけられます。",
-        "tip": "warrior.direction_of_stairs() で階段の方向を調べ、その値を warrior.walk() に渡して移動しましょう。"
+        "tip": "samurai.direction_of_stairs() で階段の方向を調べ、その値を samurai.walk() に渡して移動しましょう。"
       },
       "2": {
         "description": "また広い部屋ですが、階段への道を数体の敵が塞いでいます。",
         "tip": "歩くのと同様に、攻撃や感知も複数の方向（forward, left, right, backward）で行えます。",
-        "clue": "各方向で warrior.feel(direction).is_enemy() を呼んで隣に敵がいないか確認しましょう（いたら攻撃）。周囲に敵がいなければ warrior.rest() で回復しましょう。"
+        "clue": "各方向で samurai.feel(direction).is_enemy() を呼んで隣に敵がいないか確認しましょう（いたら攻撃）。周囲に敵がいなければ samurai.rest() で回復しましょう。"
       },
       "3": {
         "description": "四方からヌルヌルした感触が...囲まれています！",
-        "tip": "warrior.bind(direction) で敵を拘束し、攻撃を防ぎましょう。拘束された敵は捕虜のように見えます。",
+        "tip": "samurai.bind(direction) で敵を拘束し、攻撃を防ぎましょう。拘束された敵は捕虜のように見えます。",
         "clue": "周囲の敵の数を数えましょう。2体以上いる場合は敵を拘束しましょう。"
       },
       "4": {
         "description": "耳が周囲の音に順応してきました。聞き耳を立てて敵と捕虜を見つけましょう！",
-        "tip": "warrior.listen() で他のユニットがいるマスを探し、warrior.direction_of(space) でその方向を判定しましょう。",
-        "clue": "warrior.walk(warrior.direction_of(warrior.listen()[0])) で敵や捕虜に向かって歩きましょう。warrior.listen() が空になったら階段に向かいましょう。"
+        "tip": "samurai.listen() で他のユニットがいるマスを探し、samurai.direction_of(space) でその方向を判定しましょう。",
+        "clue": "samurai.walk(samurai.direction_of(samurai.listen()[0])) で敵や捕虜に向かって歩きましょう。samurai.listen() が空になったら階段に向かいましょう。"
       },
       "5": {
         "description": "すぐ隣に階段がありますが、本当にすぐ上りますか？",
-        "tip": "レベルをクリアしてからの方がポイントが多くもらえます。階段を急がず、まず近くのユニットを優先し、その後 warrior.direction_of_stairs() で階段に向かいましょう。",
+        "tip": "レベルをクリアしてからの方がポイントが多くもらえます。階段を急がず、まず近くのユニットを優先し、その後 samurai.direction_of_stairs() で階段に向かいましょう。",
         "clue": "ユニットへの方向が階段と同じ方向なら、安全に敵に向かえるまで別の空いた方向に移動してみましょう。"
       },
       "6": {
         "description": "何かチクタク音がする...捕虜の足元に時限爆弾が！",
         "tip": "急いでまず捕虜を救出しましょう。一人は時限爆弾を抱えています。",
-        "clue": "最初は敵と戦うのを避けましょう。warrior.listen() で近くのユニットを探し、できるだけ早く捕虜を救出しましょう。"
+        "clue": "最初は敵と戦うのを避けましょう。samurai.listen() で近くのユニットを探し、できるだけ早く捕虜を救出しましょう。"
       },
       "7": {
         "description": "またチクタク音がしますが、スライムが道を塞いでいます。",
@@ -203,12 +203,12 @@
       },
       "8": {
         "description": "爆弾の入った袋を発見しました。敵の群れに立ち向かう時に役立ちます。",
-        "tip": "warrior.look() で前方に数体の敵が見えたら爆弾を起爆しましょう。体力にも注意。",
-        "clue": "warrior.look() はスペースの配列を返します。最初の2つに敵がいれば warrior.detonate() で爆弾を起爆しましょう。"
+        "tip": "samurai.look() で前方に数体の敵が見えたら爆弾を起爆しましょう。体力にも注意。",
+        "clue": "samurai.look() はスペースの配列を返します。最初の2つに敵がいれば samurai.detonate() で爆弾を起爆しましょう。"
       },
       "9": {
         "description": "これほどスライムで溢れた部屋は見たことがありません。花火を始めましょう！",
-        "tip": "チクタクしている捕虜が炎に巻き込まれないように注意。warrior.distance_of で捕虜との距離を確認しましょう。",
+        "tip": "チクタクしている捕虜が炎に巻き込まれないように注意。samurai.distance_of で捕虜との距離を確認しましょう。",
         "clue": "戦闘前に周囲の敵を拘束しましょう。爆薬を起爆する前に体力を確認しましょう。"
       }
     }

@@ -1,13 +1,13 @@
 class Player:
-    def play_turn(self, warrior):
-        health = warrior.hp
-        space = warrior.feel()
+    def play_turn(self, samurai):
+        health = samurai.hp
+        space = samurai.feel()
         if space is not None and space.is_captive():
-            warrior.rescue()
+            samurai.rescue()
         elif space is not None and space.is_enemy():
-            warrior.attack()
+            samurai.attack()
         elif health < 20 and self.last_health is not None and health >= self.last_health:
-            warrior.rest()
+            samurai.rest()
         else:
-            warrior.walk()
+            samurai.walk()
         self.last_health = health

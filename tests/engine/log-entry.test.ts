@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 import { ThickSludge } from "@engine/units/thick-sludge";
 import { Archer } from "@engine/units/archer";
@@ -20,7 +20,7 @@ class CapturingLogger implements ILogger {
 
 describe("BaseUnit.nameKey", () => {
   it("returns correct key for each unit type", () => {
-    expect(new Warrior().nameKey).toBe("warrior");
+    expect(new Samurai().nameKey).toBe("samurai");
     expect(new Sludge().nameKey).toBe("sludge");
     expect(new ThickSludge().nameKey).toBe("thickSludge");
     expect(new Archer().nameKey).toBe("archer");
@@ -58,38 +58,38 @@ describe("Space.nameKey", () => {
   });
 });
 
-function setupWarrior(): { logger: CapturingLogger; warrior: Warrior; floor: Floor } {
+function setupSamurai(): { logger: CapturingLogger; samurai: Samurai; floor: Floor } {
   const logger = new CapturingLogger();
-  const warrior = new Warrior(logger);
+  const samurai = new Samurai(logger);
   const floor = new Floor(8, 1);
   floor.placeStairs(7, 0);
-  floor.add(warrior, 0, 0, "east");
-  warrior.addAbilities("walk!", "attack!", "rest!");
-  return { logger, warrior, floor };
+  floor.add(samurai, 0, 0, "east");
+  samurai.addAbilities("walk!", "attack!", "rest!");
+  return { logger, samurai, floor };
 }
 
 describe("LogEntry emission", () => {
   it("walk emits engine.walk", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.abilities.get("walk!")!.perform("forward");
+    const { logger, samurai } = setupSamurai();
+    samurai.abilities.get("walk!")!.perform("forward");
     expect(logger.entries).toContainEqual(
       expect.objectContaining({ key: "engine.walk", params: { direction: "forward" } }),
     );
   });
 
   it("attack miss emits engine.attackMiss", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.abilities.get("attack!")!.perform("forward");
+    const { logger, samurai } = setupSamurai();
+    samurai.abilities.get("attack!")!.perform("forward");
     expect(logger.entries).toContainEqual(
       expect.objectContaining({ key: "engine.attackMiss", params: { direction: "forward" } }),
     );
   });
 
   it("attack hit emits engine.attackHit with target nameKey", () => {
-    const { logger, warrior, floor } = setupWarrior();
+    const { logger, samurai, floor } = setupSamurai();
     const sludge = new Sludge(logger);
     floor.add(sludge, 1, 0, "west");
-    warrior.abilities.get("attack!")!.perform("forward");
+    samurai.abilities.get("attack!")!.perform("forward");
     expect(logger.entries).toContainEqual(
       expect.objectContaining({
         key: "engine.attackHit",
@@ -99,8 +99,8 @@ describe("LogEntry emission", () => {
   });
 
   it("takeDamage emits engine.takeDamage", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.takeDamage(3);
+    const { logger, samurai } = setupSamurai();
+    samurai.takeDamage(3);
     expect(logger.entries).toContainEqual(
       expect.objectContaining({
         key: "engine.takeDamage",
@@ -110,27 +110,27 @@ describe("LogEntry emission", () => {
   });
 
   it("rest emits engine.restHeal", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.takeDamage(5);
+    const { logger, samurai } = setupSamurai();
+    samurai.takeDamage(5);
     logger.entries.length = 0;
-    warrior.abilities.get("rest!")!.perform();
+    samurai.abilities.get("rest!")!.perform();
     expect(logger.entries).toContainEqual(
       expect.objectContaining({ key: "engine.restHeal" }),
     );
   });
 
   it("idle emits engine.idle when no action", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.prepareTurn();
-    warrior.performTurn();
+    const { logger, samurai } = setupSamurai();
+    samurai.prepareTurn();
+    samurai.performTurn();
     expect(logger.entries).toContainEqual(
       expect.objectContaining({ key: "engine.idle", params: {} }),
     );
   });
 
   it("earnPoints emits engine.earnPoints", () => {
-    const { logger, warrior } = setupWarrior();
-    warrior.earnPoints(10);
+    const { logger, samurai } = setupSamurai();
+    samurai.earnPoints(10);
     expect(logger.entries).toContainEqual(
       expect.objectContaining({ key: "engine.earnPoints", params: { points: 10 } }),
     );

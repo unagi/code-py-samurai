@@ -48,7 +48,7 @@ describe("Beginner Level 8", () => {
     const level = new Level(level008);
     level.setup(player, inherited);
     const result = level.play(50);
-    // Warrior bumps into captive forever, never passes
+    // Samurai bumps into captive forever, never passes
     expect(result.passed).toBe(false);
   });
 });

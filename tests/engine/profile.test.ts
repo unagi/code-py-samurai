@@ -4,7 +4,7 @@ import { Profile } from "@engine/profile";
 describe("Profile", () => {
   it("creates with name and tower", () => {
     const profile = new Profile("Tama", "beginner");
-    expect(profile.warriorName).toBe("Tama");
+    expect(profile.samuraiName).toBe("Tama");
     expect(profile.towerName).toBe("beginner");
     expect(profile.score).toBe(0);
     expect(profile.levelNumber).toBe(0);
@@ -68,7 +68,7 @@ describe("Profile", () => {
     const json = profile.toJSON();
     const restored = Profile.fromJSON(json);
 
-    expect(restored.warriorName).toBe("Tama");
+    expect(restored.samuraiName).toBe("Tama");
     expect(restored.towerName).toBe("beginner");
     expect(restored.score).toBe(50);
     expect(restored.levelNumber).toBe(3);
@@ -92,7 +92,7 @@ describe("Profile", () => {
 
     const loaded = Profile.load(profile.storageKey, mockStorage);
     expect(loaded).not.toBeNull();
-    expect(loaded!.warriorName).toBe("Tama");
+    expect(loaded!.samuraiName).toBe("Tama");
     expect(loaded!.score).toBe(100);
     expect(loaded!.levelNumber).toBe(5);
   });

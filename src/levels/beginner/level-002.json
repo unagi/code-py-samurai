@@ -1,7 +1,7 @@
 {
   "description": "It is too dark to see anything, but you smell sludge nearby.",
-  "tip": "Use warrior.feel() to see what is in front. If it is None, walk; otherwise attack. Remember, you can only do one action per turn.",
-  "clue": "Add an if/else condition with `space = warrior.feel()` and `if space is None:` to decide whether to warrior.attack() or warrior.walk().",
+  "tip": "Use samurai.feel() to see what is in front. If it is None, walk; otherwise attack. Remember, you can only do one action per turn.",
+  "clue": "Add an if/else condition with `space = samurai.feel()` and `if space is None:` to decide whether to samurai.attack() or samurai.walk().",
   "timeBonus": 20,
   "aceScore": 26,
   "floor": {
@@ -12,11 +12,11 @@
     "x": 7,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 0,
     "y": 0,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

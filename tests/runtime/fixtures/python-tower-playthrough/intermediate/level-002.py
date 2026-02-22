@@ -1,11 +1,11 @@
 class Player:
-    def play_turn(self, warrior):
+    def play_turn(self, samurai):
         for d in ['forward', 'left', 'right', 'backward']:
-            space = warrior.feel(d)
+            space = samurai.feel(d)
             if space is not None and space.is_enemy():
-                warrior.attack(d)
+                samurai.attack(d)
                 return
-        if warrior.hp < 15:
-            warrior.rest()
+        if samurai.hp < 15:
+            samurai.rest()
             return
-        warrior.walk(warrior.direction_of_stairs())
+        samurai.walk(samurai.direction_of_stairs())

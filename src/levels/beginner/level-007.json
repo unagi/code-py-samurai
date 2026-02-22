@@ -1,6 +1,6 @@
 {
   "description": "You feel a wall right in front of you and an opening behind you.",
-  "tip": "You are not as effective at attacking backward. Use warrior.feel().is_wall() and warrior.pivot() to turn around.",
+  "tip": "You are not as effective at attacking backward. Use samurai.feel().is_wall() and samurai.pivot() to turn around.",
   "timeBonus": 30,
   "aceScore": 50,
   "floor": {
@@ -11,11 +11,11 @@
     "x": 0,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 5,
     "y": 0,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

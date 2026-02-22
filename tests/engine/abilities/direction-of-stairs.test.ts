@@ -1,24 +1,24 @@
 import { describe, it, expect } from "vitest";
 import { DirectionOfStairs } from "@engine/abilities/direction-of-stairs";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 
 function setup(
-  warriorX: number,
-  warriorY: number,
+  samuraiX: number,
+  samuraiY: number,
   direction: "north" | "east" | "south" | "west",
   stairsX: number,
   stairsY: number
 ) {
   const floor = new Floor(6, 4);
   floor.placeStairs(stairsX, stairsY);
-  const warrior = new Warrior();
-  warrior.addAbilities("direction_of_stairs");
-  floor.add(warrior, warriorX, warriorY, direction);
-  const ability = warrior.abilities.get(
+  const samurai = new Samurai();
+  samurai.addAbilities("direction_of_stairs");
+  floor.add(samurai, samuraiX, samuraiY, direction);
+  const ability = samurai.abilities.get(
     "direction_of_stairs"
   ) as DirectionOfStairs;
-  return { floor, warrior, ability };
+  return { floor, samurai, ability };
 }
 
 describe("DirectionOfStairs", () => {

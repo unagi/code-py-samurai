@@ -13,7 +13,7 @@ describe("Beginner Level 9", () => {
 
   it("is passed with pivot-west-first strategy", () => {
     // Strategy: immediately pivot west, shoot archer, walk to stairs@0
-    // East enemies (TS@7, wizard@9) can't reach warrior going west
+    // East enemies (TS@7, wizard@9) can't reach samurai going west
     let pivoted = false;
     const player: IPlayer = {
       playTurn(turn: ITurn) {
@@ -60,7 +60,7 @@ describe("Beginner Level 9", () => {
     expect(level.floor.otherUnits).toHaveLength(5);
   });
 
-  it("fails if warrior only walks", () => {
+  it("fails if samurai only walks", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         (turn as Turn).doAction("walk!", "forward");

@@ -41,7 +41,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     shootPower: 3,
     abilities: new Map(),
     isBound: () => false,
-    isWarrior: () => false,
+    isSamurai: () => false,
     isGolem: () => false,
     hasAbility: () => false,
     nameKey: "unit",
@@ -124,8 +124,8 @@ describe("Space", () => {
       expect(space.isEnemy()).toBe(true);
     });
 
-    it("returns false for warrior", () => {
-      const unit = createMockUnit({ isWarrior: () => true, character: "@" });
+    it("returns false for samurai", () => {
+      const unit = createMockUnit({ isSamurai: () => true, character: "@" });
       const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
       const space = new Space(floor, 3, 0);
       expect(space.isEnemy()).toBe(false);
@@ -175,8 +175,8 @@ describe("Space", () => {
   });
 
   describe("isPlayer", () => {
-    it("returns true for warrior", () => {
-      const unit = createMockUnit({ isWarrior: () => true });
+    it("returns true for samurai", () => {
+      const unit = createMockUnit({ isSamurai: () => true });
       const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
       const space = new Space(floor, 3, 0);
       expect(space.isPlayer()).toBe(true);

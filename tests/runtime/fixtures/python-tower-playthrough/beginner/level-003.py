@@ -1,14 +1,14 @@
 class Player:
-    def play_turn(self, warrior):
-        space = warrior.feel()
+    def play_turn(self, samurai):
+        space = samurai.feel()
         if space is None:
-            if warrior.hp < 20:
-                warrior.rest()
+            if samurai.hp < 20:
+                samurai.rest()
             else:
-                warrior.walk()
+                samurai.walk()
         elif space.is_enemy():
-            warrior.attack()
-        elif warrior.hp < 20:
-            warrior.rest()
+            samurai.attack()
+        elif samurai.hp < 20:
+            samurai.rest()
         else:
-            warrior.walk()
+            samurai.walk()

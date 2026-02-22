@@ -7,7 +7,7 @@ import { level001, level002, level003 } from "../../src/levels/beginner";
 
 describe("python runtime level integration", () => {
   it("clears beginner level 1 with walk strategy", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
 
     const player = compilePythonPlayer(source);
     const level = new Level(level001);
@@ -20,7 +20,7 @@ describe("python runtime level integration", () => {
   });
 
   it("clears beginner level 2 with feel+attack strategy", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is None:\n            warrior.walk()\n        else:\n            warrior.attack()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            samurai.walk()\n        else:\n            samurai.attack()`;
 
     const player = compilePythonPlayer(source);
     const level = new Level(level002);
@@ -29,11 +29,11 @@ describe("python runtime level integration", () => {
 
     expect(result.passed).toBe(true);
     expect(result.failed).toBe(false);
-    expect(result.warriorScore).toBe(12);
+    expect(result.samuraiScore).toBe(12);
   });
 
   it("clears beginner level 3 with rest+attack strategy", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is None:\n            if warrior.hp < 20:\n                warrior.rest()\n            else:\n                warrior.walk()\n        elif space.is_enemy():\n            warrior.attack()\n        elif warrior.hp < 20:\n            warrior.rest()\n        else:\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            if samurai.hp < 20:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.is_enemy():\n            samurai.attack()\n        elif samurai.hp < 20:\n            samurai.rest()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
     const level = new Level(level003);
@@ -42,6 +42,6 @@ describe("python runtime level integration", () => {
 
     expect(result.passed).toBe(true);
     expect(result.failed).toBe(false);
-    expect(result.warriorScore).toBe(48);
+    expect(result.samuraiScore).toBe(48);
   });
 });

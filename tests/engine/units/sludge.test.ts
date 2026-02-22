@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Sludge } from "@engine/units/sludge";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
 
 describe("Sludge", () => {
@@ -13,9 +13,9 @@ describe("Sludge", () => {
     expect(sludge.name).toBe("Sludge");
   });
 
-  it("is not warrior or golem", () => {
+  it("is not samurai or golem", () => {
     const sludge = new Sludge();
-    expect(sludge.isWarrior()).toBe(false);
+    expect(sludge.isSamurai()).toBe(false);
     expect(sludge.isGolem()).toBe(false);
   });
 
@@ -28,15 +28,15 @@ describe("Sludge", () => {
   it("attacks player in front", () => {
     const floor = new Floor(8, 1);
     floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    floor.add(warrior, 3, 0, "east");
+    const samurai = new Samurai();
+    floor.add(samurai, 3, 0, "east");
     const sludge = new Sludge();
     floor.add(sludge, 4, 0, "west");
-    // Sludge faces west, warrior is at x=3 (forward for sludge)
+    // Sludge faces west, samurai is at x=3 (forward for sludge)
     sludge.prepareTurn();
-    const startHealth = warrior.health;
+    const startHealth = samurai.health;
     sludge.performTurn();
-    expect(warrior.health).toBe(startHealth - sludge.attackPower);
+    expect(samurai.health).toBe(startHealth - sludge.attackPower);
   });
 
   it("attacks player behind", () => {
@@ -44,12 +44,12 @@ describe("Sludge", () => {
     floor.placeStairs(7, 0);
     const sludge = new Sludge();
     floor.add(sludge, 2, 0, "west");
-    const warrior = new Warrior();
-    floor.add(warrior, 3, 0, "west");
-    // Sludge faces west, warrior is at x=3 (backward for sludge)
+    const samurai = new Samurai();
+    floor.add(samurai, 3, 0, "west");
+    // Sludge faces west, samurai is at x=3 (backward for sludge)
     sludge.prepareTurn();
     sludge.performTurn();
-    expect(warrior.health).toBeLessThan(20);
+    expect(samurai.health).toBeLessThan(20);
   });
 
   it("does nothing when no player nearby", () => {

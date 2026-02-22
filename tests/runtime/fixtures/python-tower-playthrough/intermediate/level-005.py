@@ -1,20 +1,20 @@
 class Player:
-    def play_turn(self, warrior):
-        health = warrior.hp
-        units = warrior.listen()
+    def play_turn(self, samurai):
+        health = samurai.hp
+        units = samurai.listen()
         for d in ['forward', 'left', 'right', 'backward']:
-            space = warrior.feel(d)
+            space = samurai.feel(d)
             if space is not None and space.is_enemy():
-                warrior.attack(d)
+                samurai.attack(d)
                 return
             if space is not None and space.is_captive():
-                warrior.rescue(d)
+                samurai.rescue(d)
                 return
         for unit in units:
             if unit.is_enemy() or unit.is_captive():
-                warrior.walk(warrior.direction_of(unit))
+                samurai.walk(samurai.direction_of(unit))
                 return
         if health < 15:
-            warrior.rest()
+            samurai.rest()
             return
-        warrior.walk(warrior.direction_of_stairs())
+        samurai.walk(samurai.direction_of_stairs())

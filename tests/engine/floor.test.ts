@@ -12,11 +12,11 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
     shootPower: 3,
     abilities: new Map(),
     isBound: () => false,
-    isWarrior: () => true,
+    isSamurai: () => true,
     isGolem: () => false,
     hasAbility: () => false,
-    nameKey: "warrior",
-    toString: () => "Warrior",
+    nameKey: "samurai",
+    toString: () => "Samurai",
     takeDamage: () => {},
     earnPoints: () => {},
     say: () => {},
@@ -34,7 +34,7 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
 function createEnemyUnit(char: string = "s", name: string = "Sludge"): IUnit {
   return createMockUnit({
     character: char,
-    isWarrior: () => false,
+    isSamurai: () => false,
     toString: () => name,
   });
 }
@@ -114,9 +114,9 @@ describe("Floor", () => {
     it("returns only alive units (with position)", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
-      const warrior = createMockUnit();
+      const samurai = createMockUnit();
       const enemy = createEnemyUnit();
-      floor.add(warrior, 0, 0, "east");
+      floor.add(samurai, 0, 0, "east");
       floor.add(enemy, 4, 0, "west");
       expect(floor.units).toHaveLength(2);
     });
@@ -124,9 +124,9 @@ describe("Floor", () => {
     it("excludes dead units (removed position)", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
-      const warrior = createMockUnit();
+      const samurai = createMockUnit();
       const enemy = createEnemyUnit();
-      floor.add(warrior, 0, 0, "east");
+      floor.add(samurai, 0, 0, "east");
       floor.add(enemy, 4, 0, "west");
       // Simulate death by removing position
       floor.removeUnit(enemy);
@@ -135,12 +135,12 @@ describe("Floor", () => {
   });
 
   describe("otherUnits", () => {
-    it("returns non-warrior units", () => {
+    it("returns non-samurai units", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
-      const warrior = createMockUnit();
+      const samurai = createMockUnit();
       const enemy = createEnemyUnit();
-      floor.add(warrior, 0, 0, "east");
+      floor.add(samurai, 0, 0, "east");
       floor.add(enemy, 4, 0, "west");
       const others = floor.otherUnits;
       expect(others).toHaveLength(1);
@@ -187,12 +187,12 @@ describe("Floor", () => {
       expect(floor.character()).toBe(expected);
     });
 
-    it("renders floor with warrior and enemy", () => {
+    it("renders floor with samurai and enemy", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
-      const warrior = createMockUnit({ character: "@" });
+      const samurai = createMockUnit({ character: "@" });
       const enemy = createEnemyUnit("s");
-      floor.add(warrior, 0, 0, "east");
+      floor.add(samurai, 0, 0, "east");
       floor.add(enemy, 4, 0, "west");
       // x0=@ x1-3=space x4=s x5-6=space x7=>
       const expected = [
@@ -206,8 +206,8 @@ describe("Floor", () => {
     it("renders 4x3 multi-row floor", () => {
       const floor = new Floor(4, 3);
       floor.placeStairs(3, 2);
-      const warrior = createMockUnit({ character: "@" });
-      floor.add(warrior, 0, 0, "east");
+      const samurai = createMockUnit({ character: "@" });
+      floor.add(samurai, 0, 0, "east");
       const lines = floor.character().split("\n");
       expect(lines[0]).toBe(" ----");  // top border
       expect(lines[1]).toBe("|@   |"); // row 0: x0=@ x1-3=space (4 chars)

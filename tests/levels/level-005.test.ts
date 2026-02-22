@@ -31,7 +31,7 @@ describe("Beginner Level 5", () => {
     level.setup(player, inherited);
     const result = level.play();
     expect(result.passed).toBe(true);
-    expect(result.warriorScore).toBeGreaterThan(0);
+    expect(result.samuraiScore).toBeGreaterThan(0);
   });
 
   it("has captives on the floor", () => {

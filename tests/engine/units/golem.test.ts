@@ -20,9 +20,9 @@ describe("Golem", () => {
     expect(golem.isGolem()).toBe(true);
   });
 
-  it("isWarrior returns false", () => {
+  it("isSamurai returns false", () => {
     const { golem } = setup();
-    expect(golem.isWarrior()).toBe(false);
+    expect(golem.isSamurai()).toBe(false);
   });
 
   it("has character G", () => {

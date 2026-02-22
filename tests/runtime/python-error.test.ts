@@ -37,7 +37,7 @@ describe("python error handling", () => {
   });
 
   it("returns runtime error when play_turn references unknown variable", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        if hp < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        if hp < 8:\n            samurai.rest()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
     expect(() => player.playTurn(new FakeTurn() as never)).toThrow(PythonRuntimeError);

@@ -1,18 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { Form } from "@engine/abilities/form";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 import { Golem } from "@engine/units/golem";
 
 function setup() {
   const floor = new Floor(8, 1);
   floor.placeStairs(7, 0);
-  const warrior = new Warrior();
-  warrior.addAbilities("form!");
-  floor.add(warrior, 3, 0, "east");
-  const ability = warrior.abilities.get("form!") as Form;
-  return { floor, warrior, ability };
+  const samurai = new Samurai();
+  samurai.addAbilities("form!");
+  floor.add(samurai, 3, 0, "east");
+  const ability = samurai.abilities.get("form!") as Form;
+  return { floor, samurai, ability };
 }
 
 describe("Form", () => {
@@ -24,21 +24,21 @@ describe("Form", () => {
     expect(golem!.isGolem()).toBe(true);
   });
 
-  it("golem gets half warrior HP (floor division)", () => {
-    const { floor, warrior, ability } = setup();
-    expect(warrior.health).toBe(20);
+  it("golem gets half samurai HP (floor division)", () => {
+    const { floor, samurai, ability } = setup();
+    expect(samurai.health).toBe(20);
     ability.perform("forward");
     const golem = floor.get(4, 0)!;
     expect(golem.health).toBe(10); // floor(20/2)
-    expect(warrior.health).toBe(10);
+    expect(samurai.health).toBe(10);
   });
 
   it("does nothing if space is occupied", () => {
-    const { floor, warrior, ability } = setup();
+    const { floor, samurai, ability } = setup();
     floor.add(new Sludge(), 4, 0, "west");
     ability.perform("forward");
-    // warrior health unchanged
-    expect(warrior.health).toBe(20);
+    // samurai health unchanged
+    expect(samurai.health).toBe(20);
     // no golem created (sludge still there)
     const unit = floor.get(4, 0);
     expect(unit!.isGolem()).toBe(false);

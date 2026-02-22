@@ -9,7 +9,7 @@ describe("no default injection", () => {
   });
 
   it("does not auto-run an action when source only contains pass", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        pass`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        pass`;
 
     const { player } = runPythonPlayerSource(source);
     const turn = {

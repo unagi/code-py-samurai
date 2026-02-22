@@ -22,9 +22,9 @@ describe("Captive", () => {
     expect(captive.isBound()).toBe(false);
   });
 
-  it("is not warrior, enemy, or golem", () => {
+  it("is not samurai, enemy, or golem", () => {
     const captive = new Captive();
-    expect(captive.isWarrior()).toBe(false);
+    expect(captive.isSamurai()).toBe(false);
     expect(captive.isGolem()).toBe(false);
   });
 

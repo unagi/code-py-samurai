@@ -1,6 +1,6 @@
 {
   "description": "You feel slime on all sides, you're surrounded!",
-  "tip": "Call warrior.bind(direction) to bind an enemy to keep him from attacking. Bound enemies look like captives.",
+  "tip": "Call samurai.bind(direction) to bind an enemy to keep him from attacking. Bound enemies look like captives.",
   "clue": "Count the number of enemies around you. Bind an enemy if there are two or more.",
   "timeBonus": 50,
   "aceScore": 101,
@@ -12,11 +12,11 @@
     "x": 0,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 1,
     "y": 1,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

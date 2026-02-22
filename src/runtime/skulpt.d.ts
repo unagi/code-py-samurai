@@ -27,7 +27,7 @@ interface SkModule {
   $d: Record<string, any>;
 }
 
-interface SkInstance {
+export interface SkInstance {
   tp$getattr(name: SkBuiltinStr): any;
   tp$setattr(name: SkBuiltinStr, value: any): void;
 }
@@ -39,7 +39,7 @@ interface SkConfigureOptions {
   python3?: boolean;
 }
 
-interface SkNamespace {
+export interface SkNamespace {
   configure(options: SkConfigureOptions): void;
 
   importMainWithBody(
@@ -105,9 +105,6 @@ interface SkNamespace {
   };
 }
 
-declare const Sk: SkNamespace;
-
-declare namespace globalThis {
-  // eslint-disable-next-line no-var
+declare global {
   var Sk: SkNamespace;
 }

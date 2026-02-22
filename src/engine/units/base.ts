@@ -8,7 +8,7 @@ import { Turn } from "../turn";
  * Mapping from unit display name to i18n nameKey (matching tiles.* keys).
  */
 const NAME_TO_KEY: Record<string, string> = {
-  Warrior: "warrior",
+  Samurai: "samurai",
   Sludge: "sludge",
   "Thick Sludge": "thickSludge",
   Archer: "archer",
@@ -18,7 +18,7 @@ const NAME_TO_KEY: Record<string, string> = {
 };
 
 /**
- * Base class for all units (warrior, enemies, captives).
+ * Base class for all units (samurai, enemies, captives).
  * Ported from RubyWarrior::Units::Base
  */
 export abstract class BaseUnit implements IUnit {
@@ -95,7 +95,7 @@ export abstract class BaseUnit implements IUnit {
     this._bound = false;
   }
 
-  isWarrior(): boolean {
+  isSamurai(): boolean {
     return false;
   }
 
@@ -120,7 +120,7 @@ export abstract class BaseUnit implements IUnit {
   }
 
   earnPoints(_points: number): void {
-    // Override in Warrior
+    // Override in Samurai
   }
 
   say(entry: LogEntry): void {

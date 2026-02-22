@@ -4,7 +4,7 @@ import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
 
-export class Warrior extends BaseUnit {
+export class Samurai extends BaseUnit {
   private _score: number = 0;
   private _name: string = "";
   private _player: IPlayer | null = null;
@@ -30,7 +30,7 @@ export class Warrior extends BaseUnit {
   }
 
   get name(): string {
-    return this._name || "Warrior";
+    return this._name || "Samurai";
   }
 
   set playerName(name: string) {
@@ -45,7 +45,7 @@ export class Warrior extends BaseUnit {
     this._player = player;
   }
 
-  isWarrior(): boolean {
+  isSamurai(): boolean {
     return true;
   }
 

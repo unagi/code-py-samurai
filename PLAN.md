@@ -109,7 +109,7 @@ py-samurai/
 │   │   │   └── distance-of.ts
 │   │   └── units/             # ユニット群
 │   │       ├── base.ts
-│   │       ├── warrior.ts
+│   │       ├── samurai.ts
 │   │       ├── sludge.ts
 │   │       ├── thick-sludge.ts
 │   │       ├── archer.ts
@@ -129,7 +129,7 @@ py-samurai/
 │   ├── runtime/               # Python実行連携（Phase 2で新設）
 │   │   ├── python-runner.ts   # Skulpt実行管理
 │   │   ├── bridge.ts          # Python API → Engine橋渡し
-│   │   └── py-builtins.ts     # warrior/space等のPythonバインディング
+│   │   └── py-builtins.ts     # samurai/space等のPythonバインディング
 │   │
 │   ├── renderer/              # ゲーム描画
 │   │   ├── GameRenderer.ts    # Canvas描画メイン
@@ -183,7 +183,7 @@ py-samurai/
 2. `BaseUnit`: ユニット共通基盤 (HP, attack_power, position, bound状態, prepare/perform_turn)
 3. `Turn`: ターンオブジェクト (アクション1つ + センス複数を登録)
 4. 最小アビリティ: `walk`, `feel`, `health`, `attack`, `rest`
-5. 最小ユニット: `Warrior`, `Sludge` (+ 敵AI)
+5. 最小ユニット: `Samurai`, `Sludge` (+ 敵AI)
 6. `Level`: ターンループ、勝利/敗北判定、基本スコア計算
 7. Beginnerレベル1〜3のデータ定義
 
@@ -195,7 +195,7 @@ py-samurai/
 - [x] `attack.test.ts`: ダメージ計算、backward半減、対象HP減少、死亡でposition=null
 - [x] `health.test.ts`: 現在HPを返す
 - [x] `rest.test.ts`: HP回復 (maxの10%, max超えない)
-- [x] `warrior.test.ts`: 初期ステータス (HP=20, attack=5, shoot=3)
+- [x] `samurai.test.ts`: 初期ステータス (HP=20, attack=5, shoot=3)
 - [x] `sludge.test.ts`: 初期ステータス (HP=12, attack=3) + AI (隣接時attack)
 - [x] `level-001.test.ts`: walkだけで7ターンでクリア (stairs到達=passed)
 - [x] `level-002.test.ts`: feel+attackでSludge撃破→stairsでクリア
@@ -254,24 +254,24 @@ py-samurai/
 ```python
 # ユーザーが書くコード
 class Player:
-    def play_turn(self, warrior):
-        space = warrior.feel()
+    def play_turn(self, samurai):
+        space = samurai.feel()
         if space is None:
-            warrior.walk()
+            samurai.walk()
         else:
-            warrior.attack()
+            samurai.attack()
 ```
 
 3. APIブリッジ実装:
-   - `warrior` オブジェクトのPythonバインディング
-   - アクション: `warrior.walk(direction)`, `warrior.attack(direction)`, etc.
-   - センス: `warrior.feel(direction)`, `warrior.hp`, etc.
+   - `samurai` オブジェクトのPythonバインディング
+   - アクション: `samurai.walk(direction)`, `samurai.attack(direction)`, etc.
+   - センス: `samurai.feel(direction)`, `samurai.hp`, etc.
    - `Space` オブジェクトのバインディング: `space.is_enemy()`, `space.is_captive()`, etc.
    - 方向定数: Pythonでは文字列 `"forward"`, `"backward"`, `"left"`, `"right"`
 
 4. Python命名規約への変換:
-   - Ruby: `warrior.walk!`, `feel.empty?`, `direction_of_stairs`
-   - Python: `warrior.walk()`, `space is None`, `warrior.direction_of_stairs()`
+   - Ruby: `samurai.walk!`, `feel.empty?`, `direction_of_stairs`
+   - Python: `samurai.walk()`, `space is None`, `samurai.direction_of_stairs()`
 
 5. 既定値注入の廃止（最優先）:
    - UI内の固定コード/擬似AI依存を撤去
@@ -290,7 +290,7 @@ class Player:
 
 **完了条件** (`npm test` 全Pass):
 - [x] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
-- [x] `tests/runtime/bridge.test.ts`: warrior.walk/attack/feel等のPython呼び出しがTurnに反映
+- [x] `tests/runtime/bridge.test.ts`: samurai.walk/attack/feel等のPython呼び出しがTurnに反映
 - [x] `tests/runtime/py-builtins.test.ts`: Space→Python値変換（空マスの`None`化と述語バインディング）が正しい値
 - [x] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
 - [x] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
@@ -308,7 +308,7 @@ class Player:
    - リザルト画面: スコア、グレード表示
 2. CodeMirror 6 統合:
    - Python syntax highlighting
-   - 基本的な補完 (warrior APIのメソッド)
+   - 基本的な補完 (samurai APIのメソッド)
    - エラーハイライト
 3. ゲームコントロール:
    - Play (コード実行開始)
@@ -429,34 +429,34 @@ class Player:
 
 ```python
 class Player:
-    def play_turn(self, warrior):
+    def play_turn(self, samurai):
         # ユーザーがこのメソッドを実装する
         pass
 
 # === Actions (1ターンに1つだけ) ===
-warrior.walk()              # 前方に移動 (デフォルト)
-warrior.walk("backward")    # 後方に移動
-warrior.attack()            # 前方を攻撃
-warrior.attack("left")      # 左を攻撃
-warrior.rest()              # 休息してHP回復
-warrior.rescue()            # 前方の捕虜を救出
-warrior.rescue("right")     # 右の捕虜を救出
-warrior.shoot()             # 前方に射撃 (遠距離攻撃)
-warrior.pivot()             # 後方を向く
-warrior.pivot("right")      # 右を向く
-warrior.bind()              # 前方の敵を拘束
-warrior.detonate()          # 前方で爆破
+samurai.walk()              # 前方に移動 (デフォルト)
+samurai.walk("backward")    # 後方に移動
+samurai.attack()            # 前方を攻撃
+samurai.attack("left")      # 左を攻撃
+samurai.rest()              # 休息してHP回復
+samurai.rescue()            # 前方の捕虜を救出
+samurai.rescue("right")     # 右の捕虜を救出
+samurai.shoot()             # 前方に射撃 (遠距離攻撃)
+samurai.pivot()             # 後方を向く
+samurai.pivot("right")      # 右を向く
+samurai.bind()              # 前方の敵を拘束
+samurai.detonate()          # 前方で爆破
 
 # === Senses (何度でも使用可能) ===
-warrior.feel()              # → Space | None (前方1マス)
-warrior.feel("left")        # → Space | None (左1マス)
-warrior.hp                  # → int (現在HP)
-warrior.look()              # → list[Space | None] (前方3マス)
-warrior.look("backward")    # → list[Space | None] (後方3マス)
-warrior.listen()            # → list[Space] (ユニットがいるマスのみ)
-warrior.direction_of_stairs()  # → str ("forward"等)
-warrior.direction_of(space)    # → str (spaceへの相対方向)
-warrior.distance_of(space)     # → int (spaceへのマンハッタン距離)
+samurai.feel()              # → Space | None (前方1マス)
+samurai.feel("left")        # → Space | None (左1マス)
+samurai.hp                  # → int (現在HP)
+samurai.look()              # → list[Space | None] (前方3マス)
+samurai.look("backward")    # → list[Space | None] (後方3マス)
+samurai.listen()            # → list[Space] (ユニットがいるマスのみ)
+samurai.direction_of_stairs()  # → str ("forward"等)
+samurai.direction_of(space)    # → str (spaceへの相対方向)
+samurai.distance_of(space)     # → int (spaceへのマンハッタン距離)
 
 # === Space メソッド ===
 space.is_stairs()           # bool

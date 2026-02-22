@@ -32,7 +32,7 @@ describe("Beginner Level 3", () => {
     expect(result.failed).toBe(false);
   });
 
-  it("warrior earns points from 4 sludges (48 total)", () => {
+  it("samurai earns points from 4 sludges (48 total)", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
@@ -51,10 +51,10 @@ describe("Beginner Level 3", () => {
     level.setup(player, ["feel", "attack!", "walk!", "health", "rest!"]);
     const result = level.play();
 
-    expect(result.warriorScore).toBe(48); // 4 * 12 = 48
+    expect(result.samuraiScore).toBe(48); // 4 * 12 = 48
   });
 
-  it("fails without resting (warrior dies)", () => {
+  it("fails without resting (samurai dies)", () => {
     // No resting - just attack and walk
     const player: IPlayer = {
       playTurn(turn: ITurn) {

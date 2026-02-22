@@ -1,4 +1,4 @@
-# Py Samurai
+# Python侍
 
 [English](README.md) | [日本語](README_ja.md)
 

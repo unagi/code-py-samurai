@@ -21,10 +21,10 @@ EXTRACTED_DIR = Path(__file__).parent.parent.parent / "from_creator" / "gemini" 
 AUDIT_DIR = Path(__file__).parent.parent.parent / "from_creator" / "gemini" / "_audit"
 
 SOURCES = [
-    ("warrior-01", "idle", ["north", "east", "south", "west"], 4),
-    ("warrior-02", "walk", ["north", "east", "south", "west"], 6),
-    ("warrior-03", "attack", ["north", "east", "south", "west"], 6),
-    ("warrior-04", "rest", ["left", "right"], 4),
+    ("samurai-01", "idle", ["north", "east", "south", "west"], 4),
+    ("samurai-02", "walk", ["north", "east", "south", "west"], 6),
+    ("samurai-03", "attack", ["north", "east", "south", "west"], 6),
+    ("samurai-04", "rest", ["left", "right"], 4),
 ]
 
 

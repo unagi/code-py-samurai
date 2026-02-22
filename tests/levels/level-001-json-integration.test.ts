@@ -7,7 +7,7 @@ import { level001 } from "../../src/levels/beginner";
 
 describe("beginner level 001 json integration", () => {
   it("clears with simple walk strategy", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
     const player = compilePythonPlayer(source);
     const level = new Level(level001);
     level.setup(player, ["walk!"]);

@@ -9,7 +9,7 @@
 実行方法:
     # 環境変数PATHにcuDNN/cuBLAS DLLを含めて実行
     # (run.sh から呼び出す想定)
-    uv run python phase1_extract.py [warrior-01|warrior-02|...|tiles-01|all]
+    uv run python phase1_extract.py [samurai-01|samurai-02|...|tiles-01|all]
 """
 
 from __future__ import annotations
@@ -239,13 +239,13 @@ def tight_crop(
     return img.crop((x1, y1, x2, y2))
 
 
-def process_warrior(
+def process_samurai(
     source_path: Path,
     meta: dict,
     output_dir: Path,
     session,
 ) -> list[Path]:
-    """warrior系画像を処理."""
+    """samurai系画像を処理."""
     print(f"\n=== {source_path.name} ===")
 
     img = Image.open(source_path).convert("RGBA")
@@ -565,10 +565,10 @@ def main() -> None:
     output_base = source_dir / "_extracted"
 
     targets = [
-        ("warrior-01.png", "warrior-01-meta.json", "warrior"),
-        ("warrior-02.png", "warrior-02-meta.json", "warrior"),
-        ("warrior-03.png", "warrior-03-meta.json", "warrior"),
-        ("warrior-04.png", "warrior-04-meta.json", "warrior"),
+        ("samurai-01.png", "samurai-01-meta.json", "samurai"),
+        ("samurai-02.png", "samurai-02-meta.json", "samurai"),
+        ("samurai-03.png", "samurai-03-meta.json", "samurai"),
+        ("samurai-04.png", "samurai-04-meta.json", "samurai"),
         ("tiles-01.png", "tiles-01-meta.json", "tiles"),
     ]
 
@@ -595,8 +595,8 @@ def main() -> None:
         meta = load_meta(meta_path)
         output_dir = output_base / source_path.stem
 
-        if role == "warrior":
-            process_warrior(source_path, meta, output_dir, session)
+        if role == "samurai":
+            process_samurai(source_path, meta, output_dir, session)
         elif role == "tiles":
             process_tiles(source_path, meta, output_dir, session)
 

@@ -1,16 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { DistanceOf } from "@engine/abilities/distance-of";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 
 function setup() {
   const floor = new Floor(6, 4);
   floor.placeStairs(5, 3);
-  const warrior = new Warrior();
-  warrior.addAbilities("distance_of");
-  floor.add(warrior, 2, 2, "east");
-  const ability = warrior.abilities.get("distance_of") as DistanceOf;
-  return { floor, warrior, ability };
+  const samurai = new Samurai();
+  samurai.addAbilities("distance_of");
+  floor.add(samurai, 2, 2, "east");
+  const ability = samurai.abilities.get("distance_of") as DistanceOf;
+  return { floor, samurai, ability };
 }
 
 describe("DistanceOf", () => {

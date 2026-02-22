@@ -8,7 +8,7 @@ describe("level json schema", () => {
     const level = parseLevelDefinitionJson(rawLevel001);
     expect(level.floor.width).toBe(8);
     expect(level.stairs).toEqual({ x: 7, y: 0 });
-    expect(level.warrior.abilities).toBeUndefined();
+    expect(level.samurai.abilities).toBeUndefined();
   });
 
   it("fails when required fields are missing", () => {
@@ -16,7 +16,7 @@ describe("level json schema", () => {
       description: "x",
       tip: "y",
       floor: { width: 8, height: 1 },
-      warrior: { x: 0, y: 0, direction: "east" },
+      samurai: { x: 0, y: 0, direction: "east" },
       units: [],
     };
 
@@ -32,8 +32,8 @@ describe("level json schema", () => {
       aceScore: 20,
       floor: { width: 4, height: 1 },
       stairs: { x: 3, y: 0 },
-      warrior: {
-        unitId: "warrior",
+      samurai: {
+        unitId: "samurai",
         x: 0,
         y: 0,
         direction: "east",
@@ -52,7 +52,7 @@ describe("level json schema", () => {
       ],
     });
 
-    expect(parsed.warrior.abilities?.skills).toEqual(["walk()"]);
+    expect(parsed.samurai.abilities?.skills).toEqual(["walk()"]);
     expect(parsed.units[0].unitId).toBe("sludge#1");
     expect(parsed.units[0].abilities).toEqual(["attack!"]);
   });
@@ -66,7 +66,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "warrior", x: 0, y: 0, direction: "up" },
+        samurai: { unitId: "samurai", x: 0, y: 0, direction: "up" },
         units: [],
       }),
     ).toThrow(/must be one of/i);
@@ -81,7 +81,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2.5, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "warrior", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "samurai", x: 0, y: 0, direction: "east" },
         units: [],
       }),
     ).toThrow(/integer/i);
@@ -94,8 +94,8 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: {
-          unitId: "warrior",
+        samurai: {
+          unitId: "samurai",
           x: 0,
           y: 0,
           direction: "east",
@@ -121,13 +121,13 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: "bad",
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
         units: [],
       }),
     ).toThrow(/floor must be an object/i);
   });
 
-  it("fails when warrior is not an object", () => {
+  it("fails when samurai is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
         description: "x",
@@ -136,10 +136,10 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: "bad",
+        samurai: "bad",
         units: [],
       }),
-    ).toThrow(/warrior must be an object/i);
+    ).toThrow(/samurai must be an object/i);
   });
 
   it("fails when units is not an array", () => {
@@ -151,7 +151,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
         units: "bad",
       }),
     ).toThrow(/units must be an array/i);
@@ -166,7 +166,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
         units: [42],
       }),
     ).toThrow(/units\[0\] must be an object/i);
@@ -181,7 +181,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
         units: [],
       }),
     ).toThrow(/must be a number/i);
@@ -196,13 +196,13 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: { unitId: "w", x: 0, y: 0, direction: "east" },
+        samurai: { unitId: "w", x: 0, y: 0, direction: "east" },
         units: [],
       }),
     ).toThrow(/must be a string/i);
   });
 
-  it("fails when warrior.abilities is not an object", () => {
+  it("fails when samurai.abilities is not an object", () => {
     expect(() =>
       parseLevelDefinitionJson({
         description: "x",
@@ -211,7 +211,7 @@ describe("level json schema", () => {
         aceScore: 1,
         floor: { width: 2, height: 1 },
         stairs: { x: 1, y: 0 },
-        warrior: {
+        samurai: {
           unitId: "w",
           x: 0,
           y: 0,

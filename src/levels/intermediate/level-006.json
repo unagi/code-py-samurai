@@ -1,7 +1,7 @@
 {
   "description": "What's that ticking? Some captives have a timed bomb at their feet!",
   "tip": "Hurry and rescue captives first; one of them has a timed bomb.",
-  "clue": "Avoid fighting enemies at first. Use warrior.listen() to find nearby units and rescue captives as quickly as possible.",
+  "clue": "Avoid fighting enemies at first. Use samurai.listen() to find nearby units and rescue captives as quickly as possible.",
   "timeBonus": 50,
   "aceScore": 108,
   "floor": {
@@ -12,11 +12,11 @@
     "x": 5,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 0,
     "y": 1,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

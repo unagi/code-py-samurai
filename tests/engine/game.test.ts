@@ -19,7 +19,7 @@ function createTestTower(): Tower {
     aceScore: 10,
     floor: { width: 4, height: 1 },
     stairs: { x: 3, y: 0 },
-    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["walk()"], stats: [] } },
+    samurai: { x: 0, y: 0, direction: "east", abilities: { skills: ["walk()"], stats: [] } },
     units: [],
   };
 
@@ -31,7 +31,7 @@ function createTestTower(): Tower {
     aceScore: 20,
     floor: { width: 5, height: 1 },
     stairs: { x: 4, y: 0 },
-    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["feel()", "attack()"], stats: [] } },
+    samurai: { x: 0, y: 0, direction: "east", abilities: { skills: ["feel()", "attack()"], stats: [] } },
     units: [{ type: "sludge", x: 2, y: 0, direction: "west" }],
   };
 
@@ -43,7 +43,7 @@ function createTestTower(): Tower {
     aceScore: 30,
     floor: { width: 6, height: 1 },
     stairs: { x: 5, y: 0 },
-    warrior: { x: 0, y: 0, direction: "east", abilities: { skills: ["rest()"], stats: ["hp"] } },
+    samurai: { x: 0, y: 0, direction: "east", abilities: { skills: ["rest()"], stats: ["hp"] } },
     units: [{ type: "sludge", x: 3, y: 0, direction: "west" }],
   };
 

@@ -1,7 +1,7 @@
 import { Level } from "./level";
 
 export interface ProfileData {
-  warriorName: string;
+  samuraiName: string;
   towerName: string;
   score: number;
   epicScore: number;
@@ -19,7 +19,7 @@ export interface ProfileData {
  * Ported from RubyWarrior::Profile
  */
 export class Profile {
-  warriorName: string;
+  samuraiName: string;
   towerName: string;
   score: number = 0;
   epicScore: number = 0;
@@ -31,8 +31,8 @@ export class Profile {
   lastLevelNumber: number | null = null;
   private _epic: boolean = false;
 
-  constructor(warriorName: string, towerName: string) {
-    this.warriorName = warriorName;
+  constructor(samuraiName: string, towerName: string) {
+    this.samuraiName = samuraiName;
     this.towerName = towerName;
   }
 
@@ -83,7 +83,7 @@ export class Profile {
 
   toJSON(): ProfileData {
     return {
-      warriorName: this.warriorName,
+      samuraiName: this.samuraiName,
       towerName: this.towerName,
       score: this.score,
       epicScore: this.epicScore,
@@ -98,7 +98,7 @@ export class Profile {
   }
 
   static fromJSON(data: ProfileData): Profile {
-    const profile = new Profile(data.warriorName, data.towerName);
+    const profile = new Profile(data.samuraiName, data.towerName);
     profile.score = data.score;
     profile.epicScore = data.epicScore;
     profile.currentEpicScore = data.currentEpicScore;
@@ -117,7 +117,7 @@ export class Profile {
   }
 
   get storageKey(): string {
-    const safeName = this.warriorName.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
+    const safeName = this.samuraiName.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
     return `pysamurai-${safeName}-${this.towerName}`;
   }
 

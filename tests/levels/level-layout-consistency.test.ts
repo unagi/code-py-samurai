@@ -21,7 +21,7 @@ type Unit = Point & { unitId?: string };
 type RawLevelLayout = {
   floor: { width: number; height: number };
   stairs: Point;
-  warrior: Point;
+  samurai: Point;
   units: Unit[];
 };
 
@@ -60,7 +60,7 @@ function toRawLayout(value: unknown): RawLevelLayout {
       height: asInt(floor.height, "floor.height"),
     },
     stairs: asPoint(root.stairs, "stairs"),
-    warrior: asPoint(root.warrior, "warrior"),
+    samurai: asPoint(root.samurai, "samurai"),
     units: unitsRaw.map((unit, index) => {
       const rec = asRecord(unit, `units[${index}]`);
       return {
@@ -82,7 +82,7 @@ describe("level layout consistency", () => {
         x >= 0 && y >= 0 && x < level.floor.width && y < level.floor.height;
 
       expect(inBounds(level.stairs.x, level.stairs.y), `${file}: stairs out of bounds`).toBe(true);
-      expect(inBounds(level.warrior.x, level.warrior.y), `${file}: warrior out of bounds`).toBe(true);
+      expect(inBounds(level.samurai.x, level.samurai.y), `${file}: samurai out of bounds`).toBe(true);
       for (let i = 0; i < level.units.length; i++) {
         const unit = level.units[i];
         expect(inBounds(unit.x, unit.y), `${file}: units[${i}] out of bounds`).toBe(true);
@@ -103,7 +103,7 @@ describe("level layout consistency", () => {
         used.set(key, label);
       };
 
-      put("warrior", level.warrior.x, level.warrior.y);
+      put("samurai", level.samurai.x, level.samurai.y);
       for (let i = 0; i < level.units.length; i++) {
         const unit = level.units[i];
         put(`units[${i}]`, unit.x, unit.y);

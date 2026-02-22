@@ -1,4 +1,4 @@
-import type {} from "./skulpt.d";
+import type { SkInstance, SkNamespace } from "./skulpt";
 import type { ITurn, IPlayer } from "@engine/types";
 import { asRuntimeTurn, type RuntimeTurn } from "./bridge";
 import { PythonRuntimeError, PythonSyntaxError } from "./errors";
@@ -114,7 +114,7 @@ function senseResultToSk(sk: SkNamespace, value: unknown): unknown {
   return jsSpaceToSk(sk, value);
 }
 
-/* ---------- Warrior proxy ---------- */
+/* ---------- Samurai proxy ---------- */
 
 const ACTION_ENTRIES: ReadonlyArray<readonly [string, string]> = [
   ["walk", "walk!"],
@@ -134,9 +134,9 @@ const SENSE_NAMES = ["feel", "look", "listen", "direction_of_stairs"] as const;
 /** Senses that take a Space object argument (requires unwrapping Skulpt proxy). */
 const SPACE_SENSE_NAMES = ["direction_of", "distance_of"] as const;
 
-/** Build a Skulpt Warrior instance that delegates to a RuntimeTurn. */
-function buildWarriorInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
-  const WarriorClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
+/** Build a Skulpt Samurai instance that delegates to a RuntimeTurn. */
+function buildSamuraiInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
+  const SamuraiClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
     // hp property
     const hpGetter = new sk.builtin.func(() =>
       new sk.builtin.int_(turn.doSense("health") as number),
@@ -181,9 +181,9 @@ function buildWarriorInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
         });
       })(senseName);
     }
-  }, "Warrior", []);
+  }, "Samurai", []);
 
-  return sk.misceval.callsimArray(WarriorClass, []);
+  return sk.misceval.callsimArray(SamuraiClass, []);
 }
 
 /* ---------- Error helpers ---------- */
@@ -218,7 +218,7 @@ export function compilePythonPlayer(source: string): IPlayer {
     playTurnMethod = playerInstance.tp$getattr(new sk.builtin.str("play_turn"));
     // __getattr__ returns Sk.builtin.none.none$ for missing attrs, so check for that too
     if (!playTurnMethod || playTurnMethod === sk.builtin.none.none$) {
-      throw new PythonSyntaxError("def play_turn(self, warrior) not found.");
+      throw new PythonSyntaxError("def play_turn(self, samurai) not found.");
     }
   } catch (error) {
     if (error instanceof PythonSyntaxError) throw error;
@@ -230,8 +230,8 @@ export function compilePythonPlayer(source: string): IPlayer {
       try {
         skToJsSpaceMap.clear();
         const turn = asRuntimeTurn(turnInput);
-        const warriorProxy = buildWarriorInstance(sk, turn);
-        sk.misceval.callsimArray(playTurnMethod, [warriorProxy]);
+        const samuraiProxy = buildSamuraiInstance(sk, turn);
+        sk.misceval.callsimArray(playTurnMethod, [samuraiProxy]);
       } catch (error) {
         if (error instanceof PythonSyntaxError || error instanceof PythonRuntimeError) {
           throw error;

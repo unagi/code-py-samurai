@@ -307,7 +307,7 @@ body {
 }
 
 .tile-stairs,
-.tile-warrior,
+.tile-samurai,
 .tile-golem,
 .tile-sludge,
 .tile-thick-sludge,
@@ -1114,11 +1114,11 @@ dialog.modal-backdrop::backdrop {
   font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
 }
 
-.refdoc-warrior-action-list .refdoc-item-method {
+.refdoc-samurai-action-list .refdoc-item-method {
   border-left: 3px solid rgba(217, 119, 6, 0.38);
 }
 
-.refdoc-warrior-sense-grid {
+.refdoc-samurai-sense-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.55rem;

@@ -2,18 +2,18 @@ import { describe, it, expect } from "vitest";
 import { Detonate } from "@engine/abilities/detonate";
 import { Explode } from "@engine/abilities/explode";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
 function setup() {
   const floor = new Floor(8, 3);
   floor.placeStairs(7, 1);
-  const warrior = new Warrior();
-  warrior.addAbilities("detonate!");
-  floor.add(warrior, 0, 1, "east");
-  const ability = warrior.abilities.get("detonate!") as Detonate;
-  return { floor, warrior, ability };
+  const samurai = new Samurai();
+  samurai.addAbilities("detonate!");
+  floor.add(samurai, 0, 1, "east");
+  const ability = samurai.abilities.get("detonate!") as Detonate;
+  return { floor, samurai, ability };
 }
 
 describe("Detonate", () => {
@@ -37,14 +37,14 @@ describe("Detonate", () => {
   });
 
   it("deals 4 damage to self at (0,0) offset", () => {
-    const { warrior, ability } = setup();
+    const { samurai, ability } = setup();
     ability.perform("forward");
-    // warrior takes 4 self-damage from the [0,0] bomb
-    expect(warrior.health).toBe(20 - 4);
+    // samurai takes 4 self-damage from the [0,0] bomb
+    expect(samurai.health).toBe(20 - 4);
   });
 
   it("triggers chain explosion on ticking captive", () => {
-    const { floor, warrior, ability } = setup();
+    const { floor, samurai, ability } = setup();
     // Place a ticking captive at the center
     const captive = new Captive();
     captive.addAbilities("explode!");
@@ -55,7 +55,7 @@ describe("Detonate", () => {
     ability.perform("forward");
 
     // Chain explosion kills everyone with 100 damage
-    expect(warrior.position).toBeNull();
+    expect(samurai.position).toBeNull();
     expect(captive.position).toBeNull();
   });
 

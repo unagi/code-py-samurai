@@ -42,7 +42,7 @@ export class Space {
   isPlayer(): boolean {
     const u = this.unit;
     if (!u) return false;
-    return u.isWarrior() || u.isGolem();
+    return u.isSamurai() || u.isGolem();
   }
 
   isEnemy(): boolean {

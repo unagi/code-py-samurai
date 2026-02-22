@@ -1,26 +1,26 @@
 class Player:
-    def play_turn(self, warrior):
-        health = warrior.hp
-        fwd = warrior.feel()
-        bwd = warrior.feel('backward')
+    def play_turn(self, samurai):
+        health = samurai.hp
+        fwd = samurai.feel()
+        bwd = samurai.feel('backward')
         if not self.captive_rescued:
             if bwd is not None and bwd.is_captive():
-                warrior.rescue('backward')
+                samurai.rescue('backward')
                 self.captive_rescued = True
                 self.last_health = health
                 return
             elif bwd is not None and bwd.is_wall():
                 self.captive_rescued = True
             else:
-                warrior.walk('backward')
+                samurai.walk('backward')
                 self.last_health = health
                 return
         if fwd is not None and fwd.is_enemy():
-            warrior.attack()
+            samurai.attack()
         elif health < 20 and self.last_health is not None and health >= self.last_health:
-            warrior.rest()
+            samurai.rest()
         elif health <= 10 and self.last_health is not None and health < self.last_health and fwd is None:
-            warrior.walk('backward')
+            samurai.walk('backward')
         else:
-            warrior.walk()
+            samurai.walk()
         self.last_health = health
