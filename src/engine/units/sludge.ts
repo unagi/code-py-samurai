@@ -1,7 +1,6 @@
 import type { RelativeDirection } from "../direction";
 import type { ILogger } from "../types";
 import type { Space } from "../space";
-import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
@@ -19,7 +18,7 @@ export class Sludge extends BaseUnit {
   protected static readonly CHARACTER: string = "s";
 
   constructor(logger?: ILogger) {
-    super(logger);
+    super(logger, createAbility);
     this.addAbilities("attack!", "feel");
   }
 
@@ -31,9 +30,5 @@ export class Sludge extends BaseUnit {
         return;
       }
     }
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }

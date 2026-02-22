@@ -1,5 +1,4 @@
 import type { ILogger, IPlayer } from "../types";
-import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
@@ -16,7 +15,7 @@ export class Samurai extends BaseUnit {
   private _player: IPlayer | null = null;
 
   constructor(logger?: ILogger) {
-    super(logger);
+    super(logger, createAbility);
   }
 
   get name(): string {
@@ -55,9 +54,5 @@ export class Samurai extends BaseUnit {
       this.say({ key: "engine.idle", params: {} });
     }
     super.performTurn();
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }

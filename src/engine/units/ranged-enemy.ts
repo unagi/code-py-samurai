@@ -1,6 +1,5 @@
 import type { RelativeDirection } from "../direction";
 import type { ILogger } from "../types";
-import type { BaseAbility } from "../abilities/base";
 import type { Space } from "../space";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
@@ -17,7 +16,7 @@ const SEARCH_DIRECTIONS = [
  */
 export abstract class RangedEnemy extends BaseUnit {
   constructor(logger?: ILogger) {
-    super(logger);
+    super(logger, createAbility);
     this.addAbilities("shoot!", "look");
   }
 
@@ -34,9 +33,5 @@ export abstract class RangedEnemy extends BaseUnit {
         }
       }
     }
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }

@@ -1,5 +1,4 @@
 import type { ILogger } from "../types";
-import type { BaseAbility } from "../abilities/base";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
@@ -17,7 +16,7 @@ export class Golem extends BaseUnit {
   private _turnCallback: ((turn: Turn) => void) | null = null;
 
   constructor(logger?: ILogger) {
-    super(logger);
+    super(logger, createAbility);
   }
 
   get maxHealth(): number {
@@ -40,9 +39,5 @@ export class Golem extends BaseUnit {
     if (this._turnCallback) {
       this._turnCallback(turn);
     }
-  }
-
-  protected createAbility(name: string): BaseAbility | null {
-    return createAbility(name, this);
   }
 }
