@@ -1,7 +1,7 @@
 {
   "description": "You discover a satchel of bombs which will help when facing a mob of enemies.",
-  "tip": "Detonate a bomb when you see a couple enemies ahead of you (warrior.look()). Watch out for your health too.",
-  "clue": "Calling warrior.look() will return an array of Spaces. If the first two contain enemies, detonate a bomb with warrior.detonate().",
+  "tip": "Detonate a bomb when you see a couple enemies ahead of you (samurai.look()). Watch out for your health too.",
+  "clue": "Calling samurai.look() will return an array of Spaces. If the first two contain enemies, detonate a bomb with samurai.detonate().",
   "timeBonus": 30,
   "aceScore": 0,
   "floor": {
@@ -12,11 +12,11 @@
     "x": 6,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 0,
     "y": 0,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

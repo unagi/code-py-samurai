@@ -61,12 +61,12 @@ describe("Beginner Level 1", () => {
     level.setup(player, base);
     const result = level.play();
 
-    // No enemies, so warrior score = 0
+    // No enemies, so samurai score = 0
     // Time bonus = 8
     // Clear bonus = round((0 + 8) * 0.2) = 2 (no other units)
     // Total = 0 + 8 + 2 = 10
     // ace_score = 10, grade = S
-    expect(result.warriorScore).toBe(0);
+    expect(result.samuraiScore).toBe(0);
     expect(result.clearBonus).toBe(2);
     expect(result.totalScore).toBe(10);
     expect(result.grade).toBe("S");
@@ -84,7 +84,7 @@ describe("Beginner Level 1", () => {
     const result = level.play(20); // Limit turns
 
     expect(result.passed).toBe(false);
-    // Warrior is still alive, just didn't reach stairs
+    // Samurai is still alive, just didn't reach stairs
     expect(result.failed).toBe(false);
   });
 });

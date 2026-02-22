@@ -31,7 +31,7 @@ export interface IUnit {
   readonly shootPower: number;
   readonly abilities: Map<string, BaseAbility>;
   isBound(): boolean;
-  isWarrior(): boolean;
+  isSamurai(): boolean;
   isGolem(): boolean;
   hasAbility(name: string): boolean;
   toString(): string;
@@ -83,12 +83,12 @@ export interface LevelDefinition {
     height: number;
   };
   stairs: MapPoint;
-  warrior: {
+  samurai: {
     unitId?: string;
     x: number;
     y: number;
     direction: AbsoluteDirection;
-    abilities?: WarriorAbilitySet;
+    abilities?: SamuraiAbilitySet;
   };
   units: Array<{
     unitId?: string;
@@ -110,11 +110,11 @@ export interface MapPoint {
   y: number;
 }
 
-export interface MapWarriorDefinition {
+export interface MapSamuraiDefinition {
   unitId?: string;
   position: MapPoint;
   direction: AbsoluteDirection;
-  abilities?: WarriorAbilitySet;
+  abilities?: SamuraiAbilitySet;
 }
 
 export interface MapUnitDefinition {
@@ -132,11 +132,11 @@ export interface MapLayoutDefinition {
     height: number;
   };
   stairs: MapPoint;
-  warrior: MapWarriorDefinition;
+  samurai: MapSamuraiDefinition;
   units: MapUnitDefinition[];
 }
 
-export interface WarriorAbilitySet {
+export interface SamuraiAbilitySet {
   skills: string[];
   stats: string[];
 }

@@ -230,9 +230,9 @@ function renderCompactMethodCard(item: ReferenceItem, locale: LocaleCode) {
   );
 }
 
-function renderWarriorSection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode) {
-  const actionGroupIndex = section.items.findIndex((item) => item.id === "warrior-action-methods");
-  const senseGroupIndex = section.items.findIndex((item) => item.id === "warrior-sense-methods");
+function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode) {
+  const actionGroupIndex = section.items.findIndex((item) => item.id === "samurai-action-methods");
+  const senseGroupIndex = section.items.findIndex((item) => item.id === "samurai-sense-methods");
 
   const introItems = section.items.filter((item, index) => {
     if (actionGroupIndex < 0) return true;
@@ -274,7 +274,7 @@ function renderWarriorSection(section: (typeof apiReferenceDocument.sections)[nu
             </div>
           </div>
           <p className="refdoc-subsection-description">{pickText(actionGroup.description, locale)}</p>
-          <div className="refdoc-items refdoc-warrior-action-list">
+          <div className="refdoc-items refdoc-samurai-action-list">
             {actionItems.map((item) => renderReferenceItem(item, locale))}
           </div>
         </section>
@@ -293,7 +293,7 @@ function renderWarriorSection(section: (typeof apiReferenceDocument.sections)[nu
             </div>
           </div>
           <p className="refdoc-subsection-description">{pickText(senseGroup.description, locale)}</p>
-          <div className="refdoc-warrior-sense-grid">
+          <div className="refdoc-samurai-sense-grid">
             {senseItems.map((item) => renderCompactMethodCard(item, locale))}
           </div>
         </section>
@@ -585,8 +585,8 @@ export default function ReferencePage() {
                 {apiReferenceDocument.sections
                   .filter((section) => section.items.some((item) => item.kind === "class"))
                   .map((section) => {
-                    if (section.id === "warrior-class") {
-                      return renderWarriorSection(section, locale);
+                    if (section.id === "samurai-class") {
+                      return renderSamuraiSection(section, locale);
                     }
                     if (section.id === "player-class") {
                       return renderPlayerSection(section, locale);

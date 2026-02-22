@@ -87,7 +87,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("executes if/elif/else by sensed space and hp property", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is None:\n            if warrior.hp < 8:\n                warrior.rest()\n            else:\n                warrior.walk()\n        elif space.is_enemy():\n            warrior.attack()\n        elif warrior.hp < 8:\n            warrior.rest()\n        else:\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            if samurai.hp < 8:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.is_enemy():\n            samurai.attack()\n        elif samurai.hp < 8:\n            samurai.rest()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
 
@@ -114,7 +114,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("supports is not None", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space is not None:\n            warrior.attack()\n        else:\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is not None:\n            samurai.attack()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
     const enemyTurn = new FakeTurn({
@@ -129,12 +129,12 @@ describe("compilePythonPlayer", () => {
     // one-action-per-turn restriction, then perform a single action after.
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
+      "    def play_turn(self, samurai):",
       "        total = 0",
       "        for x in range(3):",
-      "            total = total + warrior.hp",
+      "            total = total + samurai.hp",
       "        if total > 0:",
-      "            warrior.walk()",
+      "            samurai.walk()",
     ].join("\n");
 
     const player = compilePythonPlayer(source);
@@ -144,7 +144,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("accepts 2-space indentation", () => {
-    const source = `class Player:\n  def play_turn(self, warrior):\n    warrior.walk()`;
+    const source = `class Player:\n  def play_turn(self, samurai):\n    samurai.walk()`;
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({});
     player.playTurn(turn as never);
@@ -152,23 +152,23 @@ describe("compilePythonPlayer", () => {
   });
 
   it("accepts tab indentation", () => {
-    const source = "class Player:\n\tdef play_turn(self, warrior):\n\t\twarrior.walk()";
+    const source = "class Player:\n\tdef play_turn(self, samurai):\n\t\tsamurai.walk()";
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({});
     player.playTurn(turn as never);
     expect(turn.action).toEqual(["walk!", "forward"]);
   });
 
-  it("throws at runtime on unknown warrior method/attribute", () => {
+  it("throws at runtime on unknown samurai method/attribute", () => {
     // Skulpt compiles any valid Python; errors surface at runtime
     const singPlayer = compilePythonPlayer(
-      "class Player:\n    def play_turn(self, warrior):\n        warrior.sing()",
+      "class Player:\n    def play_turn(self, samurai):\n        samurai.sing()",
     );
     const turn1 = new FakeTurn({});
     expect(() => singPlayer.playTurn(turn1 as never)).toThrow(/attribute/i);
 
     const energyPlayer = compilePythonPlayer(
-      "class Player:\n    def play_turn(self, warrior):\n        if warrior.energy < 1:\n            warrior.walk()",
+      "class Player:\n    def play_turn(self, samurai):\n        if samurai.energy < 1:\n            samurai.walk()",
     );
     const turn2 = new FakeTurn({ health: () => 20 });
     expect(() => energyPlayer.playTurn(turn2 as never)).toThrow(/attribute/i);
@@ -177,19 +177,19 @@ describe("compilePythonPlayer", () => {
   it("throws PythonSyntaxError on bad indentation and stray elif", () => {
     expect(() =>
       compilePythonPlayer(
-        "class Player:\n    def play_turn(self, warrior):\n        if warrior.hp < 10:\n        warrior.walk()",
+        "class Player:\n    def play_turn(self, samurai):\n        if samurai.hp < 10:\n        samurai.walk()",
       ),
     ).toThrow(PythonSyntaxError);
 
     expect(() =>
       compilePythonPlayer(
-        "class Player:\n    def play_turn(self, warrior):\n        elif warrior.hp < 10:\n            warrior.walk()",
+        "class Player:\n    def play_turn(self, samurai):\n        elif samurai.hp < 10:\n            samurai.walk()",
       ),
     ).toThrow(PythonSyntaxError);
   });
 
   it("handles pass statement without error", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        pass`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        pass`;
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({});
     player.playTurn(turn as never);
@@ -197,7 +197,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("skips rest! when action is unavailable", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.rest()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.rest()`;
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({});
     // Remove rest! from available actions to test the guard branch
@@ -207,7 +207,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("throws TypeError when predicate is not a function", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.is_enemy():\n            samurai.walk()`;
     const player = compilePythonPlayer(source);
 
     const turn = new FakeTurn({
@@ -220,17 +220,17 @@ describe("compilePythonPlayer", () => {
   it("supports self.xxx instance variables persisted across turns", () => {
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
+      "    def play_turn(self, samurai):",
       "        if self.prev_hp is not None:",
-      "            if warrior.hp < self.prev_hp:",
-      "                warrior.attack()",
-      "            elif warrior.hp < 15:",
-      "                warrior.rest()",
+      "            if samurai.hp < self.prev_hp:",
+      "                samurai.attack()",
+      "            elif samurai.hp < 15:",
+      "                samurai.rest()",
       "            else:",
-      "                warrior.walk()",
+      "                samurai.walk()",
       "        else:",
-      "            warrior.walk()",
-      "        self.prev_hp = warrior.hp",
+      "            samurai.walk()",
+      "        self.prev_hp = samurai.hp",
     ].join("\n");
 
     const player = compilePythonPlayer(source);
@@ -264,11 +264,11 @@ describe("compilePythonPlayer", () => {
   it("self.xxx returns undefined (not error) when not yet assigned", () => {
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
+      "    def play_turn(self, samurai):",
       "        if self.flag is None:",
-      "            warrior.walk()",
+      "            samurai.walk()",
       "        else:",
-      "            warrior.attack()",
+      "            samurai.attack()",
       "        self.flag = 1",
     ].join("\n");
 
@@ -288,15 +288,15 @@ describe("compilePythonPlayer", () => {
   it("supports and/or boolean operators", () => {
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
-      "        space = warrior.feel()",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
       "        if space.is_enemy():",
-      "            warrior.attack()",
-      "        elif warrior.hp < 20 and warrior.hp >= self.prev_hp:",
-      "            warrior.rest()",
+      "            samurai.attack()",
+      "        elif samurai.hp < 20 and samurai.hp >= self.prev_hp:",
+      "            samurai.rest()",
       "        else:",
-      "            warrior.walk()",
-      "        self.prev_hp = warrior.hp",
+      "            samurai.walk()",
+      "        self.prev_hp = samurai.hp",
     ].join("\n");
 
     const player = compilePythonPlayer(source);
@@ -329,12 +329,12 @@ describe("compilePythonPlayer", () => {
   it("supports or operator", () => {
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
-      "        space = warrior.feel()",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
       "        if space.is_enemy() or space.is_captive():",
-      "            warrior.attack()",
+      "            samurai.attack()",
       "        else:",
-      "            warrior.walk()",
+      "            samurai.walk()",
     ].join("\n");
 
     const player = compilePythonPlayer(source);
@@ -362,7 +362,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("wraps non-Error throws as PythonRuntimeError", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        space = warrior.feel()\n        if space.is_enemy():\n            warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.is_enemy():\n            samurai.walk()`;
     const player = compilePythonPlayer(source);
 
     const turn = new FakeTurn({
@@ -380,12 +380,12 @@ describe("compilePythonPlayer", () => {
   it("supports space.is_ticking() predicate", () => {
     const source = [
       "class Player:",
-      "    def play_turn(self, warrior):",
-      "        space = warrior.feel()",
+      "    def play_turn(self, samurai):",
+      "        space = samurai.feel()",
       "        if space is not None and space.is_ticking():",
-      "            warrior.rescue()",
+      "            samurai.rescue()",
       "        else:",
-      "            warrior.walk()",
+      "            samurai.walk()",
     ].join("\n");
 
     const player = compilePythonPlayer(source);

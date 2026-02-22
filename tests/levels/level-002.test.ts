@@ -27,7 +27,7 @@ describe("Beginner Level 2", () => {
     expect(result.failed).toBe(false);
   });
 
-  it("earns warrior score from killing sludge (12 HP)", () => {
+  it("earns samurai score from killing sludge (12 HP)", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
@@ -44,10 +44,10 @@ describe("Beginner Level 2", () => {
     level.setup(player, ["walk!", "feel", "attack!"]);
     const result = level.play();
 
-    expect(result.warriorScore).toBe(12); // Sludge maxHealth = 12
+    expect(result.samuraiScore).toBe(12); // Sludge maxHealth = 12
   });
 
-  it("warrior takes damage from sludge attacks", () => {
+  it("samurai takes damage from sludge attacks", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
@@ -64,11 +64,11 @@ describe("Beginner Level 2", () => {
     level.setup(player, ["walk!", "feel", "attack!"]);
     level.play();
 
-    // Warrior should have taken some damage from Sludge (attack=3)
-    expect(level.warrior.health).toBeLessThan(20);
+    // Samurai should have taken some damage from Sludge (attack=3)
+    expect(level.samurai.health).toBeLessThan(20);
   });
 
-  it("fails if warrior only walks (dies to sludge)", () => {
+  it("fails if samurai only walks (dies to sludge)", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         (turn as Turn).doAction("walk!", "forward");
@@ -80,7 +80,7 @@ describe("Beginner Level 2", () => {
     const result = level.play();
 
     // Walking into sludge means bumping, then getting attacked
-    // Eventually warrior dies
+    // Eventually samurai dies
     expect(result.failed).toBe(true);
   });
 });

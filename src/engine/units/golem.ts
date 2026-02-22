@@ -6,7 +6,7 @@ import { BaseUnit } from "./base";
 
 /**
  * Golem - player-controlled unit created by form! ability.
- * Gets half of warrior's HP and executes a player-defined callback.
+ * Gets half of samurai's HP and executes a player-defined callback.
  * Ported from RubyWarrior::Units::Golem
  */
 export class Golem extends BaseUnit {

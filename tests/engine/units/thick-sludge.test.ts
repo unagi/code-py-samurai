@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ThickSludge } from "@engine/units/thick-sludge";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
 
 describe("ThickSludge", () => {
@@ -13,9 +13,9 @@ describe("ThickSludge", () => {
     expect(ts.name).toBe("Thick Sludge");
   });
 
-  it("is not warrior or golem", () => {
+  it("is not samurai or golem", () => {
     const ts = new ThickSludge();
-    expect(ts.isWarrior()).toBe(false);
+    expect(ts.isSamurai()).toBe(false);
     expect(ts.isGolem()).toBe(false);
   });
 
@@ -28,12 +28,12 @@ describe("ThickSludge", () => {
   it("attacks player when adjacent", () => {
     const floor = new Floor(8, 1);
     floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    floor.add(warrior, 3, 0, "east");
+    const samurai = new Samurai();
+    floor.add(samurai, 3, 0, "east");
     const ts = new ThickSludge();
     floor.add(ts, 4, 0, "west");
     ts.prepareTurn();
     ts.performTurn();
-    expect(warrior.health).toBe(20 - 3);
+    expect(samurai.health).toBe(20 - 3);
   });
 });

@@ -1,4 +1,4 @@
-# Python API Reference (Player / Warrior / Space)
+# Python API Reference (Player / Samurai / Space)
 
 このドキュメントは、学習者向け Python API の仕様（ドキュメント先行）です。
 
@@ -15,7 +15,7 @@
 
 ```java
 /**
- * Warrior API で使用する相対方向。
+ * Samurai API で使用する相対方向。
  * @values FORWARD | RIGHT | BACKWARD | LEFT
  */
 ```
@@ -43,22 +43,22 @@
 ```java
 /**
  * User-defined class executed by the game each turn.
- * 実装必須メソッドは play_turn(warrior) のみ。
+ * 実装必須メソッドは play_turn(samurai) のみ。
  */
 ```
 
-### `play_turn(self, warrior) -> None`
+### `play_turn(self, samurai) -> None`
 
 ```java
 /**
  * 1ターン分の行動を決定する。
- * @param warrior Warrior 現在ターンの操作対象。
+ * @param samurai Samurai 現在ターンの操作対象。
  * @return None
  * @remarks 行動メソッド（walk/attack/rest...）はこのメソッド内で 1 回だけ実行できる。
  */
 ```
 
-## Class: `Warrior`
+## Class: `Samurai`
 
 ```java
 /**

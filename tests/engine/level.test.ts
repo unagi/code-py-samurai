@@ -20,7 +20,7 @@ describe("Level setup", () => {
     const level = new Level(definition);
     // Should not throw even though unit type is unrecognised
     level.setup(walkingPlayer, ["walk!"]);
-    // Only the warrior should be on the floor
+    // Only the samurai should be on the floor
     expect(level.floor.units.length).toBe(1);
   });
 });

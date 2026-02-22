@@ -1,6 +1,6 @@
 #!/bin/bash
 # Phase 1 extraction runner with CUDA DLL paths
-# Usage: bash tools/pipeline/run_phase1.sh [warrior-01|warrior-02|...|tiles-01|all]
+# Usage: bash tools/pipeline/run_phase1.sh [samurai-01|samurai-02|...|tiles-01|all]
 
 cd "$(dirname "$0")/.."
 

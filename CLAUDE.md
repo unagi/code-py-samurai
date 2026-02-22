@@ -28,7 +28,7 @@ Skulptで内部的にJSに変換してブラウザ上で動作。サーバーサ
 src/
 ├── engine/          # ゲームエンジン (pure TS, フレームワーク非依存)
 │   ├── abilities/   # walk, attack, feel, look, shoot, rescue, bind, etc. (18種)
-│   ├── units/       # warrior, sludge, thick-sludge, archer, wizard, captive, golem
+│   ├── units/       # samurai, sludge, thick-sludge, archer, wizard, captive, golem
 │   ├── tower.ts     # Tower - レベル群の管理
 │   ├── profile.ts   # Profile - プレイヤー進行状態 (保存/読込対応)
 │   ├── game.ts      # Game - ゲームフロー (Normal/Epic Mode)
@@ -48,7 +48,7 @@ src/
 - ゲームエンジン (`src/engine/`) はReactに依存しない純粋TSで実装
 - ファイル名: kebab-case (`thick-sludge.ts`)
 - Rubyの `!` メソッド → アクション (1ターン1回), `?` メソッド → `is_` prefix
-- Python API: snake_case (`warrior.walk()`, `space.is_empty()`)
+- Python API: snake_case (`samurai.walk()`, `space.is_empty()`)
 - レベルデータ: TypeScriptオブジェクトで定義
 
 ## Phase Roadmap

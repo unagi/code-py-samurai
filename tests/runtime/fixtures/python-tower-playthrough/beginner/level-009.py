@@ -1,20 +1,20 @@
 class Player:
-    def play_turn(self, warrior):
-        fwd = warrior.feel()
+    def play_turn(self, samurai):
+        fwd = samurai.feel()
         if not self.pivoted:
-            warrior.pivot('backward')
+            samurai.pivot('backward')
             self.pivoted = True
             return
-        for space in warrior.look():
+        for space in samurai.look():
             if space is None:
                 continue
             if space.is_enemy():
-                warrior.shoot()
+                samurai.shoot()
                 return
             break
         if fwd is not None and fwd.is_captive():
-            warrior.rescue()
+            samurai.rescue()
         elif fwd is not None and fwd.is_enemy():
-            warrior.attack()
+            samurai.attack()
         else:
-            warrior.walk()
+            samurai.walk()

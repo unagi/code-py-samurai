@@ -12,11 +12,11 @@
     "x": 0,
     "y": 0
   },
-  "warrior": {
+  "samurai": {
     "x": 5,
     "y": 0,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

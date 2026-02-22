@@ -1,22 +1,22 @@
 import { describe, it, expect } from "vitest";
 import { Explode } from "@engine/abilities/explode";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
 function setup() {
   const floor = new Floor(8, 1);
   floor.placeStairs(7, 0);
-  const warrior = new Warrior();
-  warrior.addAbilities("walk!", "feel", "attack!");
-  floor.add(warrior, 0, 0, "east");
-  return { floor, warrior };
+  const samurai = new Samurai();
+  samurai.addAbilities("walk!", "feel", "attack!");
+  floor.add(samurai, 0, 0, "east");
+  return { floor, samurai };
 }
 
 describe("Explode", () => {
   it("deals 100 damage to all units on floor when performed", () => {
-    const { floor, warrior } = setup();
+    const { floor, samurai } = setup();
     const captive = new Captive();
     captive.addAbilities("explode!");
     floor.add(captive, 3, 0, "west");
@@ -27,8 +27,8 @@ describe("Explode", () => {
     explode.perform();
 
     // all units should be dead (100 damage is lethal)
-    expect(warrior.health).toBeLessThanOrEqual(0);
-    expect(warrior.position).toBeNull();
+    expect(samurai.health).toBeLessThanOrEqual(0);
+    expect(samurai.position).toBeNull();
     expect(sludge.position).toBeNull();
     expect(captive.position).toBeNull();
   });
@@ -46,7 +46,7 @@ describe("Explode", () => {
   });
 
   it("auto-triggers at time 0", () => {
-    const { floor, warrior } = setup();
+    const { floor, samurai } = setup();
     const captive = new Captive();
     captive.addAbilities("explode!");
     floor.add(captive, 3, 0, "west");
@@ -54,11 +54,11 @@ describe("Explode", () => {
     explode.time = 1;
 
     explode.passTurn(); // time goes 1→0, triggers explosion
-    expect(warrior.position).toBeNull(); // killed by explosion
+    expect(samurai.position).toBeNull(); // killed by explosion
   });
 
   it("does nothing when time is null", () => {
-    const { floor, warrior } = setup();
+    const { floor, samurai } = setup();
     const captive = new Captive();
     captive.addAbilities("explode!");
     floor.add(captive, 3, 0, "west");
@@ -66,7 +66,7 @@ describe("Explode", () => {
     explode.time = null;
 
     explode.passTurn();
-    expect(warrior.health).toBe(20); // no damage
+    expect(samurai.health).toBe(20); // no damage
   });
 
   it("does not tick when unit is dead (position null)", () => {

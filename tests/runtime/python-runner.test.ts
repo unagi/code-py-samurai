@@ -24,7 +24,7 @@ class FakeTurn {
 
 describe("runPythonPlayerSource", () => {
   it("compiles source and returns executable player", () => {
-    const source = `class Player:\n    def play_turn(self, warrior):\n        warrior.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        samurai.walk()`;
 
     const { player } = runPythonPlayerSource(source);
     const turn = new FakeTurn();

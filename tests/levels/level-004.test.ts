@@ -33,7 +33,7 @@ describe("Beginner Level 4", () => {
     expect(result.failed).toBe(false);
   });
 
-  it("fails if warrior only walks", () => {
+  it("fails if samurai only walks", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         (turn as Turn).doAction("walk!", "forward");

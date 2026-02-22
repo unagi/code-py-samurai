@@ -1,20 +1,20 @@
 class Player:
-    def play_turn(self, warrior):
-        health = warrior.hp
-        spaces = warrior.look()
-        fwd = warrior.feel()
-        units = warrior.listen()
+    def play_turn(self, samurai):
+        health = samurai.hp
+        spaces = samurai.look()
+        fwd = samurai.feel()
+        units = samurai.listen()
         if len(spaces) >= 2:
             a = spaces[0]
             b = spaces[1]
             if a is not None and b is not None and a.is_enemy() and b.is_enemy():
-                warrior.detonate()
+                samurai.detonate()
                 return
         if fwd is not None and fwd.is_enemy():
-            warrior.attack()
+            samurai.attack()
             return
         if fwd is not None and fwd.is_captive():
-            warrior.rescue()
+            samurai.rescue()
             return
         has_ticking = False
         for unit in units:
@@ -22,6 +22,6 @@ class Player:
                 has_ticking = True
                 break
         if (not has_ticking) and health < 10:
-            warrior.rest()
+            samurai.rest()
             return
-        warrior.walk()
+        samurai.walk()

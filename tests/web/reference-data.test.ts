@@ -38,7 +38,7 @@ describe("python api reference data", () => {
         "terrain-enum",
         "unitkind-enum",
         "player-class",
-        "warrior-class",
+        "samurai-class",
         "space-class",
         "occupant-class",
       ]),
@@ -49,12 +49,12 @@ describe("python api reference data", () => {
     );
     expect(allItemIds).toEqual(
       expect.arrayContaining([
-        "warrior-walk",
-        "warrior-attack",
-        "warrior-rest",
-        "warrior-feel",
-        "warrior-look",
-        "warrior-listen",
+        "samurai-walk",
+        "samurai-attack",
+        "samurai-rest",
+        "samurai-feel",
+        "samurai-look",
+        "samurai-listen",
         "space-unit",
         "occupant-kind",
       ]),

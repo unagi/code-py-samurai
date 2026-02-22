@@ -1,18 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { Listen } from "@engine/abilities/listen";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 import { Captive } from "@engine/units/captive";
 
 function setup() {
   const floor = new Floor(6, 4);
   floor.placeStairs(5, 3);
-  const warrior = new Warrior();
-  warrior.addAbilities("listen");
-  floor.add(warrior, 0, 0, "east");
-  const ability = warrior.abilities.get("listen") as Listen;
-  return { floor, warrior, ability };
+  const samurai = new Samurai();
+  samurai.addAbilities("listen");
+  floor.add(samurai, 0, 0, "east");
+  const ability = samurai.abilities.get("listen") as Listen;
+  return { floor, samurai, ability };
 }
 
 describe("Listen", () => {

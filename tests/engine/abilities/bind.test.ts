@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { Bind } from "@engine/abilities/bind";
 import { Floor } from "@engine/floor";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
 
 function setup() {
   const floor = new Floor(8, 1);
   floor.placeStairs(7, 0);
-  const warrior = new Warrior();
-  warrior.addAbilities("bind!");
-  floor.add(warrior, 0, 0, "east");
-  const ability = warrior.abilities.get("bind!") as Bind;
-  return { floor, warrior, ability };
+  const samurai = new Samurai();
+  samurai.addAbilities("bind!");
+  floor.add(samurai, 0, 0, "east");
+  const ability = samurai.abilities.get("bind!") as Bind;
+  return { floor, samurai, ability };
 }
 
 describe("Bind", () => {
@@ -38,9 +38,9 @@ describe("Bind", () => {
     // prepareTurn records action, performTurn should skip due to bound
     sludge.prepareTurn();
     sludge.performTurn();
-    // warrior should not take damage
-    const warrior = floor.units.find((u) => u.isWarrior())!;
-    expect(warrior.health).toBe(20);
+    // samurai should not take damage
+    const samurai = floor.units.find((u) => u.isSamurai())!;
+    expect(samurai.health).toBe(20);
   });
 
   it("throws on invalid direction", () => {

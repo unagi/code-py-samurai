@@ -27,7 +27,7 @@ export function createUnit(
   return new Ctor(logger);
 }
 
-export { Warrior } from "./warrior";
+export { Samurai } from "./samurai";
 export { Sludge } from "./sludge";
 export { ThickSludge } from "./thick-sludge";
 export { Archer } from "./archer";

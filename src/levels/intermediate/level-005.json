@@ -1,6 +1,6 @@
 {
   "description": "You can feel the stairs right next to you, but are you sure you want to go up them right away?",
-  "tip": "You'll get more points for clearing the level first. Don't rush to stairs. Prioritize nearby units first, then head toward stairs with warrior.direction_of_stairs().",
+  "tip": "You'll get more points for clearing the level first. Don't rush to stairs. Prioritize nearby units first, then head toward stairs with samurai.direction_of_stairs().",
   "clue": "If going towards a unit is the same direction as the stairs, try moving another empty direction until you can safely move toward the enemies.",
   "timeBonus": 45,
   "aceScore": 107,
@@ -12,11 +12,11 @@
     "x": 1,
     "y": 1
   },
-  "warrior": {
+  "samurai": {
     "x": 0,
     "y": 1,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": [
     {

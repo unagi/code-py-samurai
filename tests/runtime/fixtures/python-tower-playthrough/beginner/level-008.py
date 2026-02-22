@@ -1,14 +1,14 @@
 class Player:
-    def play_turn(self, warrior):
-        fwd = warrior.feel()
+    def play_turn(self, samurai):
+        fwd = samurai.feel()
         if fwd is not None and fwd.is_captive():
-            warrior.rescue()
+            samurai.rescue()
             return
-        for space in warrior.look():
+        for space in samurai.look():
             if space is None:
                 continue
             if space.is_enemy():
-                warrior.shoot()
+                samurai.shoot()
                 return
             break
-        warrior.walk()
+        samurai.walk()

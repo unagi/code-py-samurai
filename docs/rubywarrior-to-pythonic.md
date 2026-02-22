@@ -4,7 +4,7 @@
 
 関連:
 
-- `docs/python-api-reference.md`（`Player` / `Warrior` / `Space` の参照）
+- `docs/python-api-reference.md`（`Player` / `Samurai` / `Space` の参照）
 
 ## 方針
 
@@ -35,10 +35,10 @@
 
 - 旧（RubyWarrior 的）:
   - 方向は文字列表現（Ruby 側ではシンボル相当）を直接渡して扱う
-  - 例: `warrior.walk(:left)` / `warrior.feel(:forward)`
+  - 例: `samurai.walk(:left)` / `samurai.feel(:forward)`
 - 現在（Pythonic 仕様）:
   - `Direction` を使って方向を表す
-  - 例: `warrior.walk(Direction.LEFT)` / `warrior.feel(Direction.FORWARD)`
+  - 例: `samurai.walk(Direction.LEFT)` / `samurai.feel(Direction.FORWARD)`
 
 狙い:
 
@@ -75,17 +75,17 @@
 推奨例:
 
 ```python
-space = warrior.feel(Direction.FORWARD)
+space = samurai.feel(Direction.FORWARD)
 if space.unit is None:
-    warrior.walk(Direction.FORWARD)
+    samurai.walk(Direction.FORWARD)
 elif space.unit.kind == UnitKind.ENEMY:
-    warrior.attack(Direction.FORWARD)
+    samurai.attack(Direction.FORWARD)
 ```
 
 ### 4. 命名
 
 - Python 側は `snake_case` を使用
-  - 例: `warrior.direction_of_stairs()`
+  - 例: `samurai.direction_of_stairs()`
 - 型・列挙は Python らしい `PascalCase` / `UPPER_CASE` を使用
   - 例: `Direction.LEFT`, `Terrain.STAIRS`, `UnitKind.CAPTIVE`
 - エンジン内部の camelCase はランタイム層で吸収する
@@ -96,7 +96,7 @@ elif space.unit.kind == UnitKind.ENEMY:
 - `Space` の説明は `terrain` と `unit` を中心に行う
 - `is_empty()` / `is_enemy()` など判定メソッド前提の説明は追加しない
 - 条件分岐は次の順を推奨する
-  1. `space = warrior.feel(Direction.FORWARD)`
+  1. `space = samurai.feel(Direction.FORWARD)`
   2. `if space.unit is None:`
   3. `elif space.unit.kind == UnitKind.ENEMY:` のように対象別に分岐
 

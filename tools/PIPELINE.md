@@ -25,13 +25,13 @@ Gemini 生成画像は `Gemini_Generated_Image_<hash>.png` で納品される。
 
 ### 手順
 1. LLM に画像を見せる
-2. 内容に基づいてリネーム: `warrior-01.png`, `tiles-01.png` 等
+2. 内容に基づいてリネーム: `samurai-01.png`, `tiles-01.png` 等
 3. `*-meta.json` を作成（グリッド構造・行ごとのアニメーション名を定義）
 
 ### meta.json の例
 ```json
 {
-  "source": "warrior-01.png",
+  "source": "samurai-01.png",
   "grid": { "rows": 4, "cols": 4 },
   "rows": [
     { "name": "idle-north", "frames": 4 },
@@ -48,7 +48,7 @@ Gemini 生成画像は `Gemini_Generated_Image_<hash>.png` で納品される。
 
 ```bash
 # tools/ ディレクトリから実行
-bash pipeline/run_phase1.sh warrior-01   # 単体
+bash pipeline/run_phase1.sh samurai-01   # 単体
 bash pipeline/run_phase1.sh all          # 全部
 ```
 

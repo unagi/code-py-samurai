@@ -54,7 +54,7 @@ describe("Beginner Level 6", () => {
     expect(result.passed).toBe(true);
   });
 
-  it("fails if warrior only walks forward", () => {
+  it("fails if samurai only walks forward", () => {
     const player: IPlayer = {
       playTurn(turn: ITurn) {
         (turn as Turn).doAction("walk!", "forward");

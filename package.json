@@ -1,7 +1,7 @@
 {
   "name": "py-samurai",
   "version": "0.1.0",
-  "description": "Python programming learning game - Samurai Cat Warrior",
+  "description": "Python programming learning game - Python侍 (Py SAMURAI)",
   "type": "module",
   "scripts": {
     "dev": "vite",

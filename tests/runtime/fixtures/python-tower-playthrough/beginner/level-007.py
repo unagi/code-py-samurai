@@ -1,16 +1,16 @@
 class Player:
-    def play_turn(self, warrior):
-        health = warrior.hp
-        fwd = warrior.feel()
+    def play_turn(self, samurai):
+        health = samurai.hp
+        fwd = samurai.feel()
         if fwd is not None and fwd.is_wall() and not self.pivoted:
-            warrior.pivot('backward')
+            samurai.pivot('backward')
             self.pivoted = True
         elif fwd is not None and fwd.is_enemy():
-            warrior.attack()
+            samurai.attack()
         elif health < 20 and self.last_health is not None and health >= self.last_health:
-            warrior.rest()
+            samurai.rest()
         elif health <= 10 and self.last_health is not None and health < self.last_health and fwd is None:
-            warrior.walk('backward')
+            samurai.walk('backward')
         else:
-            warrior.walk()
+            samurai.walk()
         self.last_health = health

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Wizard } from "@engine/units/wizard";
-import { Warrior } from "@engine/units/warrior";
+import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
 
 describe("Wizard", () => {
@@ -22,13 +22,13 @@ describe("Wizard", () => {
   it("shoots player at range with high damage", () => {
     const floor = new Floor(8, 1);
     floor.placeStairs(7, 0);
-    const warrior = new Warrior();
-    floor.add(warrior, 0, 0, "east");
+    const samurai = new Samurai();
+    floor.add(samurai, 0, 0, "east");
     const wizard = new Wizard();
     floor.add(wizard, 3, 0, "west");
     wizard.prepareTurn();
     wizard.performTurn();
-    expect(warrior.health).toBe(20 - 11);
+    expect(samurai.health).toBe(20 - 11);
   });
 
   it("dies easily (low health)", () => {

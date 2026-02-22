@@ -12,8 +12,8 @@ SPRITE_SPEC constraints:
 - Game engine reads 80px frames, renders center 48px
 
 Normalization strategy:
-- warrior-01/02/03 (4-row source): scale factor based on standing height
-- warrior-04 (2-row source): half the scale factor (2x larger source pixels)
+- samurai-01/02/03 (4-row source): scale factor based on standing height
+- samurai-04 (2-row source): half the scale factor (2x larger source pixels)
 - Anchor: bottom-center of character aligned to consistent canvas position
 - Cross-action consistency: same scale for same source resolution
 """
@@ -57,11 +57,11 @@ class SourceConfig:
     source_rows: int  # 4 or 2 (affects scale factor)
 
 
-WARRIOR_SOURCES = [
-    SourceConfig("warrior-01", "idle", ["north", "east", "south", "west"], 4, 4),
-    SourceConfig("warrior-02", "walk", ["north", "east", "south", "west"], 6, 4),
-    SourceConfig("warrior-03", "attack", ["north", "east", "south", "west"], 6, 4),
-    SourceConfig("warrior-04", "rest", ["left", "right"], 4, 2),
+SAMURAI_SOURCES = [
+    SourceConfig("samurai-01", "idle", ["north", "east", "south", "west"], 4, 4),
+    SourceConfig("samurai-02", "walk", ["north", "east", "south", "west"], 6, 4),
+    SourceConfig("samurai-03", "attack", ["north", "east", "south", "west"], 6, 4),
+    SourceConfig("samurai-04", "rest", ["left", "right"], 4, 2),
 ]
 
 
@@ -86,7 +86,7 @@ def determine_scale_factors(
     """
     max_heights: dict[int, list[int]] = {4: [], 2: []}
 
-    for cfg in WARRIOR_SOURCES:
+    for cfg in SAMURAI_SOURCES:
         src_dir = extracted_dir / cfg.source_dir
         if not src_dir.exists():
             continue
@@ -105,7 +105,7 @@ def determine_scale_factors(
     target_h = EFFECTIVE_SIZE - 4  # 44px, leaving 2px top + 2px bottom margin
 
     scales: dict[str, float] = {}
-    for cfg in WARRIOR_SOURCES:
+    for cfg in SAMURAI_SOURCES:
         heights = max_heights.get(cfg.source_rows, [])
         if not heights:
             continue
@@ -241,10 +241,10 @@ def main() -> None:
     scales = determine_scale_factors(extracted_dir)
     print()
 
-    # Step 2: Process warrior frames
-    # For corrected sources (warrior-01/idle), prefer _corrected over _extracted
-    print("[2/3] Processing warrior frames...")
-    for cfg in WARRIOR_SOURCES:
+    # Step 2: Process samurai frames
+    # For corrected sources (samurai-01/idle), prefer _corrected over _extracted
+    print("[2/3] Processing samurai frames...")
+    for cfg in SAMURAI_SOURCES:
         scale = scales.get(cfg.source_dir)
         if scale is None:
             print(f"  SKIP {cfg.source_dir}: no scale factor")

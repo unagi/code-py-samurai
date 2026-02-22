@@ -36,7 +36,7 @@ function asStringArray(value: unknown, path: string): string[] {
   return value;
 }
 
-function asWarriorAbilities(value: unknown, path: string): { skills: string[]; stats: string[] } {
+function asSamuraiAbilities(value: unknown, path: string): { skills: string[]; stats: string[] } {
   if (!isRecord(value)) {
     throw new TypeError(`${path} must be an object`);
   }
@@ -74,8 +74,8 @@ export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
   })();
   const stairs = asPoint(value.stairs, "stairs");
 
-  const warriorRaw = isRecord(value.warrior) ? value.warrior : (() => {
-    throw new TypeError("warrior must be an object");
+  const samuraiRaw = isRecord(value.samurai) ? value.samurai : (() => {
+    throw new TypeError("samurai must be an object");
   })();
 
   const unitsRaw = value.units;
@@ -94,15 +94,15 @@ export function parseLevelDefinitionJson(value: unknown): LevelDefinition {
       height: asInt(floor.height, "floor.height"),
     },
     stairs,
-    warrior: {
-      unitId: asString(warriorRaw.unitId, "warrior.unitId"),
-      x: asInt(warriorRaw.x, "warrior.x"),
-      y: asInt(warriorRaw.y, "warrior.y"),
-      direction: asDirection(warriorRaw.direction, "warrior.direction"),
+    samurai: {
+      unitId: asString(samuraiRaw.unitId, "samurai.unitId"),
+      x: asInt(samuraiRaw.x, "samurai.x"),
+      y: asInt(samuraiRaw.y, "samurai.y"),
+      direction: asDirection(samuraiRaw.direction, "samurai.direction"),
       abilities:
-        warriorRaw.abilities === undefined
+        samuraiRaw.abilities === undefined
           ? undefined
-          : asWarriorAbilities(warriorRaw.abilities, "warrior.abilities"),
+          : asSamuraiAbilities(samuraiRaw.abilities, "samurai.abilities"),
     },
     units: unitsRaw.map((unit, index) => {
       if (!isRecord(unit)) {

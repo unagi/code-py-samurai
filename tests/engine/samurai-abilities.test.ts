@@ -2,35 +2,35 @@ import { describe, expect, it } from "vitest";
 
 import {
   getGlobalLevelFromTowerLevel,
-  getMaxWarriorLevel,
+  getMaxSamuraiLevel,
   getTowerAndLocalFromGlobal,
-  getWarriorAbilitiesAtGlobalLevel,
-  getWarriorAbilityIncrementAtGlobalLevel,
-  getWarriorRank,
-  warriorAbilitiesToEngineAbilities,
-} from "@engine/warrior-abilities";
+  getSamuraiAbilitiesAtGlobalLevel,
+  getSamuraiAbilityIncrementAtGlobalLevel,
+  getSamuraiRank,
+  samuraiAbilitiesToEngineAbilities,
+} from "@engine/samurai-abilities";
 
-describe("warrior-abilities", () => {
-  it("getMaxWarriorLevel returns expected max", () => {
-    const max = getMaxWarriorLevel();
+describe("samurai-abilities", () => {
+  it("getMaxSamuraiLevel returns expected max", () => {
+    const max = getMaxSamuraiLevel();
     expect(max).toBeGreaterThanOrEqual(18);
   });
 
-  it("getWarriorAbilityIncrementAtGlobalLevel returns empty for unregistered level", () => {
-    const result = getWarriorAbilityIncrementAtGlobalLevel(999);
+  it("getSamuraiAbilityIncrementAtGlobalLevel returns empty for unregistered level", () => {
+    const result = getSamuraiAbilityIncrementAtGlobalLevel(999);
     expect(result.skills).toEqual([]);
     expect(result.stats).toEqual([]);
   });
 
-  it("getWarriorAbilitiesAtGlobalLevel accumulates abilities", () => {
-    const result = getWarriorAbilitiesAtGlobalLevel(3);
+  it("getSamuraiAbilitiesAtGlobalLevel accumulates abilities", () => {
+    const result = getSamuraiAbilitiesAtGlobalLevel(3);
     expect(result.skills).toContain("walk()");
     expect(result.skills).toContain("rest()");
     expect(result.stats).toContain("hp");
   });
 
-  it("warriorAbilitiesToEngineAbilities maps skills to engine names", () => {
-    const result = warriorAbilitiesToEngineAbilities({
+  it("samuraiAbilitiesToEngineAbilities maps skills to engine names", () => {
+    const result = samuraiAbilitiesToEngineAbilities({
       skills: ["walk()", "attack()"],
       stats: ["hp"],
     });
@@ -60,35 +60,35 @@ describe("warrior-abilities", () => {
     });
   });
 
-  describe("getWarriorRank", () => {
+  describe("getSamuraiRank", () => {
     it("returns novice for levels 1-4", () => {
-      expect(getWarriorRank(1).key).toBe("ranks.novice");
-      expect(getWarriorRank(4).key).toBe("ranks.novice");
+      expect(getSamuraiRank(1).key).toBe("ranks.novice");
+      expect(getSamuraiRank(4).key).toBe("ranks.novice");
     });
 
     it("returns apprentice for levels 5-9", () => {
-      expect(getWarriorRank(5).key).toBe("ranks.apprentice");
-      expect(getWarriorRank(9).key).toBe("ranks.apprentice");
+      expect(getSamuraiRank(5).key).toBe("ranks.apprentice");
+      expect(getSamuraiRank(9).key).toBe("ranks.apprentice");
     });
 
     it("returns journeyman for levels 10-13", () => {
-      expect(getWarriorRank(10).key).toBe("ranks.journeyman");
-      expect(getWarriorRank(13).key).toBe("ranks.journeyman");
+      expect(getSamuraiRank(10).key).toBe("ranks.journeyman");
+      expect(getSamuraiRank(13).key).toBe("ranks.journeyman");
     });
 
     it("returns veteran for levels 14-16", () => {
-      expect(getWarriorRank(14).key).toBe("ranks.veteran");
-      expect(getWarriorRank(16).key).toBe("ranks.veteran");
+      expect(getSamuraiRank(14).key).toBe("ranks.veteran");
+      expect(getSamuraiRank(16).key).toBe("ranks.veteran");
     });
 
     it("returns master for levels 17-18", () => {
-      expect(getWarriorRank(17).key).toBe("ranks.master");
-      expect(getWarriorRank(18).key).toBe("ranks.master");
+      expect(getSamuraiRank(17).key).toBe("ranks.master");
+      expect(getSamuraiRank(18).key).toBe("ranks.master");
     });
 
     it("clamps below 1 to novice", () => {
-      expect(getWarriorRank(0).key).toBe("ranks.novice");
-      expect(getWarriorRank(-5).key).toBe("ranks.novice");
+      expect(getSamuraiRank(0).key).toBe("ranks.novice");
+      expect(getSamuraiRank(-5).key).toBe("ranks.novice");
     });
   });
 });

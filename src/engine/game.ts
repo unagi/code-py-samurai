@@ -3,10 +3,10 @@ import { Profile } from "./profile";
 import { Tower } from "./tower";
 import type { ILogger, IPlayer } from "./types";
 import {
-  getWarriorAbilitiesAtLevel,
-  getWarriorAbilityIncrement,
-  warriorAbilitiesToEngineAbilities,
-} from "./warrior-abilities";
+  getSamuraiAbilitiesAtLevel,
+  getSamuraiAbilityIncrement,
+  samuraiAbilitiesToEngineAbilities,
+} from "./samurai-abilities";
 
 export interface GameResult {
   passed: boolean;
@@ -41,16 +41,16 @@ export class Game {
     }
 
     const level = new Level(levelDef, this._logger);
-    const baselineAbilities = warriorAbilitiesToEngineAbilities(
-      getWarriorAbilitiesAtLevel(this.tower.name, this.profile.levelNumber),
+    const baselineAbilities = samuraiAbilitiesToEngineAbilities(
+      getSamuraiAbilitiesAtLevel(this.tower.name, this.profile.levelNumber),
     );
     level.setup(player, [...new Set([...baselineAbilities, ...this.profile.abilities])]);
     const result = level.play(maxTurns);
 
     if (result.passed) {
       this.profile.score += result.totalScore;
-      const increment = getWarriorAbilityIncrement(this.tower.name, this.profile.levelNumber);
-      const unlockedFromProgression = warriorAbilitiesToEngineAbilities(increment);
+      const increment = getSamuraiAbilityIncrement(this.tower.name, this.profile.levelNumber);
+      const unlockedFromProgression = samuraiAbilitiesToEngineAbilities(increment);
       this.profile.addAbilities(...new Set(unlockedFromProgression));
     }
 
@@ -112,8 +112,8 @@ export class Game {
   }
 
   private getAccumulatedAbilities(upToLevel: number): string[] {
-    return warriorAbilitiesToEngineAbilities(
-      getWarriorAbilitiesAtLevel(this.tower.name, upToLevel),
+    return samuraiAbilitiesToEngineAbilities(
+      getSamuraiAbilitiesAtLevel(this.tower.name, upToLevel),
     );
   }
 }

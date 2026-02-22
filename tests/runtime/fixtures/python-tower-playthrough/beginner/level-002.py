@@ -1,7 +1,7 @@
 class Player:
-    def play_turn(self, warrior):
-        space = warrior.feel()
+    def play_turn(self, samurai):
+        space = samurai.feel()
         if space is None:
-            warrior.walk()
+            samurai.walk()
         else:
-            warrior.attack()
+            samurai.attack()

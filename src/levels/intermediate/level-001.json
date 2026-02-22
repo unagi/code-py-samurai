@@ -1,6 +1,6 @@
 {
   "description": "Silence. The room feels large, but empty. Luckily you have a map of this tower to help find the stairs.",
-  "tip": "Use warrior.direction_of_stairs() to determine where the stairs are. Pass that value to warrior.walk() to move in that direction.",
+  "tip": "Use samurai.direction_of_stairs() to determine where the stairs are. Pass that value to samurai.walk() to move in that direction.",
   "timeBonus": 20,
   "aceScore": 19,
   "floor": {
@@ -11,11 +11,11 @@
     "x": 2,
     "y": 3
   },
-  "warrior": {
+  "samurai": {
     "x": 0,
     "y": 1,
     "direction": "east",
-    "unitId": "warrior"
+    "unitId": "samurai"
   },
   "units": []
 }

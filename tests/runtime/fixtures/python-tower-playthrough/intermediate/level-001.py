@@ -1,3 +1,3 @@
 class Player:
-    def play_turn(self, warrior):
-        warrior.walk(warrior.direction_of_stairs())
+    def play_turn(self, samurai):
+        samurai.walk(samurai.direction_of_stairs())

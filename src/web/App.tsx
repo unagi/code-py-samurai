@@ -10,21 +10,21 @@ import { tags } from "@lezer/highlight";
 
 import { Level, type LevelResult } from "../engine/level";
 import type { LogEntry } from "../engine/log-entry";
-import type { ILogger, IPlayer, LevelDefinition, WarriorAbilitySet } from "../engine/types";
+import type { ILogger, IPlayer, LevelDefinition, SamuraiAbilitySet } from "../engine/types";
 import {
   getGlobalLevelFromTowerLevel,
-  getMaxWarriorLevel,
+  getMaxSamuraiLevel,
   getTowerAndLocalFromGlobal,
-  getWarriorAbilitiesAtGlobalLevel,
-  getWarriorRank,
-  warriorAbilitiesToEngineAbilities,
-} from "../engine/warrior-abilities";
+  getSamuraiAbilitiesAtGlobalLevel,
+  getSamuraiRank,
+  samuraiAbilitiesToEngineAbilities,
+} from "../engine/samurai-abilities";
 import { formatPythonError } from "../runtime/errors";
 import { runPythonPlayerSource } from "../runtime/python-runner";
 import { towers } from "../levels";
 
 function buildStarterPlayerCode(comment: string): string {
-  return `class Player:\n    def play_turn(self, warrior):\n        ${comment}\n        pass`;
+  return `class Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
 }
 
 interface TileMeta {
@@ -42,8 +42,8 @@ const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
   "|": { kind: "wall-v", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall-top.png" },
   ">": { kind: "stairs", altKey: "tiles.stairs", assetPath: "/assets/tiles/cave-stairs.png" },
   "@": {
-    kind: "warrior",
-    altKey: "tiles.warrior",
+    kind: "samurai",
+    altKey: "tiles.samurai",
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
   s: { kind: "sludge", altKey: "tiles.sludge", emoji: "\u{1F9DF}" },         // 🧟
@@ -78,14 +78,14 @@ interface DamagePopup {
 
 const BOARD_TILE_GAP_PX = 2;
 const UI_MAX_TURNS = 1000;
-const WARRIOR_IDLE_FRAME_COUNT = 16;
-const WARRIOR_IDLE_FRAME_MS = 140;
+const SAMURAI_IDLE_FRAME_COUNT = 16;
+const SAMURAI_IDLE_FRAME_MS = 140;
 const DAMAGE_POPUP_MS = 820;
 const STORAGE_KEY_PROGRESS = "py-samurai:progress";
 const STORAGE_KEY_PLAYER_CODE = "py-samurai:player-code";
 
 const UNIT_ID_PREFIX_TO_KIND: Record<string, string> = {
-  warrior: "warrior",
+  samurai: "samurai",
   golem: "golem",
   sludge: "sludge",
   thicksludge: "thick-sludge",
@@ -95,7 +95,7 @@ const UNIT_ID_PREFIX_TO_KIND: Record<string, string> = {
 };
 
 const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }> = {
-  warrior: { hp: 20, atk: 5 },
+  samurai: { hp: 20, atk: 5 },
   golem: { hp: null, atk: 3 },
   sludge: { hp: 12, atk: 3 },
   "thick-sludge": { hp: 24, atk: 3 },
@@ -110,8 +110,8 @@ interface ProgressStorageData {
   // legacy fields
   towerName?: string;
   levelNumber?: number;
-  warriorLevel?: number;
-  warriorLevelByTower?: Record<string, number>;
+  samuraiLevel?: number;
+  samuraiLevelByTower?: Record<string, number>;
 }
 
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
@@ -130,15 +130,15 @@ function readProgressStorage(): ProgressStorageData {
   }
 }
 
-function buildWarriorLevel(data: ProgressStorageData): number {
-  const maxLv = getMaxWarriorLevel();
-  if (typeof data.warriorLevel === "number") {
-    return Math.min(Math.max(1, Math.floor(data.warriorLevel)), maxLv);
+function buildSamuraiLevel(data: ProgressStorageData): number {
+  const maxLv = getMaxSamuraiLevel();
+  if (typeof data.samuraiLevel === "number") {
+    return Math.min(Math.max(1, Math.floor(data.samuraiLevel)), maxLv);
   }
 
   let migrated = 1;
-  if (data.warriorLevelByTower && typeof data.warriorLevelByTower === "object") {
-    for (const [towerName, local] of Object.entries(data.warriorLevelByTower)) {
+  if (data.samuraiLevelByTower && typeof data.samuraiLevelByTower === "object") {
+    for (const [towerName, local] of Object.entries(data.samuraiLevelByTower)) {
       if (typeof local !== "number") continue;
       migrated = Math.max(migrated, getGlobalLevelFromTowerLevel(towerName, Math.floor(local)));
     }
@@ -157,8 +157,8 @@ function migrateToGlobalLevel(data: ProgressStorageData): number {
   return 1;
 }
 
-function getWarriorIdleFramePath(frameIndex: number): string {
-  const frame = String((frameIndex % WARRIOR_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
+function getSamuraiIdleFramePath(frameIndex: number): string {
+  const frame = String((frameIndex % SAMURAI_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
   return `/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`;
 }
 
@@ -307,7 +307,7 @@ function buildTileIndexResolver(
   const indicesByKind = new Map<string, number[]>();
   const useCountByKind = new Map<string, number>();
   const tiles = grid.tiles;
-  const warriorIndex = tiles.findIndex((tile) => tile.kind === "warrior");
+  const samuraiIndex = tiles.findIndex((tile) => tile.kind === "samurai");
   const cols = Math.max(grid.columns, 1);
 
   for (let i = 0; i < tiles.length; i++) {
@@ -320,12 +320,12 @@ function buildTileIndexResolver(
     }
   }
 
-  const distanceToWarrior = (index: number): number => {
-    if (warriorIndex < 0) return 0;
+  const distanceToSamurai = (index: number): number => {
+    if (samuraiIndex < 0) return 0;
     const x1 = index % cols;
     const y1 = Math.floor(index / cols);
-    const x2 = warriorIndex % cols;
-    const y2 = Math.floor(warriorIndex / cols);
+    const x2 = samuraiIndex % cols;
+    const y2 = Math.floor(samuraiIndex / cols);
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
   };
 
@@ -339,9 +339,9 @@ function buildTileIndexResolver(
       const indices = indicesByKind.get(kind);
       if (!indices || indices.length === 0) return undefined;
       const used = useCountByKind.get(kind) ?? 0;
-      if (kind !== "warrior" && warriorIndex >= 0) {
+      if (kind !== "samurai" && samuraiIndex >= 0) {
         indices.sort((a, b) => {
-          const d = distanceToWarrior(a) - distanceToWarrior(b);
+          const d = distanceToSamurai(a) - distanceToSamurai(b);
           return d === 0 ? a - b : d;
         });
       }
@@ -384,12 +384,12 @@ interface StatsFormatter {
 
 function buildTileStatsText(
   tileKind: string,
-  warriorHealth: number | null,
-  warriorMaxHealth: number | null,
+  samuraiHealth: number | null,
+  samuraiMaxHealth: number | null,
   fmt: StatsFormatter,
 ): string | null {
-  if (tileKind === "warrior") {
-    return `${fmt.hp(warriorHealth ?? "--", warriorMaxHealth ?? "--")}  ${fmt.atk(5)}`;
+  if (tileKind === "samurai") {
+    return `${fmt.hp(samuraiHealth ?? "--", samuraiMaxHealth ?? "--")}  ${fmt.atk(5)}`;
   }
   const stats = TILE_BASE_STATS[tileKind];
   if (!stats) return null;
@@ -487,14 +487,14 @@ class LevelSession {
     return this._level.result();
   }
 
-  get warriorHealth(): number | null {
+  get samuraiHealth(): number | null {
     if (!this._level) return null;
-    return this._level.warrior.health;
+    return this._level.samurai.health;
   }
 
-  get warriorMaxHealth(): number | null {
+  get samuraiMaxHealth(): number | null {
     if (!this._level) return null;
-    return this._level.warrior.maxHealth;
+    return this._level.samurai.maxHealth;
   }
 
   getUnitTileIndexMap(board: string): Map<string, number> {
@@ -613,15 +613,15 @@ export default function App() {
   const [currentGlobalLevel, setCurrentGlobalLevel] = useState(() => {
     return migrateToGlobalLevel(initialProgress);
   });
-  const [warriorLevel, setWarriorLevel] = useState<number>(() => {
-    return buildWarriorLevel(initialProgress);
+  const [samuraiLevel, setSamuraiLevel] = useState<number>(() => {
+    return buildSamuraiLevel(initialProgress);
   });
 
   const { towerName, localLevel } = useMemo(
     () => getTowerAndLocalFromGlobal(currentGlobalLevel),
     [currentGlobalLevel],
   );
-  const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= warriorLevel;
+  const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= samuraiLevel;
   const [speedMs, setSpeedMs] = useState(450);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => {
@@ -640,13 +640,13 @@ export default function App() {
   const [board, setBoard] = useState("");
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [result, setResult] = useState<LevelResult | null>(null);
-  const [warriorHealth, setWarriorHealth] = useState<number | null>(null);
-  const [warriorMaxHealth, setWarriorMaxHealth] = useState<number | null>(null);
+  const [samuraiHealth, setSamuraiHealth] = useState<number | null>(null);
+  const [samuraiMaxHealth, setSamuraiMaxHealth] = useState<number | null>(null);
   const [damagePopups, setDamagePopups] = useState<DamagePopup[]>([]);
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
   const [tileSizePx, setTileSizePx] = useState(20);
-  const [warriorFrame, setWarriorFrame] = useState(0);
+  const [samuraiFrame, setSamuraiFrame] = useState(0);
   const [isCodeDirty, setIsCodeDirty] = useState(false);
 
   const sessionRef = useRef(new LevelSession());
@@ -664,20 +664,20 @@ export default function App() {
   const level = useMemo(() => {
     return selectedTower.getLevel(localLevel) ?? selectedTower.levels[0];
   }, [selectedTower, localLevel]);
-  const unlockedWarriorAbilities = useMemo<WarriorAbilitySet>(() => {
-    return getWarriorAbilitiesAtGlobalLevel(warriorLevel);
-  }, [warriorLevel]);
+  const unlockedSamuraiAbilities = useMemo<SamuraiAbilitySet>(() => {
+    return getSamuraiAbilitiesAtGlobalLevel(samuraiLevel);
+  }, [samuraiLevel]);
   const unlockedEngineAbilities = useMemo(
-    () => warriorAbilitiesToEngineAbilities(unlockedWarriorAbilities),
-    [unlockedWarriorAbilities],
+    () => samuraiAbilitiesToEngineAbilities(unlockedSamuraiAbilities),
+    [unlockedSamuraiAbilities],
   );
   const availableMethods = useMemo(
-    () => unlockedWarriorAbilities.skills.map((item) => `warrior.${item}`),
-    [unlockedWarriorAbilities.skills],
+    () => unlockedSamuraiAbilities.skills.map((item) => `samurai.${item}`),
+    [unlockedSamuraiAbilities.skills],
   );
   const availableProperties = useMemo(
-    () => unlockedWarriorAbilities.stats.map((item) => `warrior.${item}`),
-    [unlockedWarriorAbilities.stats],
+    () => unlockedSamuraiAbilities.stats.map((item) => `samurai.${item}`),
+    [unlockedSamuraiAbilities.stats],
   );
   const statsFmt: StatsFormatter = useMemo(() => ({
     hp: (current, max) => t("board.hp", { current, max }),
@@ -692,7 +692,7 @@ export default function App() {
     return Array.from({ length: TOTAL_LEVELS }, (_, i) => i + 1);
   }, []);
   const hasNextLevel = currentGlobalLevel < TOTAL_LEVELS;
-  const warriorRank = useMemo(() => getWarriorRank(warriorLevel), [warriorLevel]);
+  const samuraiRank = useMemo(() => getSamuraiRank(samuraiLevel), [samuraiLevel]);
   useLayoutEffect(() => {
     const viewport = boardViewportRef.current;
     if (!viewport) return;
@@ -755,8 +755,8 @@ export default function App() {
     setBoard(nextBoard);
     setLogEntries([...allEntries]);
     setResult(session.result);
-    setWarriorHealth(session.warriorHealth);
-    setWarriorMaxHealth(session.warriorMaxHealth);
+    setSamuraiHealth(session.samuraiHealth);
+    setSamuraiMaxHealth(session.samuraiMaxHealth);
     setCanPlay(session.canPlay);
     unitTileIndexMapRef.current = session.getUnitTileIndexMap(nextBoard);
   };
@@ -795,7 +795,7 @@ export default function App() {
     if (!canContinue) {
       stopTimer();
       if (currentResult?.passed) {
-        setWarriorLevel((prev) => Math.max(prev, Math.min(currentGlobalLevel + 1, TOTAL_LEVELS)));
+        setSamuraiLevel((prev) => Math.max(prev, Math.min(currentGlobalLevel + 1, TOTAL_LEVELS)));
       }
       setShowResultModal(true);
     }
@@ -864,7 +864,7 @@ export default function App() {
     }
 
     setCurrentGlobalLevel(1);
-    setWarriorLevel(1);
+    setSamuraiLevel(1);
     setPlayerCode(starterCode);
     applyCodeToEditor(starterCode);
     setIsCodeDirty(true);
@@ -889,8 +889,8 @@ export default function App() {
 
   useEffect(() => {
     const animationTimer = globalThis.setInterval(() => {
-      setWarriorFrame((prev) => (prev + 1) % WARRIOR_IDLE_FRAME_COUNT);
-    }, WARRIOR_IDLE_FRAME_MS);
+      setSamuraiFrame((prev) => (prev + 1) % SAMURAI_IDLE_FRAME_COUNT);
+    }, SAMURAI_IDLE_FRAME_MS);
     return () => globalThis.clearInterval(animationTimer);
   }, []);
 
@@ -912,12 +912,12 @@ export default function App() {
     try {
       globalThis.localStorage.setItem(
         STORAGE_KEY_PROGRESS,
-        JSON.stringify({ globalLevel: currentGlobalLevel, warriorLevel }),
+        JSON.stringify({ globalLevel: currentGlobalLevel, samuraiLevel }),
       );
     } catch {
       // ignore storage errors (private mode, quota, etc.)
     }
-  }, [currentGlobalLevel, warriorLevel]);
+  }, [currentGlobalLevel, samuraiLevel]);
 
   useEffect(() => {
     try {
@@ -958,7 +958,7 @@ export default function App() {
           <nav className="level-progress" aria-label={t("nav.levelProgress")}>
             {allLevelSteps.map((globalLvl) => {
               const isActive = globalLvl === currentGlobalLevel;
-              const isCleared = globalLvl < warriorLevel && !isActive;
+              const isCleared = globalLvl < samuraiLevel && !isActive;
               const isLocked = !isLevelAccessible(globalLvl);
 
               let className = "progress-step";
@@ -1001,7 +1001,7 @@ export default function App() {
             <div id="board" className="board-viewport" ref={boardViewportRef} style={{ aspectRatio: `${boardGrid.columns} / ${boardGrid.rows}` }}>
               <div className="board-status">
                 <span className="status-chip">
-                  {t("board.warrior")} {t(warriorRank.key)} {t("board.lv", { level: warriorLevel })}  {t("board.hp", { current: warriorHealth ?? "--", max: warriorMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
+                  {t("board.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
@@ -1014,9 +1014,9 @@ export default function App() {
                 {boardGrid.tiles.map((tile, index) => {
                   const displaySymbol = tile.emoji ?? (tile.symbol === " " ? "\u00a0" : tile.symbol);
                   const tileImageSrc =
-                    tile.kind === "warrior" ? getWarriorIdleFramePath(warriorFrame) : tile.assetPath;
+                    tile.kind === "samurai" ? getSamuraiIdleFramePath(samuraiFrame) : tile.assetPath;
                   const tilePopups = damagePopupsByTile.get(index) ?? [];
-                  const tileStats = buildTileStatsText(tile.kind, warriorHealth, warriorMaxHealth, statsFmt);
+                  const tileStats = buildTileStatsText(tile.kind, samuraiHealth, samuraiMaxHealth, statsFmt);
                   const tileAlt = t(tile.altKey);
                   return (
                     <div
@@ -1026,13 +1026,13 @@ export default function App() {
                       aria-label={tileAlt}
                       onMouseEnter={() => {
                         if (!tileStats) return;
-                        if (tile.kind === "warrior") return;
+                        if (tile.kind === "samurai") return;
                         setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
                       }}
                       onMouseLeave={() => setHoveredEnemyStats(null)}
                       onFocus={() => {
                         if (!tileStats) return;
-                        if (tile.kind === "warrior") return;
+                        if (tile.kind === "samurai") return;
                         setHoveredEnemyStats(`${tileAlt.toUpperCase()}  ${tileStats}`);
                       }}
                       onBlur={() => setHoveredEnemyStats(null)}

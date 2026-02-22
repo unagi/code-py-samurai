@@ -1,13 +1,13 @@
 import { Floor } from "./floor";
 import type { ILogger, IPlayer, LevelDefinition } from "./types";
-import { Warrior } from "./units/warrior";
+import { Samurai } from "./units/samurai";
 import { createUnit } from "./units/index";
 
 export interface LevelResult {
   passed: boolean;
   failed: boolean;
   turns: number;
-  warriorScore: number;
+  samuraiScore: number;
   timeBonus: number;
   clearBonus: number;
   totalScore: number;
@@ -21,7 +21,7 @@ export interface LevelResult {
 export class Level {
   readonly definition: LevelDefinition;
   floor!: Floor;
-  warrior!: Warrior;
+  samurai!: Samurai;
   private _timeBonus: number;
   private _turnCount: number;
   private readonly _logger: ILogger;
@@ -34,27 +34,27 @@ export class Level {
   }
 
   /**
-   * Build the floor, place units, and configure the warrior.
+   * Build the floor, place units, and configure the samurai.
    */
   setup(player: IPlayer, existingAbilities: string[] = []): void {
-    const { floor: floorDef, stairs, warrior: warDef, units } =
+    const { floor: floorDef, stairs, samurai: warDef, units } =
       this.definition;
 
     // Create floor
     this.floor = new Floor(floorDef.width, floorDef.height);
     this.floor.placeStairs(stairs.x, stairs.y);
 
-    // Create and place warrior
-    this.warrior = new Warrior(this._logger);
+    // Create and place samurai
+    this.samurai = new Samurai(this._logger);
     if (warDef.unitId) {
-      this.warrior.setUnitId(warDef.unitId);
+      this.samurai.setUnitId(warDef.unitId);
     }
-    this.warrior.player = player;
+    this.samurai.player = player;
 
     // Ability injection is runtime-driven from progression state.
-    this.warrior.addAbilities(...new Set(existingAbilities));
+    this.samurai.addAbilities(...new Set(existingAbilities));
 
-    this.floor.add(this.warrior, warDef.x, warDef.y, warDef.direction);
+    this.floor.add(this.samurai, warDef.x, warDef.y, warDef.direction);
 
     // Create and place enemy/captive units
     for (const unitDef of units) {
@@ -116,7 +116,7 @@ export class Level {
   }
 
   failed(): boolean {
-    return !this.warrior.isAlive();
+    return !this.samurai.isAlive();
   }
 
   private placeUnit(unitDef: LevelDefinition["units"][number]): void {
@@ -144,12 +144,12 @@ export class Level {
   private getResult(turns: number): LevelResult {
     const passed = this.passed();
     const failed = this.failed();
-    const warriorScore = this.warrior.score;
+    const samuraiScore = this.samurai.score;
     const timeBonus = this._timeBonus;
     const clearBonus = this.floor.otherUnits.length === 0
-      ? Math.round((warriorScore + timeBonus) * 0.2)
+      ? Math.round((samuraiScore + timeBonus) * 0.2)
       : 0;
-    const totalScore = warriorScore + timeBonus + clearBonus;
+    const totalScore = samuraiScore + timeBonus + clearBonus;
     const aceScore = this.definition.aceScore;
     const grade = aceScore > 0
       ? Level.gradeLetter(totalScore / aceScore)
@@ -159,7 +159,7 @@ export class Level {
       passed,
       failed,
       turns,
-      warriorScore,
+      samuraiScore,
       timeBonus,
       clearBonus,
       totalScore,
