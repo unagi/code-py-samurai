@@ -7,18 +7,18 @@ class Player:
         if len(spaces) >= 2:
             a = spaces[0]
             b = spaces[1]
-            if a is not None and b is not None and a.is_enemy() and b.is_enemy():
+            if a.unit is not None and b.unit is not None and a.unit.kind == UnitKind.ENEMY and b.unit.kind == UnitKind.ENEMY:
                 samurai.detonate()
                 return
-        if fwd is not None and fwd.is_enemy():
+        if fwd.unit is not None and fwd.unit.kind == UnitKind.ENEMY:
             samurai.attack()
             return
-        if fwd is not None and fwd.is_captive():
+        if fwd.unit is not None and fwd.unit.kind == UnitKind.CAPTIVE:
             samurai.rescue()
             return
         has_ticking = False
-        for unit in units:
-            if unit.is_captive() and unit.is_ticking():
+        for target in units:
+            if target.unit is not None and target.unit.kind == UnitKind.CAPTIVE and target.unit.ticking:
                 has_ticking = True
                 break
         if (not has_ticking) and health < 10:

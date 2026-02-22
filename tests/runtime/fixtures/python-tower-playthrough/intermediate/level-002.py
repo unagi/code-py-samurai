@@ -1,8 +1,8 @@
 class Player:
     def play_turn(self, samurai):
-        for d in ['forward', 'left', 'right', 'backward']:
+        for d in [Direction.FORWARD, Direction.LEFT, Direction.RIGHT, Direction.BACKWARD]:
             space = samurai.feel(d)
-            if space is not None and space.is_enemy():
+            if space.unit is not None and space.unit.kind == UnitKind.ENEMY:
                 samurai.attack(d)
                 return
         if samurai.hp < 15:

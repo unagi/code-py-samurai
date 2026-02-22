@@ -4,15 +4,15 @@ class Player:
         bound_dirs = []
         ticking_captive_dir = None
         non_ticking_captive_dir = None
-        for d in ['forward', 'left', 'right', 'backward']:
+        for d in [Direction.FORWARD, Direction.LEFT, Direction.RIGHT, Direction.BACKWARD]:
             space = samurai.feel(d)
-            if space is None:
+            if space.unit is None:
                 continue
-            if space.is_enemy():
+            if space.unit.kind == UnitKind.ENEMY:
                 enemies.append(d)
-            elif space.is_captive() and space.is_ticking():
+            elif space.unit.kind == UnitKind.CAPTIVE and space.unit.ticking:
                 ticking_captive_dir = d
-            elif space.is_captive():
+            elif space.unit.kind == UnitKind.CAPTIVE:
                 if non_ticking_captive_dir is None:
                     non_ticking_captive_dir = d
                 bound_dirs.append(d)
@@ -28,12 +28,12 @@ class Player:
             return
         d = samurai.direction_of(target)
         space = samurai.feel(d)
-        if space is None or space.is_stairs():
+        if (space.unit is None and space.terrain == Terrain.FLOOR) or space.terrain == Terrain.STAIRS:
             samurai.walk(d)
             return
-        for alt in ['forward', 'left', 'right', 'backward']:
+        for alt in [Direction.FORWARD, Direction.LEFT, Direction.RIGHT, Direction.BACKWARD]:
             s = samurai.feel(alt)
-            if s is None:
+            if s.unit is None and s.terrain != Terrain.WALL:
                 samurai.walk(alt)
                 return
         samurai.rest()
@@ -58,9 +58,9 @@ class Player:
             samurai.rescue(bound_dirs[0])
             return
         ticking = None
-        for unit in units:
-            if unit.is_captive() and unit.is_ticking():
-                ticking = unit
+        for target in units:
+            if target.unit is not None and target.unit.kind == UnitKind.CAPTIVE and target.unit.ticking:
+                ticking = target
                 break
         if ticking is not None:
             self._rush_toward_ticking(samurai, ticking, health)
@@ -72,17 +72,17 @@ class Player:
             samurai.rescue(non_ticking_dir)
             return
         captive = None
-        for unit in units:
-            if unit.is_captive():
-                captive = unit
+        for target in units:
+            if target.unit is not None and target.unit.kind == UnitKind.CAPTIVE:
+                captive = target
                 break
         if captive is not None:
             self._walk_toward(samurai, captive)
             return
         enemy = None
-        for unit in units:
-            if unit.is_enemy():
-                enemy = unit
+        for target in units:
+            if target.unit is not None and target.unit.kind == UnitKind.ENEMY:
+                enemy = target
                 break
         if enemy is not None:
             self._walk_toward(samurai, enemy)

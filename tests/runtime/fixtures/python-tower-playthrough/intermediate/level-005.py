@@ -2,17 +2,17 @@ class Player:
     def play_turn(self, samurai):
         health = samurai.hp
         units = samurai.listen()
-        for d in ['forward', 'left', 'right', 'backward']:
+        for d in [Direction.FORWARD, Direction.LEFT, Direction.RIGHT, Direction.BACKWARD]:
             space = samurai.feel(d)
-            if space is not None and space.is_enemy():
+            if space.unit is not None and space.unit.kind == UnitKind.ENEMY:
                 samurai.attack(d)
                 return
-            if space is not None and space.is_captive():
+            if space.unit is not None and space.unit.kind == UnitKind.CAPTIVE:
                 samurai.rescue(d)
                 return
-        for unit in units:
-            if unit.is_enemy() or unit.is_captive():
-                samurai.walk(samurai.direction_of(unit))
+        for target in units:
+            if target.unit is not None and (target.unit.kind == UnitKind.ENEMY or target.unit.kind == UnitKind.CAPTIVE):
+                samurai.walk(samurai.direction_of(target))
                 return
         if health < 15:
             samurai.rest()

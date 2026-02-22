@@ -20,7 +20,7 @@ describe("python runtime level integration", () => {
   });
 
   it("clears beginner level 2 with feel+attack strategy", () => {
-    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            samurai.walk()\n        else:\n            samurai.attack()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.unit is None and space.terrain != Terrain.WALL:\n            samurai.walk()\n        else:\n            samurai.attack()`;
 
     const player = compilePythonPlayer(source);
     const level = new Level(level002);
@@ -33,7 +33,7 @@ describe("python runtime level integration", () => {
   });
 
   it("clears beginner level 3 with rest+attack strategy", () => {
-    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            if samurai.hp < 20:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.is_enemy():\n            samurai.attack()\n        elif samurai.hp < 20:\n            samurai.rest()\n        else:\n            samurai.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.unit is None and space.terrain != Terrain.WALL:\n            if samurai.hp < 20:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.unit is not None and space.unit.kind == UnitKind.ENEMY:\n            samurai.attack()\n        elif samurai.hp < 20:\n            samurai.rest()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
     const level = new Level(level003);
