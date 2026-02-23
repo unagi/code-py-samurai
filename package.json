@@ -4,6 +4,11 @@
   "description": "Python programming learning game - Python侍 (Py SAMURAI)",
   "type": "module",
   "scripts": {
+    "generate:sprite-manifest": "node scripts/generate-sprite-asset-manifest.mjs",
+    "predev": "npm run generate:sprite-manifest",
+    "prebuild": "npm run generate:sprite-manifest",
+    "pretest": "npm run generate:sprite-manifest",
+    "prelint": "npm run generate:sprite-manifest",
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest run",
