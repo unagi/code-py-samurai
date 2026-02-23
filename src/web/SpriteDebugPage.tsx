@@ -4,6 +4,7 @@ import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
 import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
 import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
+import wizardGameplay from "@engine/unit-data/wizard.gameplay.json";
 
 import { BoardGridView } from "./BoardGridView";
 import {
@@ -94,6 +95,7 @@ const SLUDGE_DEBUG_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
 const THICK_SLUDGE_DEBUG_ALT_KEY = `tiles.${thickSludgeGameplay.nameKey}`;
 const CAPTIVE_DEBUG_ALT_KEY = `tiles.${captiveGameplay.nameKey}`;
 const SAMURAI_DEBUG_ALT_KEY = `tiles.${samuraiGameplay.nameKey}`;
+const WIZARD_DEBUG_ALT_KEY = `tiles.${wizardGameplay.nameKey}`;
 
 const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
   [samuraiGameplay.kind]: { symbol: samuraiGameplay.symbol, kind: samuraiGameplay.kind, altKey: SAMURAI_DEBUG_ALT_KEY },
@@ -106,6 +108,11 @@ const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
     symbol: thickSludgeGameplay.symbol,
     kind: thickSludgeGameplay.kind,
     altKey: THICK_SLUDGE_DEBUG_ALT_KEY,
+  },
+  [wizardGameplay.kind]: {
+    symbol: wizardGameplay.symbol,
+    kind: wizardGameplay.kind,
+    altKey: WIZARD_DEBUG_ALT_KEY,
   },
   [captiveGameplay.kind]: {
     symbol: captiveGameplay.symbol,
