@@ -72,6 +72,18 @@ describe("buildBoardGrid", () => {
     });
   });
 
+  it("keeps captive tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("C");
+    const captiveTile = grid.tiles.find((tile) => tile.symbol === "C" && tile.kind !== "void");
+
+    expect(captiveTile).toBeDefined();
+    expect(captiveTile).toMatchObject({
+      symbol: "C",
+      kind: "captive",
+      altKey: "tiles.captive",
+    });
+  });
+
   it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
     const grid = buildBoardGrid("@x");
     const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
