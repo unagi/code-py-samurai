@@ -8,6 +8,7 @@
     "predev": "npm run generate:sprite-manifest",
     "prebuild": "npm run generate:sprite-manifest",
     "pretest": "npm run generate:sprite-manifest",
+    "pretest:coverage": "npm run generate:sprite-manifest",
     "prelint": "npm run generate:sprite-manifest",
     "dev": "vite",
     "build": "tsc && vite build",

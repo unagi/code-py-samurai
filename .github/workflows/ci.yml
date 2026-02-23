@@ -33,5 +33,8 @@ jobs:
       - name: Install coverage provider
         run: npm i --no-save --ignore-scripts @vitest/coverage-v8
 
+      - name: Generate sprite asset manifest
+        run: npm run generate:sprite-manifest
+
       - name: Run tests with coverage
         run: npm run test:coverage
