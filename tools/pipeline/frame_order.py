@@ -1,18 +1,22 @@
-"""Idle フレーム順序決定ツール.
+"""フレーム順序決定ツール.
 
-エッジ検出 → Distance Transform → ECC位置合わせ → 距離行列 → 順序決定 → ping-pong選定
+2つのモードで動作する:
 
-手順:
+■ Idle モード（デフォルト）:
+  全フレーム間の NxN 距離行列を構築し、TSP 風の最適順序 + ping-pong サイクルを選定。
+
+■ Ref モード（--ref 指定時）:
+  参照フレーム（idle A 端点等）からの DT 距離で action フレームを昇順ソート。
+  attack / damaged / death など、idle 基準で「近い順＝アクション開始」に並べる用途。
+
+共通処理:
 1. 全フレームを同サイズ正方形にパディング
 2. 指定フレームを左右反転（R→L統一）
 3. Gaussian blur + Canny → edge画像
 4. Distance Transform（輪郭の"近さ"を滑らかに計測）
 5. ECC (Euclidean) で位置合わせ（頭の傾きなど吸収）
-6. 全ペア距離行列を構築
-7. 最遠ペア → 最近傍チェイン → 2-opt改善
-8. idle用: A→B→C→B'→A ping-pongサイクル選定
 
-実行例:
+実行例 (idle モード):
     cd tools && uv run python pipeline/frame_order.py \\
         ../from_creator/gemini/_cells/gama-01 \\
         --files r1c1.png r1c2.png r1c3.png r1c4.png r1c5.png \\
@@ -20,6 +24,13 @@
         --flip r3c1.png \\
         -o ../from_creator/gemini/_cells/gama-01/_idle_ordered \\
         --cycle-length 4
+
+実行例 (ref モード — action フレームを idle A 基準でソート):
+    cd tools && uv run python pipeline/frame_order.py \\
+        ../from_creator/gemini/_cells/gama-01 \\
+        --ref r1c4.png \\
+        --files r2c1.png r2c2.png \\
+        -o ../from_creator/gemini/_cells/gama-01/_attack_west
 """
 
 from __future__ import annotations
@@ -293,6 +304,25 @@ def select_ping_pong(
     return outbound + inbound
 
 
+# ── スプライトシート組立 ──────────────────────────────────────────
+
+
+def assemble_spritesheet(
+    images: list[Image.Image],
+    *,
+    frame_size: int = 320,
+) -> Image.Image:
+    """フレームを横並びに結合してスプライトシートを生成.
+
+    ラベルなし・パディングなし。ゲームエンジンが直接読み込む形式。
+    """
+    n = len(images)
+    sheet = Image.new("RGBA", (n * frame_size, frame_size), (0, 0, 0, 0))
+    for i, img in enumerate(images):
+        sheet.alpha_composite(img, (i * frame_size, 0))
+    return sheet
+
+
 # ── 可視化 ────────────────────────────────────────────────────────
 
 
@@ -371,14 +401,14 @@ def save_contact_sheet(
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Idle フレーム順序決定（edge DT + ECC + 距離行列）",
+        description="フレーム順序決定（idle: 距離行列+TSP, action: ref基準ソート）",
     )
     parser.add_argument("input_dir", type=Path, help="フレームが入ったディレクトリ")
     parser.add_argument(
         "--files",
         nargs="+",
         required=True,
-        help="対象ファイル名（input_dir 内）",
+        help="対象ファイル名（input_dir 内）。ref モード時は action フレームのみ",
     )
     parser.add_argument(
         "--flip",
@@ -388,21 +418,167 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-o", "--output", type=Path, required=True, help="出力ディレクトリ")
     parser.add_argument("--size", type=int, default=320, help="正規化サイズ（80の倍数, デフォルト320=4x）")
-    parser.add_argument("--cycle-length", type=int, default=4, help="ping-pong キーフレーム数")
+
+    # Ref モード（action フレーム用）
+    parser.add_argument(
+        "--ref",
+        type=str,
+        metavar="REF_FILE",
+        help="参照フレーム（input_dir 内）。指定時は ref→各frame の DT距離で昇順ソート",
+    )
+
+    # Idle モード専用
+    parser.add_argument("--cycle-length", type=int, default=4, help="ping-pong キーフレーム数（idle モード）")
     parser.add_argument(
         "--endpoints",
         nargs=2,
         metavar=("A", "C"),
-        help="ping-pong 端点を手動指定（ファイル名 stem, 例: r1c1 r3c3）",
+        help="ping-pong 端点を手動指定（ファイル名 stem, 例: r1c1 r3c3）（idle モード）",
     )
+
+    # 共通パラメータ
     parser.add_argument("--blur-ksize", type=int, default=3, help="Gaussian blur カーネルサイズ")
     parser.add_argument("--canny-low", type=int, default=50, help="Canny low threshold")
     parser.add_argument("--canny-high", type=int, default=150, help="Canny high threshold")
     return parser
 
 
+def run_ref_mode(args: argparse.Namespace) -> None:
+    """--ref モード: 参照フレームからの DT 距離で action フレームを昇順ソート."""
+    out: Path = args.output
+    out.mkdir(parents=True, exist_ok=True)
+
+    # ── 参照フレーム検証 ──
+    ref_path = args.input_dir / args.ref
+    if not ref_path.exists():
+        print(f"Error: ref {ref_path} not found", file=sys.stderr)
+        sys.exit(1)
+
+    # ── action フレーム読み込み ──
+    files: list[Path] = []
+    for name in args.files:
+        p = args.input_dir / name
+        if not p.exists():
+            print(f"Error: {p} not found", file=sys.stderr)
+            sys.exit(1)
+        files.append(p)
+
+    flip_set = set(args.flip)
+    labels = [f.stem for f in files]
+    n = len(files)
+    ref_stem = Path(args.ref).stem
+
+    print("Mode: ref (参照基準ソート)")
+    print(f"Ref: {args.ref}")
+    print(f"Action frames: {n}")
+    print(f"Flip: {flip_set or 'none'}")
+
+    # ── 正規化（ref + action を一括でスケール統一）──
+    print("\n[1/4] Normalizing...")
+    all_files = [ref_path] + files
+    all_images, square_size = load_and_normalize(all_files, flip_set, target_size=args.size)
+
+    ref_img = all_images[0]
+    action_images = all_images[1:]
+
+    norm_dir = out / "normalized"
+    norm_dir.mkdir(exist_ok=True)
+    ref_img.save(norm_dir / f"{ref_stem}_ref.png", "PNG")
+    for img, label in zip(action_images, labels):
+        img.save(norm_dir / f"{label}.png", "PNG")
+    print(f"  Square size: {square_size}×{square_size}")
+
+    # ── 参照の DT 算出 ──
+    print("[2/4] Computing ref DT...")
+    ref_edges, ref_dt = compute_edge_and_dt(
+        ref_img,
+        blur_ksize=args.blur_ksize,
+        canny_low=args.canny_low,
+        canny_high=args.canny_high,
+    )
+    print(f"  REF ({ref_stem}): edge_pixels={int(np.sum(ref_edges > 0))}")
+
+    # ── 各 action フレーム: DT + ECC align + 距離算出 ──
+    print("[3/4] Computing distances from ref...")
+    distances: list[tuple[int, float, str]] = []
+    for i, (img, label) in enumerate(zip(action_images, labels)):
+        _, dt = compute_edge_and_dt(
+            img,
+            blur_ksize=args.blur_ksize,
+            canny_low=args.canny_low,
+            canny_high=args.canny_high,
+        )
+        aligned, _warp, cc, (pdx, pdy) = ecc_align(ref_dt, dt)
+        diff = np.abs(ref_dt.astype(np.float64) - aligned.astype(np.float64))
+        dist = float(np.mean(diff))
+        distances.append((i, dist, label))
+        print(f"  {label}: dist={dist:.4f}, cc={cc:.4f}, phase=({pdx:.1f},{pdy:.1f})")
+
+    # ── 昇順ソート（idle に近い順 = アクション開始）──
+    distances.sort(key=lambda x: x[1])
+    sorted_indices = [d[0] for d in distances]
+    sorted_labels = [d[2] for d in distances]
+    sorted_dists = [d[1] for d in distances]
+
+    print(f"\n  Sorted: {' → '.join(sorted_labels)}")
+    for label, dist in zip(sorted_labels, sorted_dists):
+        print(f"    {label}: {dist:.4f}")
+
+    # ── 出力 ──
+    print("\n[4/4] Saving outputs...")
+    sorted_images = [action_images[i] for i in sorted_indices]
+
+    # コンタクトシート（REF + ソート済み、目視確認用）
+    contact_labels = [f"REF: {ref_stem}"] + [
+        f"#{k + 1} {l} (d={d:.2f})"
+        for k, (l, d) in enumerate(zip(sorted_labels, sorted_dists))
+    ]
+    save_contact_sheet(
+        [ref_img] + sorted_images,
+        contact_labels,
+        out / "ordered_contact.png",
+    )
+
+    # スプライトシート（action フレームのみ、ラベルなし）
+    sheet = assemble_spritesheet(sorted_images, frame_size=square_size)
+    sheet.save(out / "spritesheet.png", "PNG")
+
+    # ミラー版スプライトシート（左右対称キャラ: L↔R 変換用）
+    mirrored_frames = [img.transpose(Image.FLIP_LEFT_RIGHT) for img in sorted_images]
+    mirrored = assemble_spritesheet(mirrored_frames, frame_size=square_size)
+    mirrored.save(out / "spritesheet_mirrored.png", "PNG")
+
+    # JSON レポート
+    report = {
+        "mode": "ref",
+        "ref_file": args.ref,
+        "input_files": [f.name for f in files],
+        "flip": list(flip_set),
+        "square_size": square_size,
+        "sorted_order": sorted_labels,
+        "sorted_indices": sorted_indices,
+        "distances_from_ref": {l: d for l, d in zip(sorted_labels, sorted_dists)},
+        "spritesheet_size": f"{sheet.width}×{sheet.height}",
+    }
+    with open(out / "report.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
+    print(f"\nOutput: {out}")
+    print(f"  ordered_contact.png      - REF + ソート済みフレーム（目視確認用）")
+    print(f"  spritesheet.png          - スプライトシート ({n}f, {sheet.width}×{sheet.height})")
+    print(f"  spritesheet_mirrored.png - 左右反転版")
+    print(f"  report.json              - 距離データ")
+    print(f"  normalized/              - 正規化済み個別フレーム")
+
+
 def main() -> None:
     args = create_parser().parse_args()
+
+    if args.ref:
+        run_ref_mode(args)
+        return
+
+    # ── Idle モード ──
     out = args.output
     out.mkdir(parents=True, exist_ok=True)
 
