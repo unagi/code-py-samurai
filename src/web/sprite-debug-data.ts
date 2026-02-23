@@ -1,7 +1,6 @@
 import { towers } from "../levels";
 import type { SpriteState } from "./board-effects";
 import { apiReferenceDocument, type ReferenceItem } from "./reference/reference-data";
-import { SPRITE_CAPABLE_KINDS } from "./sprite-config";
 import { absoluteDirToSpriteDir, type SpriteDir } from "./sprite-utils";
 
 export type DebugSpriteButtonState = "idle" | SpriteState;
@@ -36,6 +35,7 @@ export const DEBUG_SPRITE_BUTTON_STATES = ["idle", ...DEBUG_SPRITE_TRIGGER_STATE
 
 const PREVIEW_KIND_ORDER = ["samurai", "sludge", "thick-sludge", "captive"] as const;
 const EMOJI_RENDERED_UNITS = ["archer", "golem", "wizard"] as const;
+type PreviewKind = (typeof PREVIEW_KIND_ORDER)[number];
 const DEBUG_DIR_SORT_ORDER: Readonly<Record<DebugSpritePreviewDir, number>> = {
   left: 0,
   right: 1,
@@ -90,13 +90,27 @@ function collectPreviewDirsByKind(cards: SpriteDebugCardSpec[]): Map<string, Set
   return previewDirsByKind;
 }
 
+function buildSeededDirMap(
+  previewDirsByKind: ReadonlyMap<string, Set<DebugSpritePreviewDir>>,
+): Map<string, Set<DebugSpritePreviewDir>> {
+  const dirMap = new Map<string, Set<DebugSpritePreviewDir>>();
+  for (const kind of previewDirsByKind.keys()) {
+    dirMap.set(kind, new Set());
+  }
+  return dirMap;
+}
+
+function hasSamuraiDirectionalSkill(samuraiSkillNames: ReadonlySet<string>): boolean {
+  return samuraiSkillNames.has("walk") || samuraiSkillNames.has("pivot");
+}
+
 function collectRequiredDirsByKind(
   previewDirsByKind: ReadonlyMap<string, Set<DebugSpritePreviewDir>>,
 ): Map<string, Set<DebugSpritePreviewDir>> {
-  const requiredDirsByKind = new Map<string, Set<DebugSpritePreviewDir>>();
+  const requiredDirsByKind = buildSeededDirMap(previewDirsByKind);
   const samuraiSkillNames = new Set(getSamuraiReferenceMethodSignatures().map(parseSamuraiSkillName));
 
-  if (samuraiSkillNames.has("walk") || samuraiSkillNames.has("pivot")) {
+  if (hasSamuraiDirectionalSkill(samuraiSkillNames)) {
     addDirToMap(requiredDirsByKind, "samurai", "left");
     addDirToMap(requiredDirsByKind, "samurai", "right");
   }
@@ -118,22 +132,18 @@ function collectRequiredDirsByKind(
   return requiredDirsByKind;
 }
 
-function supportedStatesForKind(kind: string): DebugSpriteButtonState[] {
-  if (kind === "samurai") {
-    return ["idle"];
-  }
-  if (SPRITE_CAPABLE_KINDS.has(kind)) {
-    return [...DEBUG_SPRITE_BUTTON_STATES];
-  }
-  return ["idle"];
+function supportedStatesForKind(kind: PreviewKind): DebugSpriteButtonState[] {
+  if (kind === "samurai") return ["idle"];
+  // PREVIEW_KIND_ORDER contains only samurai and sprite-capable units.
+  return [...DEBUG_SPRITE_BUTTON_STATES];
 }
 
-function directionsForKind(kind: string): DebugSpritePreviewDir[] {
+function directionsForKind(kind: PreviewKind): DebugSpritePreviewDir[] {
   if (kind === "captive") return ["none"];
   return ["left", "right"];
 }
 
-function buildCardNote(kind: string): string | undefined {
+function buildCardNote(kind: PreviewKind): string | undefined {
   if (kind !== "samurai") return undefined;
   return "idle のみ（現行ゲーム実装）";
 }
@@ -175,8 +185,8 @@ export function buildSpriteDebugDirectionCoverageSpecs(): SpriteDebugDirectionCo
   const requiredDirsByKind = collectRequiredDirsByKind(previewDirsByKind);
 
   return PREVIEW_KIND_ORDER.map((kind) => {
-    const previewDirs = sortDebugDirs(previewDirsByKind.get(kind) ?? []);
-    const requiredDirs = sortDebugDirs(requiredDirsByKind.get(kind) ?? []);
+    const previewDirs = sortDebugDirs(previewDirsByKind.get(kind)!);
+    const requiredDirs = sortDebugDirs(requiredDirsByKind.get(kind)!);
     const previewSet = new Set(previewDirs);
     const missingDirs = requiredDirs.filter((dir) => !previewSet.has(dir));
     return { kind, requiredDirs, previewDirs, missingDirs };

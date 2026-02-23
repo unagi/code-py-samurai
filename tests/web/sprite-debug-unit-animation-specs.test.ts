@@ -53,6 +53,7 @@ describe("sprite debug unit animation specs", () => {
       "WEST",
       "EAST",
     ]);
+    expect(unitPreviewSlotSpecs({ kind: "unknown-unit" })).toEqual([]);
   });
 
   it("materializes sprite-config-based specs from unit cards", () => {
@@ -80,5 +81,27 @@ describe("sprite debug unit animation specs", () => {
       status: "ok",
       spriteFiles: ["gama/damaged-left.png", "gama/damaged-right.png"],
     });
+  });
+
+  it("marks thick-sludge idle as NG because base idle frames do not animate yet", () => {
+    const specs = unitAnimationTypeSpecs({
+      kind: "thick-sludge",
+      renderMode: "sprite",
+      cards: [buildEnemyCard("thick-sludge", "left"), buildEnemyCard("thick-sludge", "right")],
+    });
+
+    const idle = specs.find((spec) => spec.animationType === "Idle");
+    expect(idle).toBeDefined();
+    expect(idle?.status).toBe("ng");
+    expect(idle?.implementation).toContain("静止表示");
+  });
+
+  it("returns empty for unknown unit kind and supports sprite cards omission fallback", () => {
+    expect(unitAnimationTypeSpecs({ kind: "unknown-unit" })).toEqual([]);
+
+    const specs = unitAnimationTypeSpecs({ kind: "sludge", renderMode: "sprite" });
+    expect(specs).toHaveLength(4);
+    expect(specs[0].spriteFiles).toEqual([]);
+    expect(specs[0].previewImageSrcs).toEqual([]);
   });
 });

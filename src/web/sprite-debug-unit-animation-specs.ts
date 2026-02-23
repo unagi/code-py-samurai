@@ -47,7 +47,7 @@ interface SpriteConfigUnitAnimationEntryJson {
   animationType: UnitAnimationType;
   spriteState: "idle" | SpriteState;
   trigger: string;
-  expectedFrames?: number | null;
+  expectedFrames: number;
   overlay: boolean;
 }
 
@@ -77,36 +77,34 @@ function stripSpriteAssetPrefix(src: string): string {
   return src.replace(/^\/assets\/sprites\//, "");
 }
 
-function buildFrameCountText(actualFrames: number, expectedFrames: number | undefined): string {
+function buildFrameCountText(actualFrames: number, expectedFrames: number): string {
   const actualText = `${actualFrames} frame${actualFrames === 1 ? "" : "s"}`;
-  if (expectedFrames === undefined) return actualText;
   const expectedText = `${expectedFrames} frame${expectedFrames === 1 ? "" : "s"}`;
   return `${actualText}（expected: ${expectedText}）`;
 }
 
-function hasAnimatedMotionRequirement(expectedFrames: number | undefined, actualFrames: number): boolean {
-  if (expectedFrames !== undefined) return expectedFrames > 1;
-  return actualFrames > 1;
+function hasAnimatedMotionRequirement(expectedFrames: number): boolean {
+  return expectedFrames > 1;
 }
 
 function buildSpriteConfigImplementationText(
   stateName: "idle" | SpriteState,
   actualFrames: number,
-  expectedFrames: number | undefined,
+  expectedFrames: number,
   overlay: boolean,
 ): string {
   const base = overlay
     ? `${stateName} にマッピングされ、sprite override の overlay として表示される。`
     : `${stateName} にマッピングされて表示される。`;
 
-  if (!overlay && hasAnimatedMotionRequirement(expectedFrames, actualFrames)) {
-    if (expectedFrames !== undefined && actualFrames !== expectedFrames) {
+  if (!overlay && hasAnimatedMotionRequirement(expectedFrames)) {
+    if (actualFrames !== expectedFrames) {
       return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で、かつフレーム遷移も行われず静止表示になっている。`;
     }
     return `${base.slice(0, -1)} ただし、フレーム遷移は行われず静止表示になっている。`;
   }
 
-  if (expectedFrames === undefined || actualFrames === expectedFrames) {
+  if (actualFrames === expectedFrames) {
     return base;
   }
 
@@ -117,8 +115,8 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
   def: SpriteConfigUnitAnimationDefinitionJson,
   cards: readonly SpriteDebugCardSpec[],
 ): UnitAnimationTypeSpec[] {
-  const config = CHAR_SPRITES[def.kind];
-  if (!config) return [...EMOJI_FALLBACK_DEF.entries];
+  // sprite-config mode definitions are internal and must correspond to CHAR_SPRITES.
+  const config = CHAR_SPRITES[def.kind]!;
 
   const spriteDirs = cards.map((card) => card.spriteDir);
   const uniqueSpriteDirs = Array.from(new Set(spriteDirs));
@@ -127,8 +125,8 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
   return def.entries.map((entry) => {
     const stateConfig = config[entry.spriteState];
     const actualFrames = stateConfig.frames;
-    const expectedFrames = entry.expectedFrames ?? undefined;
-    const animatedRequirement = hasAnimatedMotionRequirement(expectedFrames, actualFrames);
+    const expectedFrames = entry.expectedFrames;
+    const animatedRequirement = hasAnimatedMotionRequirement(expectedFrames);
     const spriteFiles = uniqueSpriteDirs.map((dir) => stripSpriteAssetPrefix(resolveSpriteDir(stateConfig.pathTemplate, dir)));
     const previewImageSrcs = uniqueSpriteDirs.map((dir) => resolveSpriteDir(stateConfig.pathTemplate, dir));
 
@@ -145,7 +143,7 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
 
     const status: "ok" | "ng" =
       (entry.animationType === "Idle" && animatedRequirement)
-      || (expectedFrames !== undefined && actualFrames !== expectedFrames)
+      || actualFrames !== expectedFrames
         ? "ng"
         : "ok";
 
