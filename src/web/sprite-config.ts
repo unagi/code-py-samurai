@@ -1,3 +1,4 @@
+import spriteAssetManifestJson from "./generated/sprite-assets.manifest.generated.json";
 import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
 
 export const SAMURAI_IDLE_FRAME_COUNT = 16;
@@ -20,38 +21,73 @@ export interface CharSpriteConfig {
   death: SpriteStateConfig;
 }
 
+type CharSpriteState = keyof CharSpriteConfig;
+type SpriteAssetDirectionKey = "east" | "west" | "left" | "right" | "none";
+
+interface SpriteAssetManifestFrameDef {
+  path: string;
+  width: number;
+  height: number;
+  frames: number;
+}
+
+interface SpriteAssetManifest {
+  schemaVersion: number;
+  units: Record<string, Record<string, Partial<Record<SpriteAssetDirectionKey, SpriteAssetManifestFrameDef>>>>;
+}
+
+const SPRITE_ASSET_MANIFEST = spriteAssetManifestJson as SpriteAssetManifest;
+
+function resolveManifestDirectionalFrameDef(
+  variants: Partial<Record<SpriteAssetDirectionKey, SpriteAssetManifestFrameDef>>,
+  dir: SpriteDir,
+): SpriteAssetManifestFrameDef {
+  const preferredKeys: readonly SpriteAssetDirectionKey[] = dir === "left"
+    ? ["left", "west"]
+    : ["right", "east"];
+  for (const key of preferredKeys) {
+    const def = variants[key];
+    if (def) return def;
+  }
+  throw new Error(`Missing sprite asset variant for direction=${dir}`);
+}
+
+function buildDirectionalSpriteStateConfigFromManifest(
+  unitKind: string,
+  state: CharSpriteState,
+): SpriteStateConfig {
+  const stateVariants = SPRITE_ASSET_MANIFEST.units[unitKind]?.[state];
+  if (!stateVariants) {
+    throw new Error(`Missing sprite asset manifest entry: ${unitKind}.${state}`);
+  }
+
+  const left = resolveManifestDirectionalFrameDef(stateVariants, "left");
+  const right = resolveManifestDirectionalFrameDef(stateVariants, "right");
+  if (left.frames !== right.frames) {
+    throw new Error(`Frame mismatch in sprite manifest: ${unitKind}.${state} (${left.frames} vs ${right.frames})`);
+  }
+
+  return {
+    pathByDir: {
+      left: left.path,
+      right: right.path,
+    },
+    frames: left.frames,
+  };
+}
+
+function buildSludgeSpriteConfigFromManifest(): CharSpriteConfig {
+  return {
+    idle: buildDirectionalSpriteStateConfigFromManifest("sludge", "idle"),
+    attack: buildDirectionalSpriteStateConfigFromManifest("sludge", "attack"),
+    damaged: buildDirectionalSpriteStateConfigFromManifest("sludge", "damaged"),
+    death: buildDirectionalSpriteStateConfigFromManifest("sludge", "death"),
+  };
+}
+
 /** キャラ種別 → スプライトシート定義 */
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
-  sludge: {
-    idle:    {
-      pathByDir: {
-        left: "/assets/sprites/sludge/idle-west.png",
-        right: "/assets/sprites/sludge/idle-east.png",
-      },
-      frames: 4,
-    },
-    attack:  {
-      pathByDir: {
-        left: "/assets/sprites/sludge/attack-west.png",
-        right: "/assets/sprites/sludge/attack-east.png",
-      },
-      frames: 1,
-    },
-    damaged: {
-      pathByDir: {
-        left: "/assets/sprites/sludge/damaged-west.png",
-        right: "/assets/sprites/sludge/damaged-east.png",
-      },
-      frames: 2,
-    },
-    death:   {
-      pathByDir: {
-        left: "/assets/sprites/sludge/death-west.png",
-        right: "/assets/sprites/sludge/death-east.png",
-      },
-      frames: 4,
-    },
-  },
+  sludge: buildSludgeSpriteConfigFromManifest(),
   "thick-sludge": {
     idle:    { pathTemplate: "/assets/sprites/orochi/idle-{dir}.png",    frames: 3 },
     attack:  { pathTemplate: "/assets/sprites/orochi/attack-{dir}.png",  frames: 4 },
