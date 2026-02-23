@@ -76,6 +76,25 @@ function buildDirectionalSpriteStateConfigFromManifest(
   };
 }
 
+function buildSingleVariantSpriteStateConfigFromManifest(
+  unitKind: string,
+  state: string,
+  variant: SpriteAssetDirectionKey = "none",
+): SpriteStateConfig {
+  const stateVariants = SPRITE_ASSET_MANIFEST.units[unitKind]?.[state];
+  if (!stateVariants) {
+    throw new Error(`Missing sprite asset manifest entry: ${unitKind}.${state}`);
+  }
+  const def = stateVariants[variant];
+  if (!def) {
+    throw new Error(`Missing sprite asset manifest variant: ${unitKind}.${state}.${variant}`);
+  }
+  return {
+    pathTemplate: def.path,
+    frames: def.frames,
+  };
+}
+
 function buildCharSpriteConfigFromManifest(unitKind: string): CharSpriteConfig {
   return {
     idle: buildDirectionalSpriteStateConfigFromManifest(unitKind, "idle"),
@@ -85,16 +104,21 @@ function buildCharSpriteConfigFromManifest(unitKind: string): CharSpriteConfig {
   };
 }
 
+function buildCaptiveSpriteConfigFromManifest(): CharSpriteConfig {
+  const bound = buildSingleVariantSpriteStateConfigFromManifest("captive", "bound");
+  return {
+    idle: { ...bound },
+    attack: { ...bound },
+    damaged: { ...bound },
+    death: { ...bound },
+  };
+}
+
 /** キャラ種別 → スプライトシート定義 */
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
   sludge: buildCharSpriteConfigFromManifest("sludge"),
   "thick-sludge": buildCharSpriteConfigFromManifest("thick-sludge"),
-  captive: {
-    idle:    { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
-    attack:  { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
-    damaged: { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
-    death:   { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
-  },
+  captive: buildCaptiveSpriteConfigFromManifest(),
 };
 
 export const SPRITE_CAPABLE_KINDS: ReadonlySet<string> = new Set(Object.keys(CHAR_SPRITES));

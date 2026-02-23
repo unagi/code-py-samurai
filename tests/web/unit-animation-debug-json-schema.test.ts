@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 type DebugSpriteDir = "left" | "right" | null;
 type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
 type SpriteState = "idle" | "attack" | "damaged" | "death";
+type UnitAnimationArtLayout = "single" | "pair-grid" | "quad-grid";
 
 interface DebugPreviewSlotJson {
   label: string;
@@ -20,12 +21,35 @@ interface DebugAnimationEntryJson {
   overlay: boolean;
 }
 
-interface DebugUnitAnimationJson {
+interface SpriteConfigDebugAnimationEntryJson extends DebugAnimationEntryJson {}
+
+interface StaticDebugAnimationEntryJson {
+  animationType: UnitAnimationType;
+  trigger: string;
+  spriteFiles: string[];
+  frameCountText: string;
+  motionSpec: string;
+  implementation: string;
+  status: "ok" | "ng";
+  previewImageSrcs: string[];
+  artLayout: UnitAnimationArtLayout;
+}
+
+interface SpriteConfigDebugUnitAnimationJson {
   kind: string;
   mode: "sprite-config";
   previewSlots: DebugPreviewSlotJson[];
-  entries: DebugAnimationEntryJson[];
+  entries: SpriteConfigDebugAnimationEntryJson[];
 }
+
+interface StaticDebugUnitAnimationJson {
+  kind: string;
+  mode: "static";
+  previewSlots: DebugPreviewSlotJson[];
+  entries: StaticDebugAnimationEntryJson[];
+}
+
+type DebugUnitAnimationJson = SpriteConfigDebugUnitAnimationJson | StaticDebugUnitAnimationJson;
 
 function asRecord(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -86,6 +110,29 @@ function toDebugAnimationEntryJson(value: unknown, label: string): DebugAnimatio
   };
 }
 
+function toStaticDebugAnimationEntryJson(value: unknown, label: string): StaticDebugAnimationEntryJson {
+  const rec = asRecord(value, label);
+  const spriteFilesRaw = rec.spriteFiles;
+  const previewImageSrcsRaw = rec.previewImageSrcs;
+  if (!Array.isArray(spriteFilesRaw)) {
+    throw new Error(`${label}.spriteFiles must be an array`);
+  }
+  if (!Array.isArray(previewImageSrcsRaw)) {
+    throw new Error(`${label}.previewImageSrcs must be an array`);
+  }
+  return {
+    animationType: asEnum(rec.animationType, `${label}.animationType`, ["Idle", "Disappear", "Offence", "Damaged"] as const),
+    trigger: asNonEmptyString(rec.trigger, `${label}.trigger`),
+    spriteFiles: spriteFilesRaw.map((item, index) => asNonEmptyString(item, `${label}.spriteFiles[${index}]`)),
+    frameCountText: asNonEmptyString(rec.frameCountText, `${label}.frameCountText`),
+    motionSpec: asNonEmptyString(rec.motionSpec, `${label}.motionSpec`),
+    implementation: asNonEmptyString(rec.implementation, `${label}.implementation`),
+    status: asEnum(rec.status, `${label}.status`, ["ok", "ng"] as const),
+    previewImageSrcs: previewImageSrcsRaw.map((item, index) => asNonEmptyString(item, `${label}.previewImageSrcs[${index}]`)),
+    artLayout: asEnum(rec.artLayout, `${label}.artLayout`, ["single", "pair-grid", "quad-grid"] as const),
+  };
+}
+
 function toDebugUnitAnimationJson(value: unknown): DebugUnitAnimationJson {
   const root = asRecord(value, "root");
   const previewSlotsRaw = root.previewSlots;
@@ -97,11 +144,17 @@ function toDebugUnitAnimationJson(value: unknown): DebugUnitAnimationJson {
     throw new Error("entries must be an array");
   }
 
+  const mode = asEnum(root.mode, "mode", ["sprite-config", "static"] as const);
+  const previewSlots = previewSlotsRaw.map((slot, index) => toDebugPreviewSlotJson(slot, `previewSlots[${index}]`));
+  const entries = mode === "sprite-config"
+    ? entriesRaw.map((entry, index) => toDebugAnimationEntryJson(entry, `entries[${index}]`))
+    : entriesRaw.map((entry, index) => toStaticDebugAnimationEntryJson(entry, `entries[${index}]`));
+
   const parsed: DebugUnitAnimationJson = {
     kind: asNonEmptyString(root.kind, "kind"),
-    mode: asEnum(root.mode, "mode", ["sprite-config"] as const),
-    previewSlots: previewSlotsRaw.map((slot, index) => toDebugPreviewSlotJson(slot, `previewSlots[${index}]`)),
-    entries: entriesRaw.map((entry, index) => toDebugAnimationEntryJson(entry, `entries[${index}]`)),
+    mode,
+    previewSlots,
+    entries,
   };
 
   if (parsed.previewSlots.length === 0) {

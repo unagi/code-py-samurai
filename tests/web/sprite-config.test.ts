@@ -45,6 +45,14 @@ describe("sprite config", () => {
       .toBe("/assets/sprites/thick-sludge/attack-right.png");
   });
 
+  it("resolves captive sprite paths from generated manifest", () => {
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.idle, "left"))
+      .toBe("/assets/sprites/captive/bound.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.death, "right"))
+      .toBe("/assets/sprites/captive/bound.png");
+    expect(CHAR_SPRITES.captive.idle.frames).toBe(3);
+  });
+
   it("keeps animation timing constants stable", () => {
     expect(SAMURAI_IDLE_FRAME_COUNT).toBe(16);
     expect(SAMURAI_IDLE_FRAME_MS).toBe(140);

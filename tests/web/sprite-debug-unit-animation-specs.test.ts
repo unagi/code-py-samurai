@@ -56,6 +56,15 @@ describe("sprite debug unit animation specs", () => {
     expect(unitPreviewSlotSpecs({ kind: "unknown-unit" })).toEqual([]);
   });
 
+  it("returns captive static debug entries from captive.debug.json", () => {
+    const specs = unitAnimationTypeSpecs({ kind: "captive" });
+    const idle = specs.find((spec) => spec.animationType === "Idle");
+    const disappear = specs.find((spec) => spec.animationType === "Disappear");
+
+    expect(idle?.spriteFiles).toEqual(["captive/bound.png"]);
+    expect(disappear?.spriteFiles).toEqual(["captive/rescued.png"]);
+  });
+
   it("materializes sprite-config-based specs from unit cards", () => {
     const specs = unitAnimationTypeSpecs({
       kind: "sludge",

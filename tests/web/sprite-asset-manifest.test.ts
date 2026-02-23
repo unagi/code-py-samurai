@@ -33,4 +33,21 @@ describe("sprite asset manifest (generated)", () => {
     expect(thickSludge.idle.right?.frames).toBe(3);
     expect(thickSludge.attack.left?.frames).toBe(4);
   });
+
+  it("indexes captive sprite assets under the unit-kind folder", () => {
+    const captive = spriteAssetManifest.units.captive;
+
+    expect(captive.bound.none).toMatchObject({
+      path: "/assets/sprites/captive/bound.png",
+      width: 240,
+      height: 80,
+      frames: 3,
+    });
+    expect(captive.rescued.none).toMatchObject({
+      path: "/assets/sprites/captive/rescued.png",
+      width: 480,
+      height: 80,
+      frames: 6,
+    });
+  });
 });

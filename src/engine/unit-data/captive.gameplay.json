@@ -1,0 +1,9 @@
+{
+  "kind": "captive",
+  "symbol": "C",
+  "nameKey": "captive",
+  "stats": {
+    "maxHealth": 1,
+    "attackPower": 0
+  }
+}

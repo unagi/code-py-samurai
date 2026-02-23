@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
 import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 
@@ -90,6 +91,7 @@ const DEBUG_STATS_FORMATTER: StatsFormatter = {
 
 const SLUDGE_DEBUG_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
 const THICK_SLUDGE_DEBUG_ALT_KEY = `tiles.${thickSludgeGameplay.nameKey}`;
+const CAPTIVE_DEBUG_ALT_KEY = `tiles.${captiveGameplay.nameKey}`;
 
 const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
   samurai: { symbol: "@", kind: "samurai", altKey: "tiles.samurai" },
@@ -103,7 +105,11 @@ const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
     kind: thickSludgeGameplay.kind,
     altKey: THICK_SLUDGE_DEBUG_ALT_KEY,
   },
-  captive: { symbol: "C", kind: "captive", altKey: "tiles.captive" },
+  [captiveGameplay.kind]: {
+    symbol: captiveGameplay.symbol,
+    kind: captiveGameplay.kind,
+    altKey: CAPTIVE_DEBUG_ALT_KEY,
+  },
   floor: { symbol: " ", kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
 };
 

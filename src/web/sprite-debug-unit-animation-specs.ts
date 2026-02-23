@@ -3,7 +3,7 @@ import type { SpriteDebugCardSpec } from "./sprite-debug-data";
 import { CHAR_SPRITES, resolveSpriteStateSrc } from "./sprite-config";
 import type { SpriteDir } from "./sprite-utils";
 
-import captiveDefJson from "./sprite-debug-unit-animation/captive.json";
+import captiveDefJson from "./debug/unit-animation/captive.debug.json";
 import thickSludgeDefJson from "./debug/unit-animation/thick-sludge.debug.json";
 import emojiFallbackDefJson from "./sprite-debug-unit-animation/emoji-fallback.json";
 import samuraiDefJson from "./sprite-debug-unit-animation/samurai.json";

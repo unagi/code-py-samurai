@@ -1,4 +1,5 @@
 import type { ILogger } from "../types";
+import captiveGameplay from "../unit-data/captive.gameplay.json";
 import { createAbility } from "../abilities/index";
 import { BaseUnit } from "./base";
 
@@ -7,8 +8,10 @@ import { BaseUnit } from "./base";
  * Ported from RubyWarrior::Units::Captive
  */
 export class Captive extends BaseUnit {
-  protected static readonly MAX_HEALTH: number = 1;
-  protected static readonly CHARACTER: string = "C";
+  protected static readonly ATTACK_POWER: number = captiveGameplay.stats.attackPower;
+  protected static readonly MAX_HEALTH: number = captiveGameplay.stats.maxHealth;
+  protected static readonly CHARACTER: string = captiveGameplay.symbol;
+  protected static readonly NAME_KEY: string = captiveGameplay.nameKey;
 
   constructor(logger?: ILogger) {
     super(logger, createAbility);
