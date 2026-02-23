@@ -106,12 +106,13 @@ function buildCharSpriteConfigFromManifest(unitKind: string): CharSpriteConfig {
 }
 
 function buildCaptiveSpriteConfigFromManifest(): CharSpriteConfig {
-  const bound = buildSingleVariantSpriteStateConfigFromManifest("captive", "bound");
+  const idle = buildSingleVariantSpriteStateConfigFromManifest("captive", "idle");
+  const death = buildSingleVariantSpriteStateConfigFromManifest("captive", "death");
   return {
-    idle: { ...bound },
-    attack: { ...bound },
-    damaged: { ...bound },
-    death: { ...bound },
+    idle: { ...idle },
+    attack: { ...idle },
+    damaged: { ...idle },
+    death: { ...death },
   };
 }
 

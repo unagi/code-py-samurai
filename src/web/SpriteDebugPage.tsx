@@ -37,8 +37,6 @@ import { type SpriteDir } from "./sprite-utils";
 import "./sprite-debug.css";
 
 type DebugFilter = "all" | "preview-only" | "unsupported-only";
-type CaptiveLocalState = "bound" | "rescued";
-
 const EMPTY_DAMAGE_POPUPS: ReadonlyMap<number, DamagePopup[]> = new Map();
 const NOOP_HOVER = (): void => {};
 const DEFAULT_TILE_SIZE_PX = 80;
@@ -174,7 +172,6 @@ export default function SpriteDebugPage() {
   const [tileSizePx, setTileSizePx] = useState(DEFAULT_TILE_SIZE_PX);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
   const [cardOverrides, setCardOverrides] = useState<Readonly<Record<string, SpriteOverride>>>({});
-  const [captiveLocalStates, setCaptiveLocalStates] = useState<Readonly<Record<string, CaptiveLocalState>>>({});
   const nextOverrideIdRef = useRef(1);
   const [, setSpriteRenderTick] = useState(0);
 
@@ -305,19 +302,7 @@ export default function SpriteDebugPage() {
 
   const handleReset = (): void => {
     setCardOverrides({});
-    setCaptiveLocalStates({});
     setSamuraiFrame(0);
-  };
-
-  const handleCaptiveLocalState = (card: SpriteDebugCardSpec, state: CaptiveLocalState): void => {
-    setCaptiveLocalStates((prev) => ({ ...prev, [card.id]: state }));
-    // Captive local preview is not driven by generic sprite override states.
-    setCardOverrides((prev) => {
-      if (!(card.id in prev)) return prev;
-      const next = { ...prev };
-      delete next[card.id];
-      return next;
-    });
   };
 
   const padUnitPreviewSlots = (slots: readonly UnitPreviewPanelSlotView[]): UnitPreviewPanelSlotView[] => {
@@ -739,15 +724,8 @@ export default function SpriteDebugPage() {
             })}
             {visibleCaptiveCards.map((card) => {
               const override = cardOverrides[card.id];
-              let captiveLocalState: CaptiveLocalState | null = null;
-              if (card.kind === "captive") {
-                captiveLocalState = captiveLocalStates[card.id] ?? "bound";
-              }
-              let currentStateLabel = override ? override.state : "idle";
-              if (card.kind === "captive") {
-                currentStateLabel = captiveLocalState === "rescued" ? "disappear" : "idle";
-              }
-              const currentCaptiveLocalState = captiveLocalState ?? "bound";
+              const currentState = override ? override.state : "idle";
+              const currentStateLabel = currentState === "death" ? "disappear" : currentState;
               const animationSpecs = unitAnimationTypeSpecs({ kind: card.kind });
               const captiveBoardGrid = boardGridByKind.get("captive") ?? null;
 
@@ -777,14 +755,15 @@ export default function SpriteDebugPage() {
                       tileSizePx: unitPreviewTileSizePx,
                       hideBoard: false,
                     }),
-                    buttons: animationSpecs.map((spec) => ({
-                      id: `${card.id}-anim-${spec.animationType}`,
-                      label: spec.animationType,
-                      active:
-                        (spec.animationType === "Idle" && currentCaptiveLocalState === "bound")
-                        || (spec.animationType === "Disappear" && currentCaptiveLocalState === "rescued"),
-                      onClick: () => handleCaptiveLocalState(card, spec.animationType === "Disappear" ? "rescued" : "bound"),
-                    })),
+                    buttons: animationSpecs.map((spec) => {
+                      const state = animationTypeToDebugState(spec.animationType);
+                      return {
+                        id: `${card.id}-anim-${spec.animationType}`,
+                        label: spec.animationType,
+                        active: currentState === state,
+                        onClick: () => handleTriggerStateForCards([card], state),
+                      };
+                    }),
                   })}
                   {renderUnitFooter(
                     animationSpecs,

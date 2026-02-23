@@ -52,8 +52,9 @@ describe("sprite config", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.idle, "left"))
       .toBe("/assets/sprites/captive/bound.png");
     expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.death, "right"))
-      .toBe("/assets/sprites/captive/bound.png");
+      .toBe("/assets/sprites/captive/rescued.png");
     expect(CHAR_SPRITES.captive.idle.frames).toBe(3);
+    expect(CHAR_SPRITES.captive.death.frames).toBe(6);
   });
 
   it("resolves wizard sprite paths from generated manifest", () => {

@@ -6,6 +6,12 @@ const OUTPUT_PATH = path.resolve("src/web/generated/sprite-assets.manifest.gener
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const SPRITE_FILE_RE = /^(?<state>[a-z][a-z0-9-]*?)(?:-(?<dir>east|west|left|right))?\.png$/;
+const MANIFEST_STATE_ALIASES_BY_UNIT = {
+  captive: {
+    bound: "idle",
+    rescued: "death",
+  },
+};
 
 /**
  * @typedef {{ path: string; width: number; height: number; frames: number }} SpriteAssetFrameDef
@@ -36,6 +42,14 @@ function inferFrameCount(width, height, filePath) {
     throw new Error(`Invalid inferred frame count (${frames}) for: ${filePath}`);
   }
   return frames;
+}
+
+function normalizeManifestState(unitKind, rawState) {
+  const aliases = MANIFEST_STATE_ALIASES_BY_UNIT[unitKind];
+  if (!aliases) {
+    return rawState;
+  }
+  return aliases[rawState] ?? rawState;
 }
 
 function toPublicAssetPath(absPath) {
@@ -80,7 +94,7 @@ async function buildManifest() {
         continue;
       }
 
-      const state = match.groups.state;
+      const state = normalizeManifestState(unitKind, match.groups.state);
       const dir = match.groups.dir ?? "none";
       const { width, height } = await readPngSize(absFilePath);
       const frames = inferFrameCount(width, height, absFilePath);

@@ -37,13 +37,13 @@ describe("sprite asset manifest (generated)", () => {
   it("indexes captive sprite assets under the unit-kind folder", () => {
     const captive = spriteAssetManifest.units.captive;
 
-    expect(captive.bound.none).toMatchObject({
+    expect(captive.idle.none).toMatchObject({
       path: "/assets/sprites/captive/bound.png",
       width: 240,
       height: 80,
       frames: 3,
     });
-    expect(captive.rescued.none).toMatchObject({
+    expect(captive.death.none).toMatchObject({
       path: "/assets/sprites/captive/rescued.png",
       width: 480,
       height: 80,
