@@ -482,24 +482,6 @@
   gap: 0.75rem;
 }
 
-.sprite-debug-card-captive > .sprite-debug-card-header h3 {
-  font-size: 1.9rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: #f5f8ff;
-}
-
-.sprite-debug-card-captive > .sprite-debug-card-header .sprite-debug-state-chip {
-  min-width: 4.2rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 7px;
-  border-color: rgba(223, 96, 88, 0.45);
-  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
-  color: #fff0ee;
-  font-size: 0.74rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-
 .sprite-debug-card-captive > .sprite-debug-preview-frame {
   grid-area: preview;
   width: 100%;
@@ -509,6 +491,10 @@
   border-radius: 10px;
   border: 1px solid rgba(116, 132, 167, 0.2);
   background: linear-gradient(180deg, rgba(20, 21, 27, 0.95), rgba(15, 16, 21, 0.95));
+}
+
+.sprite-debug-unit-preview-box .board-grid {
+  justify-content: center;
 }
 
 .sprite-debug-card-captive > .sprite-debug-preview-frame .board-grid {
@@ -547,6 +533,80 @@
   gap: 0.45rem;
 }
 
+.sprite-debug-card-captive > .sprite-debug-unit-motion-coverage {
+  grid-area: spec;
+}
+
+.sprite-debug-unit-card > .sprite-debug-unit-preview-panel {
+  justify-self: start;
+  width: calc(var(--sprite-debug-unit-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  border: 1px solid rgba(106, 124, 160, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sprite-debug-card-captive > .sprite-debug-unit-preview-panel {
+  grid-area: preview;
+}
+
+.sprite-debug-unit-preview-top {
+  display: grid;
+  gap: 0.55rem;
+  width: var(--sprite-debug-unit-content-width);
+}
+
+.sprite-debug-unit-animation-buttons {
+  display: grid;
+  gap: 0.55rem;
+  width: fit-content;
+}
+
+.sprite-debug-unit-animation-buttons.is-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sprite-debug-unit-animation-buttons.is-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sprite-debug-unit-animation-buttons > button {
+  width: 146px;
+  min-height: 2.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(94, 129, 173, 0.36);
+  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
+  color: #e8f2ff;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  padding: 0.65rem 0.85rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-unit-animation-buttons > button .icon-label {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.sprite-debug-unit-animation-buttons > button.sprite-debug-button-active {
+  border-color: rgba(151, 191, 236, 0.56);
+  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
+  color: #f7fbff;
+}
+
+.sprite-debug-unit-animation-buttons > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-color: rgba(120, 137, 172, 0.2);
+  background: linear-gradient(180deg, rgba(53, 63, 82, 0.75), rgba(35, 42, 58, 0.78));
+  color: rgba(219, 229, 243, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
 .sprite-debug-card-captive > .sprite-debug-local-controls .sprite-debug-button-row button {
   width: 100%;
   min-width: 0;
@@ -569,20 +629,38 @@
   color: #f4f9ff;
 }
 
-.sprite-debug-card-captive > .sprite-debug-motion-coverage {
-  grid-area: spec;
+.sprite-debug-unit-card > .sprite-debug-unit-motion-coverage {
   gap: 0.55rem;
   justify-self: start;
-  width: calc(var(--sprite-debug-captive-content-width) + (0.75rem * 2));
+  width: calc(var(--sprite-debug-unit-content-width) + (0.75rem * 2));
   max-width: 100%;
+  box-sizing: border-box;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-list {
+.sprite-debug-unit-card > .sprite-debug-card-header h3 {
+  color: #f5f8ff;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sprite-debug-unit-card > .sprite-debug-card-header .sprite-debug-state-chip {
+  min-width: 4.2rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 7px;
+  border-color: rgba(223, 96, 88, 0.45);
+  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
+  color: #fff0ee;
+  font-size: 0.74rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.sprite-debug-unit-card .sprite-debug-unit-spec-list {
   gap: 0.55rem;
   width: 100%;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-item {
+.sprite-debug-unit-card .sprite-debug-unit-spec-item {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(104, 119, 154, 0.24);
@@ -593,13 +671,20 @@
   gap: 0.45rem;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-header code {
+.sprite-debug-unit-card .sprite-debug-unit-spec-header code {
   color: #eef4ff;
   font-size: 1.22rem;
   font-weight: 700;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt {
+.sprite-debug-unit-card .sprite-debug-unit-spec-grid {
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.24rem 0.55rem;
+  align-items: start;
+  margin-top: 0.22rem;
+}
+
+.sprite-debug-unit-card .sprite-debug-unit-spec-grid dt {
   color: #95a8c7;
   font-size: 0.74rem;
   line-height: 1.2;
@@ -607,38 +692,14 @@
   text-align: left;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd {
+.sprite-debug-unit-card .sprite-debug-unit-spec-grid dd {
   color: #dbe5f3;
   font-size: 0.88rem;
   line-height: 1.4;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-grid {
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 0.24rem 0.55rem;
-  align-items: start;
-  margin-top: 0.22rem;
-}
-
-.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
+.sprite-debug-unit-card .sprite-debug-unit-spec-grid dt:not(:first-child) {
   margin-top: 0;
-}
-
-.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd code {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.sprite-debug-card-captive .sprite-debug-motion-file-preview {
-  width: auto;
-  max-width: 100%;
-  height: 80px;
-  border-radius: 8px;
-  border: 1px solid rgba(121, 137, 172, 0.24);
-  background: linear-gradient(180deg, #857d6d, #766e5f);
-  padding: 0.45rem;
-  object-fit: contain;
-  object-position: left center;
 }
 
 .sprite-debug-card-captive .sprite-debug-motion-file-meta {
@@ -655,7 +716,24 @@
   font-size: 0.74rem;
 }
 
-.sprite-debug-card-captive .sprite-debug-unit-spec-art {
+.sprite-debug-unit-card .sprite-debug-unit-spec-grid dd code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sprite-debug-unit-card .sprite-debug-motion-file-preview {
+  width: auto;
+  max-width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 137, 172, 0.24);
+  background: linear-gradient(180deg, #857d6d, #766e5f);
+  padding: 0.45rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.sprite-debug-unit-card .sprite-debug-unit-spec-art {
   border: 1px solid rgba(121, 137, 172, 0.18);
   border-radius: 8px;
   padding: 0.45rem;
@@ -663,8 +741,9 @@
 }
 
 /* Enemy cards (new mock-aligned layout; forked before commonization) */
-.sprite-debug-card-enemy {
-  --sprite-debug-enemy-content-width: calc((146px * 4) + (0.55rem * 3));
+.sprite-debug-card-enemy,
+.sprite-debug-card-samurai {
+  --sprite-debug-unit-content-width: calc((146px * 4) + (0.55rem * 3));
   max-width: min(100%, 700px);
   justify-self: start;
   width: fit-content;
@@ -677,163 +756,6 @@
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.02),
     0 6px 18px rgba(0, 0, 0, 0.16);
-}
-
-.sprite-debug-card-enemy > .sprite-debug-card-header h3 {
-  color: #f5f8ff;
-  font-size: 1.9rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.sprite-debug-card-enemy > .sprite-debug-card-header .sprite-debug-state-chip {
-  min-width: 4.2rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 7px;
-  border-color: rgba(223, 96, 88, 0.45);
-  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
-  color: #fff0ee;
-  font-size: 0.74rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-
-.sprite-debug-card-enemy > .sprite-debug-enemy-preview-panel {
-  justify-self: start;
-  width: calc(var(--sprite-debug-enemy-content-width) + (0.75rem * 2));
-  max-width: 100%;
-  border: 1px solid rgba(106, 124, 160, 0.2);
-  border-radius: 12px;
-  padding: 0.75rem;
-  background: linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-}
-
-.sprite-debug-enemy-preview-top {
-  display: grid;
-  gap: 0.55rem;
-  width: var(--sprite-debug-enemy-content-width);
-}
-
-.sprite-debug-enemy-animation-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
-  width: fit-content;
-}
-
-.sprite-debug-enemy-animation-buttons > button {
-  width: 146px;
-  min-height: 2.7rem;
-  border-radius: 8px;
-  border: 1px solid rgba(94, 129, 173, 0.36);
-  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
-  color: #e8f2ff;
-  font-size: 0.84rem;
-  line-height: 1.2;
-  padding: 0.65rem 0.85rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 2px 6px rgba(0, 0, 0, 0.16);
-}
-
-.sprite-debug-enemy-animation-buttons > button .icon-label {
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.sprite-debug-enemy-animation-buttons > button.sprite-debug-button-active {
-  border-color: rgba(151, 191, 236, 0.56);
-  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
-  color: #f7fbff;
-}
-
-.sprite-debug-captive-animation-buttons > button:disabled,
-.sprite-debug-enemy-animation-buttons > button:disabled,
-.sprite-debug-samurai-animation-buttons > button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  border-color: rgba(120, 137, 172, 0.2);
-  background: linear-gradient(180deg, rgba(53, 63, 82, 0.75), rgba(35, 42, 58, 0.78));
-  color: rgba(219, 229, 243, 0.74);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.sprite-debug-card-enemy > .sprite-debug-motion-coverage {
-  justify-self: start;
-  width: calc(var(--sprite-debug-enemy-content-width) + (0.75rem * 2));
-  max-width: 100%;
-  box-sizing: border-box;
-  gap: 0.55rem;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-list {
-  gap: 0.55rem;
-  width: 100%;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-item {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(104, 119, 154, 0.24);
-  border-radius: 10px;
-  padding: 0.65rem 0.7rem;
-  background: linear-gradient(180deg, rgba(23, 24, 30, 0.95), rgba(18, 19, 24, 0.95));
-  gap: 0.45rem;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-header code {
-  color: #eef4ff;
-  font-size: 1.22rem;
-  font-weight: 700;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 0.24rem 0.55rem;
-  align-items: start;
-  margin-top: 0.22rem;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt {
-  color: #95a8c7;
-  font-size: 0.74rem;
-  line-height: 1.2;
-  margin-top: 0;
-  text-align: left;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd {
-  color: #dbe5f3;
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
-  margin-top: 0;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd code {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.sprite-debug-card-enemy .sprite-debug-unit-spec-art {
-  border: 1px solid rgba(121, 137, 172, 0.18);
-  border-radius: 8px;
-  padding: 0.45rem;
-  background: linear-gradient(180deg, rgba(20, 21, 27, 0.92), rgba(16, 17, 22, 0.92));
-}
-
-.sprite-debug-card-enemy .sprite-debug-motion-file-preview {
-  width: auto;
-  max-width: 100%;
-  height: 80px;
-  border-radius: 8px;
-  border: 1px solid rgba(121, 137, 172, 0.24);
-  background: linear-gradient(180deg, #857d6d, #766e5f);
-  padding: 0.45rem;
-  object-fit: contain;
-  object-position: left center;
 }
 
 .sprite-debug-unit-spec-file-list {
@@ -845,169 +767,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.45rem;
-}
-
-/* Samurai card (new mock-aligned layout; forked before commonization) */
-.sprite-debug-card-samurai {
-  --sprite-debug-samurai-content-width: calc((146px * 4) + (0.55rem * 3));
-  max-width: min(100%, 700px);
-  justify-self: start;
-  width: fit-content;
-  gap: 0.8rem;
-  padding: 0.95rem;
-  background:
-    radial-gradient(circle at 14% 10%, rgba(41, 62, 104, 0.22), transparent 48%),
-    linear-gradient(180deg, rgba(18, 20, 29, 0.96), rgba(14, 16, 23, 0.96));
-  border-color: rgba(106, 124, 160, 0.22);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 6px 18px rgba(0, 0, 0, 0.16);
-}
-
-.sprite-debug-card-samurai > .sprite-debug-card-header h3 {
-  color: #f5f8ff;
-  font-size: 1.9rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.sprite-debug-card-samurai > .sprite-debug-card-header .sprite-debug-state-chip {
-  min-width: 4.2rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 7px;
-  border-color: rgba(223, 96, 88, 0.45);
-  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
-  color: #fff0ee;
-  font-size: 0.74rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-
-.sprite-debug-card-samurai > .sprite-debug-samurai-preview-panel {
-  justify-self: start;
-  width: calc(var(--sprite-debug-samurai-content-width) + (0.75rem * 2));
-  max-width: 100%;
-  border: 1px solid rgba(106, 124, 160, 0.2);
-  border-radius: 12px;
-  padding: 0.75rem;
-  background: linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-}
-
-.sprite-debug-samurai-preview-top {
-  display: grid;
-  gap: 0.55rem;
-  width: var(--sprite-debug-samurai-content-width);
-}
-
-.sprite-debug-samurai-animation-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
-  width: fit-content;
-}
-
-.sprite-debug-samurai-animation-buttons > button {
-  width: 146px;
-  min-height: 2.7rem;
-  border-radius: 8px;
-  border: 1px solid rgba(94, 129, 173, 0.36);
-  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
-  color: #e8f2ff;
-  font-size: 0.84rem;
-  line-height: 1.2;
-  padding: 0.65rem 0.85rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 2px 6px rgba(0, 0, 0, 0.16);
-}
-
-.sprite-debug-samurai-animation-buttons > button .icon-label {
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.sprite-debug-samurai-animation-buttons > button.sprite-debug-button-active {
-  border-color: rgba(151, 191, 236, 0.56);
-  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
-  color: #f7fbff;
-}
-
-.sprite-debug-card-samurai > .sprite-debug-motion-coverage {
-  justify-self: start;
-  width: calc(var(--sprite-debug-samurai-content-width) + (0.75rem * 2));
-  max-width: 100%;
-  box-sizing: border-box;
-  gap: 0.55rem;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-list {
-  gap: 0.55rem;
-  width: 100%;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-item {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(104, 119, 154, 0.24);
-  border-radius: 10px;
-  padding: 0.65rem 0.7rem;
-  background: linear-gradient(180deg, rgba(23, 24, 30, 0.95), rgba(18, 19, 24, 0.95));
-  gap: 0.45rem;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-header code {
-  color: #eef4ff;
-  font-size: 1.22rem;
-  font-weight: 700;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 0.24rem 0.55rem;
-  align-items: start;
-  margin-top: 0.22rem;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt {
-  color: #95a8c7;
-  font-size: 0.74rem;
-  line-height: 1.2;
-  margin-top: 0;
-  text-align: left;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd {
-  color: #dbe5f3;
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
-  margin-top: 0;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd code {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.sprite-debug-card-samurai .sprite-debug-unit-spec-art {
-  border: 1px solid rgba(121, 137, 172, 0.18);
-  border-radius: 8px;
-  padding: 0.45rem;
-  background: linear-gradient(180deg, rgba(20, 21, 27, 0.92), rgba(16, 17, 22, 0.92));
-}
-
-.sprite-debug-card-samurai .sprite-debug-motion-file-preview {
-  width: auto;
-  max-width: 100%;
-  height: 80px;
-  border-radius: 8px;
-  border: 1px solid rgba(121, 137, 172, 0.24);
-  background: linear-gradient(180deg, #857d6d, #766e5f);
-  padding: 0.45rem;
-  object-fit: contain;
-  object-position: left center;
 }
 
 .sprite-debug-unit-spec-art-grid-quad {
@@ -1026,8 +785,8 @@
 }
 
 /* Captive final-ish mock-aligned layout (forked for now) */
-.sprite-debug-card-captive {
-  --sprite-debug-captive-content-width: calc((146px * 4) + (0.55rem * 3));
+.sprite-debug-unit-card.sprite-debug-card-captive {
+  --sprite-debug-unit-content-width: calc((146px * 4) + (0.55rem * 3));
   max-width: min(100%, 700px);
   justify-self: start;
   width: fit-content;
@@ -1040,38 +799,19 @@
   padding: 0.95rem;
 }
 
-.sprite-debug-card-captive > .sprite-debug-captive-preview-panel {
-  grid-area: preview;
-  justify-self: start;
-  width: calc(var(--sprite-debug-captive-content-width) + (0.75rem * 2));
-  max-width: 100%;
-  border: 1px solid rgba(106, 124, 160, 0.2);
-  border-radius: 12px;
-  padding: 0.75rem;
-  background:
-    linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-}
-
-.sprite-debug-captive-preview-top {
-  display: grid;
-  gap: 0.55rem;
-  width: var(--sprite-debug-captive-content-width);
-}
-
-.sprite-debug-captive-preview-row {
+.sprite-debug-unit-preview-row {
   display: grid;
   grid-template-columns: repeat(4, 146px);
   gap: 0.55rem;
 }
 
-.sprite-debug-captive-preview-col {
+.sprite-debug-unit-preview-col {
   display: grid;
   gap: 0.35rem;
   width: 146px;
 }
 
-.sprite-debug-captive-preview-box {
+.sprite-debug-unit-preview-box {
   display: grid;
   gap: 0.32rem;
   align-content: start;
@@ -1084,20 +824,16 @@
   min-height: 112px;
 }
 
-.sprite-debug-captive-preview-box-active {
+.sprite-debug-unit-preview-box-active {
   border-color: rgba(143, 186, 235, 0.42);
   box-shadow: inset 0 0 0 1px rgba(143, 186, 235, 0.12);
 }
 
-.sprite-debug-captive-preview-box .board-grid {
-  justify-content: center;
-}
-
-.sprite-debug-captive-preview-box .board-tile {
+.sprite-debug-unit-preview-box .board-tile {
   border-radius: 6px;
 }
 
-.sprite-debug-captive-preview-placeholder {
+.sprite-debug-unit-preview-placeholder {
   width: 80px;
   height: 80px;
   margin-inline: auto;
@@ -1107,11 +843,11 @@
     linear-gradient(180deg, rgba(135, 126, 107, 0.28), rgba(103, 97, 82, 0.22));
 }
 
-.sprite-debug-captive-preview-box .tile-captive {
+.sprite-debug-unit-preview-box .tile-captive {
   background: linear-gradient(180deg, #8a816f, #756d5e);
 }
 
-.sprite-debug-captive-preview-caption {
+.sprite-debug-unit-preview-caption {
   text-align: center;
   color: #aebfda;
   font-size: 0.72rem;
@@ -1121,41 +857,8 @@
   padding-top: 0.05rem;
 }
 
-.sprite-debug-captive-preview-caption-empty {
+.sprite-debug-unit-preview-caption-empty {
   visibility: hidden;
-}
-
-.sprite-debug-captive-animation-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-  width: fit-content;
-}
-
-.sprite-debug-captive-animation-buttons > button .icon-label {
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.sprite-debug-captive-animation-buttons > button {
-  width: 146px;
-  min-height: 2.7rem;
-  border-radius: 8px;
-  border: 1px solid rgba(94, 129, 173, 0.36);
-  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
-  color: #e8f2ff;
-  font-size: 0.84rem;
-  line-height: 1.2;
-  padding: 0.65rem 0.85rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 2px 6px rgba(0, 0, 0, 0.16);
-}
-
-.sprite-debug-captive-animation-buttons > button.sprite-debug-button-active {
-  border-color: rgba(151, 191, 236, 0.56);
-  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
-  color: #f7fbff;
 }
 
 @media (max-width: 900px) {
@@ -1176,106 +879,52 @@
     grid-template-columns: 1fr;
   }
 
-  .sprite-debug-card-captive {
-    grid-template-columns: 1fr;
+  .sprite-debug-unit-card {
     max-width: none;
     width: auto;
+  }
+
+  .sprite-debug-card-captive {
+    grid-template-columns: 1fr;
     grid-template-areas:
       "header"
       "preview"
       "spec";
   }
 
-  .sprite-debug-card-captive > .sprite-debug-captive-preview-panel {
+  .sprite-debug-unit-card > .sprite-debug-unit-preview-panel {
     justify-self: stretch;
     width: auto;
   }
 
-  .sprite-debug-card-captive > .sprite-debug-motion-coverage {
+  .sprite-debug-unit-card > .sprite-debug-unit-motion-coverage {
     justify-self: stretch;
     width: auto;
   }
 
-  .sprite-debug-captive-preview-row {
+  .sprite-debug-unit-preview-row {
     grid-template-columns: 1fr;
   }
 
-  .sprite-debug-captive-animation-buttons {
+  .sprite-debug-unit-animation-buttons.is-cols-2 {
     grid-template-columns: 1fr;
   }
 
-  .sprite-debug-card-captive .sprite-debug-unit-spec-grid {
-    grid-template-columns: 1fr;
-    gap: 0.16rem;
-  }
-
-  .sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
-    margin-top: 0.22rem;
-  }
-
-  .sprite-debug-card-enemy {
-    width: auto;
-    max-width: none;
-  }
-
-  .sprite-debug-card-enemy > .sprite-debug-enemy-preview-panel {
-    justify-self: stretch;
-    width: auto;
-  }
-
-  .sprite-debug-card-enemy > .sprite-debug-motion-coverage {
-    justify-self: stretch;
-    width: auto;
-  }
-
-  .sprite-debug-card-samurai {
-    width: auto;
-    max-width: none;
-  }
-
-  .sprite-debug-card-samurai > .sprite-debug-samurai-preview-panel {
-    justify-self: stretch;
-    width: auto;
-  }
-
-  .sprite-debug-card-samurai > .sprite-debug-motion-coverage {
-    justify-self: stretch;
-    width: auto;
-  }
-
-  .sprite-debug-samurai-animation-buttons {
+  .sprite-debug-unit-animation-buttons.is-cols-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
-  .sprite-debug-samurai-animation-buttons > button {
+  .sprite-debug-unit-animation-buttons.is-cols-4 > button {
     width: 100%;
   }
 
-  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
+  .sprite-debug-unit-card .sprite-debug-unit-spec-grid {
     grid-template-columns: 1fr;
     gap: 0.16rem;
   }
 
-  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
-    margin-top: 0.22rem;
-  }
-
-  .sprite-debug-enemy-animation-buttons {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-  }
-
-  .sprite-debug-enemy-animation-buttons > button {
-    width: 100%;
-  }
-
-  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
-    grid-template-columns: 1fr;
-    gap: 0.16rem;
-  }
-
-  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
+  .sprite-debug-unit-card .sprite-debug-unit-spec-grid dt:not(:first-child) {
     margin-top: 0.22rem;
   }
 

@@ -68,6 +68,7 @@ interface UnitPreviewPanelButtonView {
 
 interface UnitPreviewPanelView {
   variant: UnitPreviewPanelVariant;
+  buttonColumns: 2 | 4;
   buttonsAriaLabel: string;
   slots: readonly UnitPreviewPanelSlotView[];
   buttons: readonly UnitPreviewPanelButtonView[];
@@ -154,12 +155,12 @@ export default function SpriteDebugPage() {
     gridTemplateRows: `repeat(1, ${tileSizePx}px)`,
     gap: "0px",
   }), [tileSizePx]);
-  const captivePreviewTileSizePx = 80;
-  const captivePreviewBoardGridStyle = useMemo<CSSProperties>(() => ({
-    gridTemplateColumns: `repeat(1, ${captivePreviewTileSizePx}px)`,
-    gridTemplateRows: `repeat(1, ${captivePreviewTileSizePx}px)`,
+  const unitPreviewTileSizePx = 80;
+  const unitPreviewBoardGridStyle = useMemo<CSSProperties>(() => ({
+    gridTemplateColumns: `repeat(1, ${unitPreviewTileSizePx}px)`,
+    gridTemplateRows: `repeat(1, ${unitPreviewTileSizePx}px)`,
     gap: "0px",
-  }), [captivePreviewTileSizePx]);
+  }), [unitPreviewTileSizePx]);
 
   const boardTranslate: TranslateFn = (key, opts) => t(key, opts);
 
@@ -301,25 +302,25 @@ export default function SpriteDebugPage() {
         boardGrid: null,
         spriteDir: null,
         spriteOverride: null,
-        boardGridStyle: captivePreviewBoardGridStyle,
-        tileSizePx: captivePreviewTileSizePx,
+        boardGridStyle: unitPreviewBoardGridStyle,
+        tileSizePx: unitPreviewTileSizePx,
       });
     }
     return padded;
   };
 
   const renderUnitPreviewPanel = (view: UnitPreviewPanelView) => {
-    const panelClass = `sprite-debug-${view.variant}-preview-panel`;
-    const topClass = `sprite-debug-${view.variant}-preview-top`;
-    const buttonsClass = `sprite-debug-${view.variant}-animation-buttons`;
+    const panelClass = "sprite-debug-unit-preview-panel";
+    const topClass = "sprite-debug-unit-preview-top";
+    const buttonsClass = `sprite-debug-unit-animation-buttons is-cols-${view.buttonColumns}`;
     const slots = padUnitPreviewSlots(view.slots);
 
     return (
       <div className={panelClass}>
         <div className={topClass}>
-          <div className="sprite-debug-captive-preview-row">
+          <div className="sprite-debug-unit-preview-row">
             {slots.map((slot) => {
-              let slotContent = <div className="sprite-debug-captive-preview-placeholder" aria-hidden="true" />;
+              let slotContent = <div className="sprite-debug-unit-preview-placeholder" aria-hidden="true" />;
 
               if (slot.boardGrid && slot.spriteDir) {
                 const spriteDirByTile = new Map<number, SpriteDir>();
@@ -347,11 +348,11 @@ export default function SpriteDebugPage() {
               }
 
               return (
-                <div key={`${view.variant}-${slot.id}`} className="sprite-debug-captive-preview-col">
-                  <div className={`sprite-debug-captive-preview-box${slot.isActiveSlot ? " sprite-debug-captive-preview-box-active" : ""}`}>
+                <div key={`${view.variant}-${slot.id}`} className="sprite-debug-unit-preview-col">
+                  <div className={`sprite-debug-unit-preview-box${slot.isActiveSlot ? " sprite-debug-unit-preview-box-active" : ""}`}>
                     {slotContent}
                     <div
-                      className={`sprite-debug-captive-preview-caption${slot.label ? "" : " sprite-debug-captive-preview-caption-empty"}`}
+                      className={`sprite-debug-unit-preview-caption${slot.label ? "" : " sprite-debug-unit-preview-caption-empty"}`}
                       aria-hidden={slot.label ? undefined : "true"}
                     >
                       {slot.label || "\u00a0"}
@@ -483,7 +484,7 @@ export default function SpriteDebugPage() {
     keyPrefix: string,
   ) => {
     return (
-      <div className="sprite-debug-motion-coverage" aria-label={ariaLabel}>
+      <div className="sprite-debug-motion-coverage sprite-debug-unit-motion-coverage" aria-label={ariaLabel}>
         <ul className="sprite-debug-unit-spec-list">
           {specs.map((spec) => (
             <li key={`${keyPrefix}-${spec.animationType}`} className="sprite-debug-unit-spec-item">
@@ -607,12 +608,12 @@ export default function SpriteDebugPage() {
                 slotDefs: unitPreviewSlotSpecs({ kind: "samurai" }),
                 cards: visibleSamuraiCards,
                 boardGrid: samuraiBoardGrid,
-                boardGridStyle: captivePreviewBoardGridStyle,
-                tileSizePx: captivePreviewTileSizePx,
+                boardGridStyle: unitPreviewBoardGridStyle,
+                tileSizePx: unitPreviewTileSizePx,
               });
 
               return (
-                <article key="samurai-group" className="sprite-debug-card sprite-debug-card-samurai">
+                <article key="samurai-group" className="sprite-debug-card sprite-debug-unit-card sprite-debug-card-samurai">
                   <header className="sprite-debug-card-header">
                     <div>
                       <h3>samurai</h3>
@@ -625,6 +626,7 @@ export default function SpriteDebugPage() {
                   </header>
                   {renderUnitPreviewPanel({
                     variant: "samurai",
+                    buttonColumns: 4,
                     buttonsAriaLabel: "samurai animation buttons",
                     slots: samuraiPreviewSlots,
                     buttons: animationSpecs.map((spec) => {
@@ -661,6 +663,7 @@ export default function SpriteDebugPage() {
               const previewPanel = (
                 <>{renderUnitPreviewPanel({
                   variant: "enemy",
+                  buttonColumns: 4,
                   buttonsAriaLabel: `${group.kind} enemy animation buttons`,
                   slots: buildUnitPreviewPanelSlots({
                     panelKey: group.kind,
@@ -685,7 +688,7 @@ export default function SpriteDebugPage() {
               return (
                 <article
                   key={`enemy-group-${group.kind}`}
-                  className="sprite-debug-card sprite-debug-card-enemy"
+                  className="sprite-debug-card sprite-debug-unit-card sprite-debug-card-enemy"
                 >
                   <header className="sprite-debug-card-header">
                     <div>
@@ -721,7 +724,7 @@ export default function SpriteDebugPage() {
               const captiveBoardGrid = boardGridByKind.get("captive") ?? null;
 
               return (
-                <article key={card.id} className="sprite-debug-card sprite-debug-card-captive">
+                <article key={card.id} className="sprite-debug-card sprite-debug-unit-card sprite-debug-card-captive">
                   <header className="sprite-debug-card-header">
                     <div>
                       <h3>{card.kind}</h3>
@@ -735,14 +738,15 @@ export default function SpriteDebugPage() {
 
                   {renderUnitPreviewPanel({
                     variant: "captive",
+                    buttonColumns: 2,
                     buttonsAriaLabel: `${card.id} captive animation buttons`,
                     slots: buildUnitPreviewPanelSlots({
                       panelKey: card.id,
                       slotDefs: unitPreviewSlotSpecs({ kind: "captive" }),
                       cards: [card],
                       boardGrid: captiveBoardGrid,
-                      boardGridStyle: captivePreviewBoardGridStyle,
-                      tileSizePx: captivePreviewTileSizePx,
+                      boardGridStyle: unitPreviewBoardGridStyle,
+                      tileSizePx: unitPreviewTileSizePx,
                       hideBoard: currentCaptiveLocalState === "rescued",
                     }),
                     buttons: animationSpecs.map((spec) => ({
