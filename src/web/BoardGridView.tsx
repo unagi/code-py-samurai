@@ -10,7 +10,16 @@ import {
   getSamuraiIdleFramePath,
   resolveSpriteStateSrc,
 } from "./sprite-config";
-import { computeSpriteFrameIndex, type SpriteDir } from "./sprite-utils";
+import {
+  computeDeterministicAnimationOffsetMs,
+  computeDeterministicJitteredCycleMs,
+  computeFrameMsFromCycle,
+  computeSpriteFrameIndex,
+  type SpriteDir,
+} from "./sprite-utils";
+
+const IDLE_SPRITE_CYCLE_MS = 1400;
+const IDLE_SPRITE_CYCLE_JITTER_RATIO = 0.15;
 
 interface BoardGridViewProps {
   boardGrid: BoardGridData;
@@ -45,11 +54,21 @@ function buildHoverText(tile: BoardTile, tileAlt: string, tileStats: string | nu
   return `${tileAlt.toUpperCase()}  ${tileStats}`;
 }
 
+function computeTileAnimationSeed(index: number, tile: BoardTile): number {
+  let seed = (index + 1) >>> 0;
+  for (let i = 0; i < tile.kind.length; i++) {
+    seed = Math.imul(seed ^ tile.kind.charCodeAt(i), 16777619) >>> 0;
+  }
+  seed = Math.imul(seed ^ tile.symbol.charCodeAt(0), 16777619) >>> 0;
+  return seed >>> 0;
+}
+
 function resolveBaseTileVisual(
   tile: BoardTile,
   override: SpriteOverride | undefined,
   spriteDir: SpriteDir,
   samuraiFrame: number,
+  tileAnimationSeed: number,
 ): SpriteVisual {
   if (tile.kind === "samurai") {
     return { src: getSamuraiIdleFramePath(samuraiFrame), frames: 1, currentFrame: 0 };
@@ -66,7 +85,15 @@ function resolveBaseTileVisual(
 
   const src = resolveSpriteStateSrc(ownSpriteConfig.idle, spriteDir);
   const frames = ownSpriteConfig.idle.frames;
-  const currentFrame = computeSpriteFrameIndex(Date.now(), frames, SPRITE_FRAME_MS, true);
+  const idleCycleMs = computeDeterministicJitteredCycleMs(
+    tileAnimationSeed ^ 0x9e3779b9,
+    IDLE_SPRITE_CYCLE_MS,
+    IDLE_SPRITE_CYCLE_JITTER_RATIO,
+  );
+  const idleFrameMs = computeFrameMsFromCycle(frames, idleCycleMs, SPRITE_FRAME_MS);
+  const cycleMs = frames * idleFrameMs;
+  const phaseOffsetMs = computeDeterministicAnimationOffsetMs(tileAnimationSeed, cycleMs);
+  const currentFrame = computeSpriteFrameIndex(Date.now() + phaseOffsetMs, frames, idleFrameMs, true);
   return { src, frames, currentFrame };
 }
 
@@ -200,7 +227,8 @@ function BoardTileCell(props: Readonly<{
 
   const override = spriteOverrideByTile.get(index);
   const spriteDir = spriteDirByTile.get(index) ?? "right";
-  const baseVisual = resolveBaseTileVisual(tile, override, spriteDir, samuraiFrame);
+  const tileAnimationSeed = computeTileAnimationSeed(index, tile);
+  const baseVisual = resolveBaseTileVisual(tile, override, spriteDir, samuraiFrame, tileAnimationSeed);
   const overlay = resolveOverlayVisual(override, spriteDir);
 
   const handleHoverStart = (): void => {
