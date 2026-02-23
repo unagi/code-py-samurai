@@ -14,8 +14,8 @@ Gemini生成画像 (スプライトシート)
   ↓── (B) 敵キャラルート (gama等):
   ↓     extract_grid_cells.py — 赤セパレータ検出 + rembg + セル分離
   ↓     (目視で各セルの向きを判定 → 左右振り分け)
-  ↓     frame_order.py — idle フレーム順序決定 (CV: edge+DT+ECC+距離行列)
-  ↓     frame_order.py 出力から手動でスプライトシート組立
+  ↓     frame_order.py (idle) — idle フレーム順序決定 (CV: edge+DT+ECC+距離行列)
+  ↓     frame_order.py --ref  — action フレームを idle A 基準でソート + スプライトシート自動生成
   ↓
   ↓  (中割りが必要な場合)
   ↓  ToonCrafter HF Space でフレーム補間
@@ -158,6 +158,61 @@ cd tools && uv run python pipeline/frame_order.py \
 - `cycle_contact.png` — A→B1→C→B2 サイクル
 - `report.json` — 全数値データ
 - `normalized/` — 正規化済み個別フレーム（320×320px）
+
+### Action フレーム順序決定: frame_order.py --ref
+
+`--ref` を指定すると ref モードに切り替わる。
+参照フレーム（idle A 端点）からの DT 距離で action フレームを昇順ソートし、
+スプライトシートを自動生成する。
+
+```
+入力: 参照フレーム (idle A) + N枚の action フレーム
+  ↓ [1] 正規化: ref + action を一括で target_size(320px) の正方形に縮小フィット
+  ↓ [2] ref の Edge + DT を算出
+  ↓ [3] 各 action: Edge + DT → ECC align → mean|ref_dt - aligned_dt| = 距離
+  ↓ [4] 距離昇順でソート（idle に近い = アクション開始）
+出力: spritesheet.png (横連結), ordered_contact.png (REF + ソート順), report.json
+```
+
+> idle 内の距離 (0.8〜4.0) に比べ、action の距離は 10〜40 と大きいため、
+> West-A / East-A の差は無視できる。同一の ref (r1c4) を全方向に使える。
+
+```bash
+# 例: west attack (2フレーム) を idle A (r1c4) 基準でソート
+cd tools && uv run python pipeline/frame_order.py \
+  ../from_creator/gemini/_cells/gama-01 \
+  --ref r1c4.png \
+  --files r2c1.png r2c2.png \
+  -o ../from_creator/gemini/_cells/gama-01/_attack_west
+
+# 1フレーム (damaged) でもパイプラインを通す（正規化 + スプライトシート生成）
+cd tools && uv run python pipeline/frame_order.py \
+  ../from_creator/gemini/_cells/gama-01 \
+  --ref r1c4.png \
+  --files r2c3.png \
+  -o ../from_creator/gemini/_cells/gama-01/_damaged_west
+```
+
+左右対称キャラは `--flip` で全アクションフレームを ref と同じ向きに揃えてから計測する。
+`spritesheet.png` が ref と同方向（west）、`spritesheet_mirrored.png` が反転（east）になる。
+
+```bash
+# 例: death (3フレーム, 全て R) を ref (r1c4, L) に揃えてソート
+cd tools && uv run python pipeline/frame_order.py \
+  ../from_creator/gemini/_cells/gama-01 \
+  --ref r1c4.png \
+  --files r2c4.png r4c4.png r2c5.png \
+  --flip r2c4.png r4c4.png r2c5.png \
+  -o ../from_creator/gemini/_cells/gama-01/_death
+# → spritesheet.png = death-west.png (L), spritesheet_mirrored.png = death-east.png (R)
+```
+
+出力:
+- `spritesheet.png` — ゲーム用スプライトシート（ラベルなし横連結、320×N×320px）
+- `spritesheet_mirrored.png` — 左右反転版（対称キャラの反対方向用）
+- `ordered_contact.png` — REF + ソート済みフレーム（目視確認用）
+- `report.json` — 距離データ（`mode: "ref"`, `distances_from_ref`）
+- `normalized/` — 正規化済み個別フレーム
 
 ---
 
