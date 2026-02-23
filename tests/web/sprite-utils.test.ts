@@ -118,6 +118,8 @@ describe("computeDeterministicJitteredCycleMs", () => {
   it("returns the base cycle when jitter is disabled or inputs are invalid", () => {
     expect(computeDeterministicJitteredCycleMs(42, 1400, 0)).toBe(1400);
     expect(computeDeterministicJitteredCycleMs(42, 1400, -0.1)).toBe(1400);
+    expect(computeDeterministicJitteredCycleMs(42, 1400, Number.NaN)).toBe(1400);
+    expect(computeDeterministicJitteredCycleMs(42, 1400, Number.POSITIVE_INFINITY)).toBe(1400);
     expect(computeDeterministicJitteredCycleMs(42, 0, 0.15)).toBe(1);
   });
 
