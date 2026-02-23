@@ -27,10 +27,10 @@ describe("sprite asset manifest (generated)", () => {
   });
 
   it("normalizes left/right named sprites into directional variants", () => {
-    const orochi = spriteAssetManifest.units.orochi;
+    const thickSludge = spriteAssetManifest.units["thick-sludge"];
 
-    expect(orochi.idle.left?.path).toBe("/assets/sprites/orochi/idle-left.png");
-    expect(orochi.idle.right?.frames).toBe(3);
-    expect(orochi.attack.left?.frames).toBe(4);
+    expect(thickSludge.idle.left?.path).toBe("/assets/sprites/thick-sludge/idle-left.png");
+    expect(thickSludge.idle.right?.frames).toBe(3);
+    expect(thickSludge.attack.left?.frames).toBe(4);
   });
 });

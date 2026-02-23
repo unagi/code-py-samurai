@@ -89,10 +89,10 @@ function buildSludgeSpriteConfigFromManifest(): CharSpriteConfig {
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
   sludge: buildSludgeSpriteConfigFromManifest(),
   "thick-sludge": {
-    idle:    { pathTemplate: "/assets/sprites/orochi/idle-{dir}.png",    frames: 3 },
-    attack:  { pathTemplate: "/assets/sprites/orochi/attack-{dir}.png",  frames: 4 },
-    damaged: { pathTemplate: "/assets/sprites/orochi/damaged-{dir}.png", frames: 2 },
-    death:   { pathTemplate: "/assets/sprites/orochi/death-{dir}.png",   frames: 4 },
+    idle:    { pathTemplate: "/assets/sprites/thick-sludge/idle-{dir}.png",    frames: 3 },
+    attack:  { pathTemplate: "/assets/sprites/thick-sludge/attack-{dir}.png",  frames: 4 },
+    damaged: { pathTemplate: "/assets/sprites/thick-sludge/damaged-{dir}.png", frames: 2 },
+    death:   { pathTemplate: "/assets/sprites/thick-sludge/death-{dir}.png",   frames: 4 },
   },
   captive: {
     idle:    { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
