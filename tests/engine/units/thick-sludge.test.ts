@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 import { ThickSludge } from "@engine/units/thick-sludge";
 import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
@@ -11,6 +12,16 @@ describe("ThickSludge", () => {
     expect(ts.attackPower).toBe(3);
     expect(ts.character).toBe("S");
     expect(ts.name).toBe("Thick Sludge");
+  });
+
+  it("matches gameplay JSON for base combat parameters", () => {
+    const ts = new ThickSludge();
+
+    expect(ts.attackPower).toBe(thickSludgeGameplay.stats.attackPower);
+    expect(ts.maxHealth).toBe(thickSludgeGameplay.stats.maxHealth);
+    expect(ts.character).toBe(thickSludgeGameplay.symbol);
+    expect(ts.nameKey).toBe(thickSludgeGameplay.nameKey);
+    expect(ts.name).toBe(thickSludgeGameplay.displayName);
   });
 
   it("is not samurai or golem", () => {

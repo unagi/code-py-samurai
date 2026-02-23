@@ -1,10 +1,11 @@
 import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
+import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 
 const TILE_BASE_STATS: Record<string, { hp: number | null; atk: number | null }> = {
   samurai: { hp: 20, atk: 5 },
   golem: { hp: null, atk: 3 },
   sludge: { hp: sludgeGameplay.stats.maxHealth, atk: sludgeGameplay.stats.attackPower },
-  "thick-sludge": { hp: 24, atk: 3 },
+  "thick-sludge": { hp: thickSludgeGameplay.stats.maxHealth, atk: thickSludgeGameplay.stats.attackPower },
   archer: { hp: 7, atk: 3 },
   wizard: { hp: 3, atk: 11 },
   captive: { hp: 1, atk: 0 },

@@ -1,0 +1,10 @@
+{
+  "kind": "thick-sludge",
+  "symbol": "S",
+  "nameKey": "thickSludge",
+  "displayName": "Thick Sludge",
+  "stats": {
+    "maxHealth": 24,
+    "attackPower": 3
+  }
+}
