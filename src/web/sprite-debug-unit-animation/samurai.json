@@ -16,7 +16,7 @@
         "/assets/sprites/samurai-cat/idle-east-frames/frame_09.png",
         "/assets/sprites/samurai-cat/idle-east-frames/frame_13.png"
       ],
-      "artLayout": "samurai-grid"
+      "artLayout": "quad-grid"
     },
     {
       "animationType": "Disappear",
@@ -27,7 +27,7 @@
       "implementation": "samurai の death sprite mapping は未実装。専用表示は出ない。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "samurai-grid"
+      "artLayout": "quad-grid"
     },
     {
       "animationType": "Offence",
@@ -38,7 +38,7 @@
       "implementation": "Offence（attack/shoot）用の samurai sprite mapping は未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "samurai-grid"
+      "artLayout": "quad-grid"
     },
     {
       "animationType": "Damaged",
@@ -49,7 +49,7 @@
       "implementation": "damaged 用の samurai sprite mapping は未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "samurai-grid"
+      "artLayout": "quad-grid"
     }
   ]
 }

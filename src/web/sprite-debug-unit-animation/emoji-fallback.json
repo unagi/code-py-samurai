@@ -11,7 +11,7 @@
       "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "enemy-grid"
+      "artLayout": "pair-grid"
     },
     {
       "animationType": "Disappear",
@@ -22,7 +22,7 @@
       "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "enemy-grid"
+      "artLayout": "pair-grid"
     },
     {
       "animationType": "Offence",
@@ -33,7 +33,7 @@
       "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "enemy-grid"
+      "artLayout": "pair-grid"
     },
     {
       "animationType": "Damaged",
@@ -44,7 +44,7 @@
       "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
       "status": "ng",
       "previewImageSrcs": [],
-      "artLayout": "enemy-grid"
+      "artLayout": "pair-grid"
     }
   ]
 }

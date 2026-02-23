@@ -434,10 +434,10 @@ export default function SpriteDebugPage() {
   };
 
   const renderUnitAnimationSpecArt = (spec: UnitAnimationTypeSpec, keyPrefix: string) => {
-    if (spec.artLayout === "enemy-grid") {
+    if (spec.artLayout === "pair-grid") {
       return (
-        <div className="sprite-debug-captive-spec-art">
-          <div className="sprite-debug-enemy-spec-art-grid">
+        <div className="sprite-debug-unit-spec-art">
+          <div className="sprite-debug-unit-spec-art-grid-pair">
             {spec.previewImageSrcs.length > 0 ? (
               spec.previewImageSrcs.map((src) => (
                 <img
@@ -450,8 +450,8 @@ export default function SpriteDebugPage() {
               ))
             ) : (
               <>
-                <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
-                <div className="sprite-debug-enemy-spec-art-empty" aria-hidden="true" />
+                <div className="sprite-debug-unit-spec-art-empty" aria-hidden="true" />
+                <div className="sprite-debug-unit-spec-art-empty" aria-hidden="true" />
               </>
             )}
           </div>
@@ -459,10 +459,10 @@ export default function SpriteDebugPage() {
       );
     }
 
-    if (spec.artLayout === "samurai-grid") {
+    if (spec.artLayout === "quad-grid") {
       return (
-        <div className="sprite-debug-captive-spec-art">
-          <div className="sprite-debug-samurai-spec-art-grid">
+        <div className="sprite-debug-unit-spec-art">
+          <div className="sprite-debug-unit-spec-art-grid-quad">
             {spec.previewImageSrcs.length > 0 ? (
               spec.previewImageSrcs.map((src) => (
                 <img
@@ -474,7 +474,7 @@ export default function SpriteDebugPage() {
                 />
               ))
             ) : (
-              <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
+              <div className="sprite-debug-unit-spec-art-empty" aria-hidden="true" />
             )}
           </div>
         </div>
@@ -482,7 +482,7 @@ export default function SpriteDebugPage() {
     }
 
     return (
-      <div className="sprite-debug-captive-spec-art">
+      <div className="sprite-debug-unit-spec-art">
         {spec.previewImageSrcs.length > 0 ? (
           spec.previewImageSrcs.map((src) => (
             <img
@@ -494,7 +494,7 @@ export default function SpriteDebugPage() {
             />
           ))
         ) : (
-          <div className="sprite-debug-samurai-spec-art-empty" aria-hidden="true" />
+          <div className="sprite-debug-unit-spec-art-empty" aria-hidden="true" />
         )}
       </div>
     );
@@ -507,10 +507,10 @@ export default function SpriteDebugPage() {
   ) => {
     return (
       <div className="sprite-debug-motion-coverage" aria-label={ariaLabel}>
-        <ul className="sprite-debug-captive-spec-list">
+        <ul className="sprite-debug-unit-spec-list">
           {specs.map((spec) => (
-            <li key={`${keyPrefix}-${spec.animationType}`} className="sprite-debug-captive-spec-item">
-              <div className="sprite-debug-captive-spec-header">
+            <li key={`${keyPrefix}-${spec.animationType}`} className="sprite-debug-unit-spec-item">
+              <div className="sprite-debug-unit-spec-header">
                 <code>{spec.animationType.toLowerCase()}</code>
                 <span
                   className={`sprite-debug-coverage-chip ${
@@ -520,12 +520,12 @@ export default function SpriteDebugPage() {
                   {spec.status.toUpperCase()}
                 </span>
               </div>
-              <dl className="sprite-debug-captive-spec-grid">
+              <dl className="sprite-debug-unit-spec-grid">
                 <dt>trigger</dt>
                 <dd>{spec.trigger}</dd>
                 <dt>sprite file</dt>
                 <dd>
-                  <div className="sprite-debug-enemy-spec-file-list">
+                  <div className="sprite-debug-unit-spec-file-list">
                     {spec.spriteFiles.map((file) => <code key={`${keyPrefix}-${spec.animationType}-${file}`}>{file}</code>)}
                   </div>
                 </dd>

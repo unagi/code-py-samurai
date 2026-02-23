@@ -10,7 +10,7 @@ import sludgeDefJson from "./sprite-debug-unit-animation/sludge.json";
 import thickSludgeDefJson from "./sprite-debug-unit-animation/thick-sludge.json";
 
 export type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
-export type UnitAnimationArtLayout = "single" | "enemy-grid" | "samurai-grid";
+export type UnitAnimationArtLayout = "single" | "pair-grid" | "quad-grid";
 
 export interface UnitAnimationTypeSpec {
   animationType: UnitAnimationType;
@@ -152,7 +152,7 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
       implementation: buildSpriteConfigImplementationText(entry.spriteState, actualFrames, expectedFrames, entry.overlay),
       status,
       previewImageSrcs,
-      artLayout: "enemy-grid",
+      artLayout: "pair-grid",
     };
   });
 }

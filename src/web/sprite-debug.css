@@ -245,7 +245,7 @@
   font-size: 0.76rem;
 }
 
-.sprite-debug-captive-spec-list {
+.sprite-debug-unit-spec-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -253,7 +253,7 @@
   gap: 0.45rem;
 }
 
-.sprite-debug-captive-spec-item {
+.sprite-debug-unit-spec-item {
   border: 1px solid rgba(145, 117, 92, 0.16);
   border-radius: 8px;
   padding: 0.45rem 0.5rem;
@@ -262,19 +262,19 @@
   gap: 0.35rem;
 }
 
-.sprite-debug-captive-spec-header {
+.sprite-debug-unit-spec-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.sprite-debug-captive-spec-header code {
+.sprite-debug-unit-spec-header code {
   color: #f0dfc5;
   font-size: 0.78rem;
 }
 
-.sprite-debug-captive-spec-grid {
+.sprite-debug-unit-spec-grid {
   margin: 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -282,7 +282,7 @@
   align-items: start;
 }
 
-.sprite-debug-captive-spec-grid dt {
+.sprite-debug-unit-spec-grid dt {
   margin: 0;
   color: #bca98f;
   font-size: 0.7rem;
@@ -290,11 +290,11 @@
   letter-spacing: 0.03em;
 }
 
-.sprite-debug-captive-spec-grid dt:not(:first-child) {
+.sprite-debug-unit-spec-grid dt:not(:first-child) {
   margin-top: 0.22rem;
 }
 
-.sprite-debug-captive-spec-grid dd {
+.sprite-debug-unit-spec-grid dd {
   margin: 0;
   min-width: 0;
 }
@@ -577,12 +577,12 @@
   max-width: 100%;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-list {
+.sprite-debug-card-captive .sprite-debug-unit-spec-list {
   gap: 0.55rem;
   width: 100%;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-item {
+.sprite-debug-card-captive .sprite-debug-unit-spec-item {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(104, 119, 154, 0.24);
@@ -593,13 +593,13 @@
   gap: 0.45rem;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-header code {
+.sprite-debug-card-captive .sprite-debug-unit-spec-header code {
   color: #eef4ff;
   font-size: 1.22rem;
   font-weight: 700;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-grid dt {
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt {
   color: #95a8c7;
   font-size: 0.74rem;
   line-height: 1.2;
@@ -607,24 +607,24 @@
   text-align: left;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-grid dd {
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd {
   color: #dbe5f3;
   font-size: 0.88rem;
   line-height: 1.4;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-grid {
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid {
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 0.24rem 0.55rem;
   align-items: start;
   margin-top: 0.22rem;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-grid dt:not(:first-child) {
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
   margin-top: 0;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-grid dd code {
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd code {
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -655,7 +655,7 @@
   font-size: 0.74rem;
 }
 
-.sprite-debug-card-captive .sprite-debug-captive-spec-art {
+.sprite-debug-card-captive .sprite-debug-unit-spec-art {
   border: 1px solid rgba(121, 137, 172, 0.18);
   border-radius: 8px;
   padding: 0.45rem;
@@ -766,12 +766,12 @@
   gap: 0.55rem;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-list {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-list {
   gap: 0.55rem;
   width: 100%;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-item {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-item {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(104, 119, 154, 0.24);
@@ -781,20 +781,20 @@
   gap: 0.45rem;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-header code {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-header code {
   color: #eef4ff;
   font-size: 1.22rem;
   font-weight: 700;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-grid {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 0.24rem 0.55rem;
   align-items: start;
   margin-top: 0.22rem;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-grid dt {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt {
   color: #95a8c7;
   font-size: 0.74rem;
   line-height: 1.2;
@@ -802,22 +802,22 @@
   text-align: left;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-grid dd {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd {
   color: #dbe5f3;
   font-size: 0.88rem;
   line-height: 1.4;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-grid dt:not(:first-child) {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
   margin-top: 0;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-grid dd code {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd code {
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-.sprite-debug-card-enemy .sprite-debug-captive-spec-art {
+.sprite-debug-card-enemy .sprite-debug-unit-spec-art {
   border: 1px solid rgba(121, 137, 172, 0.18);
   border-radius: 8px;
   padding: 0.45rem;
@@ -836,12 +836,12 @@
   object-position: left center;
 }
 
-.sprite-debug-enemy-spec-file-list {
+.sprite-debug-unit-spec-file-list {
   display: grid;
   gap: 0.12rem;
 }
 
-.sprite-debug-enemy-spec-art-grid {
+.sprite-debug-unit-spec-art-grid-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.45rem;
@@ -940,12 +940,12 @@
   gap: 0.55rem;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-list {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-list {
   gap: 0.55rem;
   width: 100%;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-item {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-item {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(104, 119, 154, 0.24);
@@ -955,20 +955,20 @@
   gap: 0.45rem;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-header code {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-header code {
   color: #eef4ff;
   font-size: 1.22rem;
   font-weight: 700;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-grid {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 0.24rem 0.55rem;
   align-items: start;
   margin-top: 0.22rem;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-grid dt {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt {
   color: #95a8c7;
   font-size: 0.74rem;
   line-height: 1.2;
@@ -976,22 +976,22 @@
   text-align: left;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-grid dd {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd {
   color: #dbe5f3;
   font-size: 0.88rem;
   line-height: 1.4;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-grid dt:not(:first-child) {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
   margin-top: 0;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-grid dd code {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd code {
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-.sprite-debug-card-samurai .sprite-debug-captive-spec-art {
+.sprite-debug-card-samurai .sprite-debug-unit-spec-art {
   border: 1px solid rgba(121, 137, 172, 0.18);
   border-radius: 8px;
   padding: 0.45rem;
@@ -1010,14 +1010,14 @@
   object-position: left center;
 }
 
-.sprite-debug-samurai-spec-art-grid {
+.sprite-debug-unit-spec-art-grid-quad {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   align-items: center;
 }
 
-.sprite-debug-samurai-spec-art-empty {
+.sprite-debug-unit-spec-art-empty {
   width: 100%;
   height: 80px;
   border-radius: 8px;
@@ -1204,12 +1204,12 @@
     grid-template-columns: 1fr;
   }
 
-  .sprite-debug-card-captive .sprite-debug-captive-spec-grid {
+  .sprite-debug-card-captive .sprite-debug-unit-spec-grid {
     grid-template-columns: 1fr;
     gap: 0.16rem;
   }
 
-  .sprite-debug-card-captive .sprite-debug-captive-spec-grid dt:not(:first-child) {
+  .sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
     margin-top: 0.22rem;
   }
 
@@ -1252,12 +1252,12 @@
     width: 100%;
   }
 
-  .sprite-debug-card-samurai .sprite-debug-captive-spec-grid {
+  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
     grid-template-columns: 1fr;
     gap: 0.16rem;
   }
 
-  .sprite-debug-card-samurai .sprite-debug-captive-spec-grid dt:not(:first-child) {
+  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
     margin-top: 0.22rem;
   }
 
@@ -1270,16 +1270,16 @@
     width: 100%;
   }
 
-  .sprite-debug-card-enemy .sprite-debug-captive-spec-grid {
+  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
     grid-template-columns: 1fr;
     gap: 0.16rem;
   }
 
-  .sprite-debug-card-enemy .sprite-debug-captive-spec-grid dt:not(:first-child) {
+  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
     margin-top: 0.22rem;
   }
 
-  .sprite-debug-enemy-spec-art-grid {
+  .sprite-debug-unit-spec-art-grid-pair {
     grid-template-columns: 1fr;
   }
 

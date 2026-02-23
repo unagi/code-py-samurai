@@ -26,7 +26,7 @@ describe("sprite debug unit animation specs", () => {
     ]);
     expect(specs[0]).toMatchObject({
       animationType: "Idle",
-      artLayout: "samurai-grid",
+      artLayout: "quad-grid",
       status: "ng",
     });
   });
