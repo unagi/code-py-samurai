@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
+import ts from "typescript";
 
 function listSourceTsFiles(root: string): string[] {
   const files: string[] = [];
@@ -35,16 +36,32 @@ function isAllowedDebugJsonImporter(relPath: string): boolean {
 
 function findDebugJsonImportSpecifiers(sourceText: string): string[] {
   const specs: string[] = [];
-  const staticImportRe = /\bimport\s+(?:[^"'()]+?\s+from\s+)?["']([^"']+\.debug\.json)["']/g;
-  const dynamicImportRe = /\bimport\(\s*["']([^"']+\.debug\.json)["']\s*\)/g;
+  const sourceFile = ts.createSourceFile(
+    "debug-json-import-boundary.tsx",
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
 
-  for (const re of [staticImportRe, dynamicImportRe]) {
-    let match: RegExpExecArray | null = re.exec(sourceText);
-    while (match) {
-      specs.push(match[1]);
-      match = re.exec(sourceText);
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
+      if (node.moduleSpecifier.text.endsWith(".debug.json")) {
+        specs.push(node.moduleSpecifier.text);
+      }
     }
-  }
+
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const firstArg = node.arguments[0];
+      if (firstArg && ts.isStringLiteralLike(firstArg) && firstArg.text.endsWith(".debug.json")) {
+        specs.push(firstArg.text);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
   return specs;
 }
 

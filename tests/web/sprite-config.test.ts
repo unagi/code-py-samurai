@@ -53,6 +53,11 @@ describe("sprite config", () => {
     expect(CHAR_SPRITES.captive.idle.frames).toBe(3);
   });
 
+  it("throws when sprite state config has no path source", () => {
+    expect(() => resolveSpriteStateSrc({ frames: 1 }, "left"))
+      .toThrow("SpriteStateConfig must define pathTemplate or pathByDir");
+  });
+
   it("keeps animation timing constants stable", () => {
     expect(SAMURAI_IDLE_FRAME_COUNT).toBe(1);
     expect(SAMURAI_IDLE_FRAME_MS).toBe(140);
