@@ -60,6 +60,18 @@ describe("buildBoardGrid", () => {
     });
   });
 
+  it("keeps thick-sludge tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("S");
+    const thickSludgeTile = grid.tiles.find((tile) => tile.symbol === "S" && tile.kind !== "void");
+
+    expect(thickSludgeTile).toBeDefined();
+    expect(thickSludgeTile).toMatchObject({
+      symbol: "S",
+      kind: "thick-sludge",
+      altKey: "tiles.thickSludge",
+    });
+  });
+
   it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
     const grid = buildBoardGrid("@x");
     const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
