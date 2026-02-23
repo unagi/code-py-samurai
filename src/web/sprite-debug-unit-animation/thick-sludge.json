@@ -1,6 +1,10 @@
 {
   "kind": "thick-sludge",
   "mode": "sprite-config",
+  "previewSlots": [
+    { "label": "WEST", "spriteDir": "left" },
+    { "label": "EAST", "spriteDir": "right" }
+  ],
   "entries": [
     {
       "animationType": "Idle",

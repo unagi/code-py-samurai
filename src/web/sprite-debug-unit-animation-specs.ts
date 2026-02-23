@@ -11,6 +11,10 @@ import thickSludgeDefJson from "./sprite-debug-unit-animation/thick-sludge.json"
 
 export type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
 export type UnitAnimationArtLayout = "single" | "pair-grid" | "quad-grid";
+export interface UnitPreviewSlotSpec {
+  label: string;
+  spriteDir: SpriteDir | null;
+}
 
 export interface UnitAnimationTypeSpec {
   animationType: UnitAnimationType;
@@ -35,6 +39,7 @@ type StaticUnitAnimationEntryJson = UnitAnimationTypeSpec;
 interface StaticUnitAnimationDefinitionJson {
   kind: string;
   mode: "static";
+  previewSlots: UnitPreviewSlotSpec[];
   entries: StaticUnitAnimationEntryJson[];
 }
 
@@ -49,6 +54,7 @@ interface SpriteConfigUnitAnimationEntryJson {
 interface SpriteConfigUnitAnimationDefinitionJson {
   kind: string;
   mode: "sprite-config";
+  previewSlots: UnitPreviewSlotSpec[];
   entries: SpriteConfigUnitAnimationEntryJson[];
 }
 
@@ -170,4 +176,14 @@ export function unitAnimationTypeSpecs(source: UnitAnimationTypeSpecSource): Uni
   }
 
   return materializeSpriteConfigUnitAnimationTypeSpecs(def, source.cards ?? []);
+}
+
+export function unitPreviewSlotSpecs(source: Pick<UnitAnimationTypeSpecSource, "kind" | "renderMode">): UnitPreviewSlotSpec[] {
+  if (source.renderMode === "emoji") {
+    return [...EMOJI_FALLBACK_DEF.previewSlots];
+  }
+
+  const def = UNIT_ANIMATION_DEFS_BY_KIND.get(source.kind);
+  if (!def) return [];
+  return [...def.previewSlots];
 }

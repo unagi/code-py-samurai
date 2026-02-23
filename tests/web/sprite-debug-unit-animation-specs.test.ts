@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SpriteDebugCardSpec } from "../../src/web/sprite-debug-data";
-import { unitAnimationTypeSpecs } from "../../src/web/sprite-debug-unit-animation-specs";
+import { unitAnimationTypeSpecs, unitPreviewSlotSpecs } from "../../src/web/sprite-debug-unit-animation-specs";
 
 function buildEnemyCard(kind: string, dir: "left" | "right"): SpriteDebugCardSpec {
   return {
@@ -37,6 +37,22 @@ describe("sprite debug unit animation specs", () => {
     expect(specs).toHaveLength(4);
     expect(specs.every((spec) => spec.status === "ng")).toBe(true);
     expect(specs[0].spriteFiles).toEqual(["-"]);
+  });
+
+  it("returns preview slots from unit JSON definitions", () => {
+    expect(unitPreviewSlotSpecs({ kind: "samurai" }).map((slot) => slot.label)).toEqual([
+      "WEST",
+      "EAST",
+      "NORTH",
+      "SOUTH",
+    ]);
+    expect(unitPreviewSlotSpecs({ kind: "captive" })).toEqual([
+      { label: "NONE", spriteDir: "right" },
+    ]);
+    expect(unitPreviewSlotSpecs({ kind: "archer", renderMode: "emoji" }).map((slot) => slot.label)).toEqual([
+      "WEST",
+      "EAST",
+    ]);
   });
 
   it("materializes sprite-config-based specs from unit cards", () => {

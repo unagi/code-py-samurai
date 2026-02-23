@@ -1,6 +1,10 @@
 {
   "kind": "emoji-fallback",
   "mode": "static",
+  "previewSlots": [
+    { "label": "WEST", "spriteDir": "left" },
+    { "label": "EAST", "spriteDir": "right" }
+  ],
   "entries": [
     {
       "animationType": "Idle",

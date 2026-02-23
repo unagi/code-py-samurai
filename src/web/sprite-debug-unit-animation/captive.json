@@ -1,6 +1,9 @@
 {
   "kind": "captive",
   "mode": "static",
+  "previewSlots": [
+    { "label": "NONE", "spriteDir": "right" }
+  ],
   "entries": [
     {
       "animationType": "Idle",

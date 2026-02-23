@@ -1,6 +1,12 @@
 {
   "kind": "samurai",
   "mode": "static",
+  "previewSlots": [
+    { "label": "WEST", "spriteDir": "left" },
+    { "label": "EAST", "spriteDir": "right" },
+    { "label": "NORTH", "spriteDir": "right" },
+    { "label": "SOUTH", "spriteDir": "left" }
+  ],
   "entries": [
     {
       "animationType": "Idle",

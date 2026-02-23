@@ -16,7 +16,12 @@ import {
   SAMURAI_IDLE_FRAME_MS,
   SPRITE_FRAME_MS,
 } from "./sprite-config";
-import { unitAnimationTypeSpecs, type UnitAnimationTypeSpec } from "./sprite-debug-unit-animation-specs";
+import {
+  unitAnimationTypeSpecs,
+  unitPreviewSlotSpecs,
+  type UnitAnimationType,
+  type UnitAnimationTypeSpec,
+} from "./sprite-debug-unit-animation-specs";
 import {
   type DebugSpriteButtonState,
   type SpriteDebugCardSpec,
@@ -34,30 +39,45 @@ const NOOP_HOVER = (): void => {};
 const DEFAULT_TILE_SIZE_PX = 80;
 const OTHER_UNIT_KINDS = new Set(["samurai", "captive"]);
 const ENEMY_EMOJI_KINDS = new Set(["archer", "wizard"]);
-const DEBUG_ANIMATION_BUTTON_ORDER: readonly DebugSpriteButtonState[] = ["idle", "death", "attack", "damaged"];
-
 interface EnemyPreviewGroup {
   kind: string;
   renderMode: "sprite" | "emoji";
   cards: SpriteDebugCardSpec[];
 }
 
-const SAMURAI_SLOT_SPECS = [
-  { id: "west", label: "WEST", spriteDir: "left" as const },
-  { id: "east", label: "EAST", spriteDir: "right" as const },
-  { id: "north", label: "NORTH", spriteDir: "right" as const },
-  { id: "south", label: "SOUTH", spriteDir: "left" as const },
-] as const;
+type UnitPreviewPanelVariant = "captive" | "enemy" | "samurai";
 
-function getAnimationTypeLabelFromDebugState(state: DebugSpriteButtonState): "Idle" | "Offence" | "Damaged" | "Disappear" {
-  if (state === "idle") return "Idle";
-  if (state === "attack") return "Offence";
-  if (state === "damaged") return "Damaged";
-  return "Disappear";
+interface UnitPreviewPanelSlotView {
+  id: string;
+  label: string;
+  isActiveSlot: boolean;
+  boardGrid: BoardGridData | null;
+  spriteDir: SpriteDir | null;
+  spriteOverride: SpriteOverride | null;
+  boardGridStyle: CSSProperties;
+  tileSizePx: number;
 }
 
-function getAnimationTypeLabelFromCaptiveState(state: CaptiveLocalState): "Idle" | "Disappear" {
-  return state === "bound" ? "Idle" : "Disappear";
+interface UnitPreviewPanelButtonView {
+  id: string;
+  label: UnitAnimationType;
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}
+
+interface UnitPreviewPanelView {
+  variant: UnitPreviewPanelVariant;
+  buttonsAriaLabel: string;
+  slots: readonly UnitPreviewPanelSlotView[];
+  buttons: readonly UnitPreviewPanelButtonView[];
+}
+
+function animationTypeToDebugState(animationType: UnitAnimationType): DebugSpriteButtonState {
+  if (animationType === "Idle") return "idle";
+  if (animationType === "Offence") return "attack";
+  if (animationType === "Damaged") return "damaged";
+  return "death";
 }
 
 const DEBUG_STATS_FORMATTER: StatsFormatter = {
@@ -271,118 +291,47 @@ export default function SpriteDebugPage() {
     });
   };
 
-  const renderCaptivePreviewPanel = (card: SpriteDebugCardSpec, captiveLocalState: CaptiveLocalState | null) => {
-    const spriteDirByTile = new Map<number, SpriteDir>();
-    spriteDirByTile.set(0, card.spriteDir);
-    const captiveBoardGrid = boardGridByKind.get("captive");
-    if (!captiveBoardGrid) return null;
-    const floorBoardGrid: BoardGridData = { columns: 1, rows: 1, tiles: [TILE_SPEC_BY_KIND.floor] };
-    const commonProps = {
-      boardGridStyle: captivePreviewBoardGridStyle,
-      t: boardTranslate,
-      damagePopupsByTile: EMPTY_DAMAGE_POPUPS,
-      spriteOverrideByTile: new Map<number, SpriteOverride>(),
-      spriteDirByTile,
-      samuraiFrame,
-      samuraiHealth: 20,
-      samuraiMaxHealth: 20,
-      statsFmt: DEBUG_STATS_FORMATTER,
-      tileSizePx: captivePreviewTileSizePx,
-      onHoveredEnemyStatsChange: NOOP_HOVER,
-    } as const;
-    const isIdleActive = captiveLocalState !== "rescued";
-    const isDisappearActive = !isIdleActive;
-    const previewBoardGrid = isIdleActive ? captiveBoardGrid : floorBoardGrid;
-
-    return (
-      <div className="sprite-debug-captive-preview-panel">
-        <div className="sprite-debug-captive-preview-top">
-          <div className="sprite-debug-captive-preview-row">
-            {([
-              { id: "slot-none", label: "NONE", active: true },
-              { id: "slot-2", label: "", active: false },
-              { id: "slot-3", label: "", active: false },
-              { id: "slot-4", label: "", active: false },
-            ] as const).map((slot) => {
-              const isNoneSlot = slot.active;
-              return (
-                <div key={`${card.id}-${slot.id}`} className="sprite-debug-captive-preview-col">
-                  <div className={`sprite-debug-captive-preview-box${isNoneSlot ? " sprite-debug-captive-preview-box-active" : ""}`}>
-                    {isNoneSlot ? (
-                      <BoardGridView boardGrid={previewBoardGrid} {...commonProps} />
-                    ) : (
-                      <div className="sprite-debug-captive-preview-placeholder" aria-hidden="true" />
-                    )}
-                    <div
-                      className={`sprite-debug-captive-preview-caption${slot.label ? "" : " sprite-debug-captive-preview-caption-empty"}`}
-                      aria-hidden={slot.label ? undefined : "true"}
-                    >
-                      {slot.label || "\u00a0"}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="sprite-debug-captive-animation-buttons" role="group" aria-label={`${card.id} captive animation buttons`}>
-            <button
-              type="button"
-              className={isIdleActive ? "sprite-debug-button-active" : undefined}
-              onClick={() => handleCaptiveLocalState(card, "bound")}
-            >
-              <span className="icon-label">
-                <i className="bi bi-play-fill" aria-hidden="true" />
-                {getAnimationTypeLabelFromCaptiveState("bound")}
-              </span>
-            </button>
-            <button
-              type="button"
-              className={isDisappearActive ? "sprite-debug-button-active" : undefined}
-              onClick={() => handleCaptiveLocalState(card, "rescued")}
-            >
-              <span className="icon-label">
-                <i className="bi bi-play-fill" aria-hidden="true" />
-                {getAnimationTypeLabelFromCaptiveState("rescued")}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const padUnitPreviewSlots = (slots: readonly UnitPreviewPanelSlotView[]): UnitPreviewPanelSlotView[] => {
+    const padded = [...slots];
+    while (padded.length < 4) {
+      padded.push({
+        id: `placeholder-${padded.length + 1}`,
+        label: "",
+        isActiveSlot: false,
+        boardGrid: null,
+        spriteDir: null,
+        spriteOverride: null,
+        boardGridStyle: captivePreviewBoardGridStyle,
+        tileSizePx: captivePreviewTileSizePx,
+      });
+    }
+    return padded;
   };
 
-  const renderEnemyPreviewPanel = (group: EnemyPreviewGroup, currentState: DebugSpriteButtonState) => {
-    const boardGrid = boardGridByKind.get(group.kind);
-    if (group.renderMode === "sprite" && !boardGrid) return null;
-    const isEmojiFallbackGroup = group.renderMode === "emoji";
-
-    const slots = [
-      { id: "west", card: group.cards.find((card) => card.spriteDir === "left") ?? null, label: "WEST" },
-      { id: "east", card: group.cards.find((card) => card.spriteDir === "right") ?? null, label: "EAST" },
-      { id: "slot-3", card: null, label: "" },
-      { id: "slot-4", card: null, label: "" },
-    ] as const;
+  const renderUnitPreviewPanel = (view: UnitPreviewPanelView) => {
+    const panelClass = `sprite-debug-${view.variant}-preview-panel`;
+    const topClass = `sprite-debug-${view.variant}-preview-top`;
+    const buttonsClass = `sprite-debug-${view.variant}-animation-buttons`;
+    const slots = padUnitPreviewSlots(view.slots);
 
     return (
-      <div className="sprite-debug-enemy-preview-panel">
-        <div className="sprite-debug-enemy-preview-top">
+      <div className={panelClass}>
+        <div className={topClass}>
           <div className="sprite-debug-captive-preview-row">
             {slots.map((slot) => {
-              const isActiveSlot = slot.card !== null;
               let slotContent = <div className="sprite-debug-captive-preview-placeholder" aria-hidden="true" />;
 
-              if (slot.card && boardGrid) {
+              if (slot.boardGrid && slot.spriteDir) {
                 const spriteDirByTile = new Map<number, SpriteDir>();
-                spriteDirByTile.set(0, slot.card.spriteDir);
+                spriteDirByTile.set(0, slot.spriteDir);
                 const spriteOverrideByTile = new Map<number, SpriteOverride>();
-                const override = cardOverrides[slot.card.id];
-                if (override) {
-                  spriteOverrideByTile.set(0, override);
+                if (slot.spriteOverride) {
+                  spriteOverrideByTile.set(0, slot.spriteOverride);
                 }
                 slotContent = (
                   <BoardGridView
-                    boardGrid={boardGrid}
-                    boardGridStyle={boardGridStyle}
+                    boardGrid={slot.boardGrid}
+                    boardGridStyle={slot.boardGridStyle}
                     t={boardTranslate}
                     damagePopupsByTile={EMPTY_DAMAGE_POPUPS}
                     spriteOverrideByTile={spriteOverrideByTile}
@@ -391,15 +340,15 @@ export default function SpriteDebugPage() {
                     samuraiHealth={20}
                     samuraiMaxHealth={20}
                     statsFmt={DEBUG_STATS_FORMATTER}
-                    tileSizePx={tileSizePx}
+                    tileSizePx={slot.tileSizePx}
                     onHoveredEnemyStatsChange={NOOP_HOVER}
                   />
                 );
               }
 
               return (
-                <div key={`${group.kind}-${slot.id}`} className="sprite-debug-captive-preview-col">
-                  <div className={`sprite-debug-captive-preview-box${isActiveSlot ? " sprite-debug-captive-preview-box-active" : ""}`}>
+                <div key={`${view.variant}-${slot.id}`} className="sprite-debug-captive-preview-col">
+                  <div className={`sprite-debug-captive-preview-box${slot.isActiveSlot ? " sprite-debug-captive-preview-box-active" : ""}`}>
                     {slotContent}
                     <div
                       className={`sprite-debug-captive-preview-caption${slot.label ? "" : " sprite-debug-captive-preview-caption-empty"}`}
@@ -412,18 +361,18 @@ export default function SpriteDebugPage() {
               );
             })}
           </div>
-          <div className="sprite-debug-enemy-animation-buttons" role="group" aria-label={`${group.kind} enemy animation buttons`}>
-            {DEBUG_ANIMATION_BUTTON_ORDER.map((state) => (
+          <div className={buttonsClass} role="group" aria-label={view.buttonsAriaLabel}>
+            {view.buttons.map((button) => (
               <button
-                key={`${group.kind}-anim-${state}`}
+                key={button.id}
                 type="button"
-                className={currentState === state ? "sprite-debug-button-active" : undefined}
-                onClick={() => handleTriggerStateForCards(group.cards, state)}
-                disabled={isEmojiFallbackGroup}
+                className={button.active ? "sprite-debug-button-active" : undefined}
+                onClick={button.onClick}
+                disabled={button.disabled}
               >
                 <span className="icon-label">
                   <i className="bi bi-play-fill" aria-hidden="true" />
-                  {getAnimationTypeLabelFromDebugState(state)}
+                  {button.label}
                 </span>
               </button>
             ))}
@@ -431,6 +380,34 @@ export default function SpriteDebugPage() {
         </div>
       </div>
     );
+  };
+
+  const buildUnitPreviewPanelSlots = (params: {
+    panelKey: string;
+    slotDefs: ReturnType<typeof unitPreviewSlotSpecs>;
+    cards: readonly SpriteDebugCardSpec[];
+    boardGrid: BoardGridData | null;
+    boardGridStyle: CSSProperties;
+    tileSizePx: number;
+    hideBoard?: boolean;
+  }): UnitPreviewPanelSlotView[] => {
+    return params.slotDefs.map((slotDef, index) => {
+      const card = slotDef.spriteDir
+        ? (params.cards.find((item) => item.spriteDir === slotDef.spriteDir) ?? null)
+        : null;
+      const spriteOverride = !params.hideBoard && card ? (cardOverrides[card.id] ?? null) : null;
+
+      return {
+        id: `${params.panelKey}-slot-${index + 1}`,
+        label: slotDef.label,
+        isActiveSlot: true,
+        boardGrid: !params.hideBoard && card && params.boardGrid ? params.boardGrid : null,
+        spriteDir: card?.spriteDir ?? slotDef.spriteDir,
+        spriteOverride,
+        boardGridStyle: params.boardGridStyle,
+        tileSizePx: params.tileSizePx,
+      };
+    });
   };
 
   const renderUnitAnimationSpecArt = (spec: UnitAnimationTypeSpec, keyPrefix: string) => {
@@ -544,79 +521,6 @@ export default function SpriteDebugPage() {
     );
   };
 
-  const renderSamuraiPreviewPanel = (cards: readonly SpriteDebugCardSpec[], currentState: DebugSpriteButtonState) => {
-    const boardGrid = boardGridByKind.get("samurai");
-    if (!boardGrid) return null;
-
-    return (
-      <div className="sprite-debug-samurai-preview-panel">
-        <div className="sprite-debug-samurai-preview-top">
-          <div className="sprite-debug-captive-preview-row">
-            {SAMURAI_SLOT_SPECS.map((slot) => {
-              const card = cards.find((item) => item.spriteDir === slot.spriteDir) ?? null;
-              const spriteDirByTile = new Map<number, SpriteDir>();
-              if (card) {
-                spriteDirByTile.set(0, card.spriteDir);
-              }
-              const spriteOverrideByTile = new Map<number, SpriteOverride>();
-              if (card) {
-                const override = cardOverrides[card.id];
-                if (override) {
-                  spriteOverrideByTile.set(0, override);
-                }
-              }
-
-              return (
-                <div key={`samurai-slot-${slot.id}`} className="sprite-debug-captive-preview-col">
-                  <div className="sprite-debug-captive-preview-box sprite-debug-captive-preview-box-active">
-                    {card ? (
-                      <BoardGridView
-                        boardGrid={boardGrid}
-                        boardGridStyle={captivePreviewBoardGridStyle}
-                        t={boardTranslate}
-                        damagePopupsByTile={EMPTY_DAMAGE_POPUPS}
-                        spriteOverrideByTile={spriteOverrideByTile}
-                        spriteDirByTile={spriteDirByTile}
-                        samuraiFrame={samuraiFrame}
-                        samuraiHealth={20}
-                        samuraiMaxHealth={20}
-                        statsFmt={DEBUG_STATS_FORMATTER}
-                        tileSizePx={captivePreviewTileSizePx}
-                        onHoveredEnemyStatsChange={NOOP_HOVER}
-                      />
-                    ) : (
-                      <div className="sprite-debug-captive-preview-placeholder" aria-hidden="true" />
-                    )}
-                    <div className="sprite-debug-captive-preview-caption">{slot.label}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="sprite-debug-samurai-animation-buttons" role="group" aria-label="samurai animation buttons">
-            {DEBUG_ANIMATION_BUTTON_ORDER.map((state) => {
-              const enabled = state === "idle";
-              return (
-                <button
-                  key={`samurai-anim-${state}`}
-                  type="button"
-                  className={currentState === state ? "sprite-debug-button-active" : undefined}
-                  onClick={() => handleTriggerStateForCards(cards, state)}
-                  disabled={!enabled}
-                >
-                  <span className="icon-label">
-                    <i className="bi bi-play-fill" aria-hidden="true" />
-                    {getAnimationTypeLabelFromDebugState(state)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <main className={`sprite-debug-page${showTileBackground ? "" : " sprite-debug-page-tile-off"}`}>
       <header className="sprite-debug-header">
@@ -696,6 +600,16 @@ export default function SpriteDebugPage() {
                 .map((card) => cardOverrides[card.id])
                 .find((override) => Boolean(override));
               const currentState: DebugSpriteButtonState = currentOverride ? currentOverride.state : "idle";
+              const animationSpecs = unitAnimationTypeSpecs({ kind: "samurai" });
+              const samuraiBoardGrid = boardGridByKind.get("samurai") ?? null;
+              const samuraiPreviewSlots = buildUnitPreviewPanelSlots({
+                panelKey: "samurai",
+                slotDefs: unitPreviewSlotSpecs({ kind: "samurai" }),
+                cards: visibleSamuraiCards,
+                boardGrid: samuraiBoardGrid,
+                boardGridStyle: captivePreviewBoardGridStyle,
+                tileSizePx: captivePreviewTileSizePx,
+              });
 
               return (
                 <article key="samurai-group" className="sprite-debug-card sprite-debug-card-samurai">
@@ -709,9 +623,23 @@ export default function SpriteDebugPage() {
                       {currentState}
                     </span>
                   </header>
-                  {renderSamuraiPreviewPanel(visibleSamuraiCards, currentState)}
+                  {renderUnitPreviewPanel({
+                    variant: "samurai",
+                    buttonsAriaLabel: "samurai animation buttons",
+                    slots: samuraiPreviewSlots,
+                    buttons: animationSpecs.map((spec) => {
+                      const state = animationTypeToDebugState(spec.animationType);
+                      return {
+                        id: `samurai-anim-${spec.animationType}`,
+                        label: spec.animationType,
+                        active: currentState === state,
+                        disabled: spec.animationType !== "Idle",
+                        onClick: () => handleTriggerStateForCards(visibleSamuraiCards, state),
+                      };
+                    }),
+                  })}
                   {renderUnitFooter(
-                    unitAnimationTypeSpecs({ kind: "samurai" }),
+                    animationSpecs,
                     "samurai game motion coverage",
                     "samurai",
                   )}
@@ -724,6 +652,36 @@ export default function SpriteDebugPage() {
                 .map((card) => cardOverrides[card.id])
                 .find((override) => Boolean(override));
               const currentState: DebugSpriteButtonState = currentOverride ? currentOverride.state : "idle";
+              const animationSpecs = unitAnimationTypeSpecs({
+                kind: group.kind,
+                renderMode: group.renderMode,
+                cards: group.cards,
+              });
+              const enemyBoardGrid = boardGridByKind.get(group.kind) ?? null;
+              const previewPanel = (
+                <>{renderUnitPreviewPanel({
+                  variant: "enemy",
+                  buttonsAriaLabel: `${group.kind} enemy animation buttons`,
+                  slots: buildUnitPreviewPanelSlots({
+                    panelKey: group.kind,
+                    slotDefs: unitPreviewSlotSpecs({ kind: group.kind, renderMode: group.renderMode }),
+                    cards: group.cards,
+                    boardGrid: enemyBoardGrid,
+                    boardGridStyle,
+                    tileSizePx,
+                  }),
+                  buttons: animationSpecs.map((spec) => {
+                    const state = animationTypeToDebugState(spec.animationType);
+                    return {
+                      id: `${group.kind}-anim-${spec.animationType}`,
+                      label: spec.animationType,
+                      active: currentState === state,
+                      disabled: group.renderMode === "emoji",
+                      onClick: () => handleTriggerStateForCards(group.cards, state),
+                    };
+                  }),
+                })}</>
+              );
               return (
                 <article
                   key={`enemy-group-${group.kind}`}
@@ -739,13 +697,9 @@ export default function SpriteDebugPage() {
                       {currentState}
                     </span>
                   </header>
-                  {renderEnemyPreviewPanel(group, currentState)}
+                  {group.renderMode === "sprite" && !enemyBoardGrid ? null : previewPanel}
                   {renderUnitFooter(
-                    unitAnimationTypeSpecs({
-                      kind: group.kind,
-                      renderMode: group.renderMode,
-                      cards: group.cards,
-                    }),
+                    animationSpecs,
                     `${group.kind} enemy game motion coverage`,
                     group.kind,
                   )}
@@ -762,6 +716,9 @@ export default function SpriteDebugPage() {
               if (card.kind === "captive") {
                 currentStateLabel = captiveLocalState === "rescued" ? "disappear" : "idle";
               }
+              const currentCaptiveLocalState = captiveLocalState ?? "bound";
+              const animationSpecs = unitAnimationTypeSpecs({ kind: card.kind });
+              const captiveBoardGrid = boardGridByKind.get("captive") ?? null;
 
               return (
                 <article key={card.id} className="sprite-debug-card sprite-debug-card-captive">
@@ -776,9 +733,29 @@ export default function SpriteDebugPage() {
                     </span>
                   </header>
 
-                  {renderCaptivePreviewPanel(card, captiveLocalState)}
+                  {renderUnitPreviewPanel({
+                    variant: "captive",
+                    buttonsAriaLabel: `${card.id} captive animation buttons`,
+                    slots: buildUnitPreviewPanelSlots({
+                      panelKey: card.id,
+                      slotDefs: unitPreviewSlotSpecs({ kind: "captive" }),
+                      cards: [card],
+                      boardGrid: captiveBoardGrid,
+                      boardGridStyle: captivePreviewBoardGridStyle,
+                      tileSizePx: captivePreviewTileSizePx,
+                      hideBoard: currentCaptiveLocalState === "rescued",
+                    }),
+                    buttons: animationSpecs.map((spec) => ({
+                      id: `${card.id}-anim-${spec.animationType}`,
+                      label: spec.animationType,
+                      active:
+                        (spec.animationType === "Idle" && currentCaptiveLocalState === "bound")
+                        || (spec.animationType === "Disappear" && currentCaptiveLocalState === "rescued"),
+                      onClick: () => handleCaptiveLocalState(card, spec.animationType === "Disappear" ? "rescued" : "bound"),
+                    })),
+                  })}
                   {renderUnitFooter(
-                    unitAnimationTypeSpecs({ kind: card.kind }),
+                    animationSpecs,
                     `${card.id} captive game motion coverage`,
                     card.id,
                   )}
