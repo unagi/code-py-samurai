@@ -775,7 +775,7 @@ export default function SpriteDebugPage() {
                       boardGrid: captiveBoardGrid,
                       boardGridStyle: unitPreviewBoardGridStyle,
                       tileSizePx: unitPreviewTileSizePx,
-                      hideBoard: currentCaptiveLocalState === "rescued",
+                      hideBoard: false,
                     }),
                     buttons: animationSpecs.map((spec) => ({
                       id: `${card.id}-anim-${spec.animationType}`,
