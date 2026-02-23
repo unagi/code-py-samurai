@@ -1,0 +1,1286 @@
+.sprite-debug-page {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  min-height: 100vh;
+  color: #ead8bb;
+  background:
+    radial-gradient(85% 50% at 12% 0%, rgba(70, 44, 26, 0.34), transparent 60%),
+    radial-gradient(70% 45% at 88% 0%, rgba(49, 62, 92, 0.24), transparent 62%),
+    linear-gradient(180deg, #1a130f 0%, #171116 52%, #151118 100%);
+}
+
+.sprite-debug-header {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  align-items: start;
+}
+
+.sprite-debug-eyebrow {
+  margin: 0;
+  color: #9fbfe0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sprite-debug-header h1 {
+  margin: 0.2rem 0 0;
+  font-size: 1.55rem;
+}
+
+.sprite-debug-summary {
+  margin: 0.45rem 0 0;
+  color: #d6c1a4;
+  font-size: 0.92rem;
+}
+
+.sprite-debug-coverage-summary {
+  margin: 0.45rem 0 0;
+  color: #d8e8c0;
+  font-size: 0.84rem;
+}
+
+.sprite-debug-coverage-summary-warn {
+  color: #ffc7b0;
+}
+
+.sprite-debug-summary-cards {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.55rem;
+}
+
+.sprite-debug-summary-card {
+  min-width: 7.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(182, 145, 106, 0.34);
+  border-radius: 10px;
+  background: rgba(19, 16, 12, 0.82);
+  display: grid;
+  gap: 0.18rem;
+}
+
+.sprite-debug-summary-card span {
+  color: #c8b79f;
+  font-size: 0.74rem;
+}
+
+.sprite-debug-summary-card strong {
+  color: #ffebc8;
+  font-size: 1.05rem;
+}
+
+.sprite-debug-panel {
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(173, 133, 95, 0.28);
+  background: linear-gradient(180deg, rgba(31, 22, 17, 0.9), rgba(22, 17, 14, 0.88));
+}
+
+.sprite-debug-panel-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sprite-debug-panel-header p {
+  margin: 0.35rem 0 0;
+  color: #cab59a;
+  font-size: 0.88rem;
+}
+
+.sprite-debug-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.sprite-debug-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #dfcfb8;
+  font-size: 0.84rem;
+  min-height: 2.4rem;
+}
+
+.sprite-debug-toggle input {
+  accent-color: #c88e54;
+}
+
+.sprite-debug-field {
+  display: grid;
+  gap: 0.2rem;
+  color: #dccaaf;
+  font-size: 0.82rem;
+}
+
+.sprite-debug-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.7rem;
+}
+
+.sprite-debug-grid-wide-cards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.7rem;
+}
+
+.sprite-debug-global-state {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(160, 127, 92, 0.2);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.sprite-debug-global-state-label {
+  color: #dccaaf;
+  font-size: 0.82rem;
+}
+
+.sprite-debug-card {
+  border: 1px solid rgba(152, 119, 87, 0.28);
+  border-radius: 10px;
+  background: rgba(14, 12, 10, 0.72);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sprite-debug-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.sprite-debug-card-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.sprite-debug-card-subtitle {
+  margin: 0.15rem 0 0;
+  color: #bca98f;
+  font-size: 0.8rem;
+}
+
+.sprite-debug-state-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.8rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(176, 149, 118, 0.32);
+  color: #d6c4aa;
+  background: rgba(20, 17, 14, 0.8);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sprite-debug-state-chip-active {
+  color: #ffe4b0;
+  border-color: rgba(242, 197, 128, 0.44);
+  background: rgba(58, 38, 19, 0.9);
+}
+
+.sprite-debug-preview-frame {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border: 1px solid rgba(152, 119, 87, 0.26);
+  border-radius: 8px;
+  padding: 0.35rem;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-color: rgba(12, 11, 9, 0.95);
+}
+
+.sprite-debug-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sprite-debug-button-row button {
+  min-width: 4.25rem;
+  padding-inline: 0.55rem;
+  font-size: 0.78rem;
+}
+
+.sprite-debug-button-row .sprite-debug-button-active {
+  border-color: #d6b183;
+  background: linear-gradient(180deg, #e4c699, #b88958);
+}
+
+.sprite-debug-meta-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+  color: #cbb89d;
+  font-size: 0.78rem;
+}
+
+.sprite-debug-motion-coverage {
+  display: grid;
+  gap: 0.25rem;
+  color: #ccb99d;
+  font-size: 0.76rem;
+}
+
+.sprite-debug-unit-spec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sprite-debug-unit-spec-item {
+  border: 1px solid rgba(145, 117, 92, 0.16);
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  background: rgba(12, 10, 9, 0.38);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.sprite-debug-unit-spec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sprite-debug-unit-spec-header code {
+  color: #f0dfc5;
+  font-size: 0.78rem;
+}
+
+.sprite-debug-unit-spec-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.16rem;
+  align-items: start;
+}
+
+.sprite-debug-unit-spec-grid dt {
+  margin: 0;
+  color: #bca98f;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sprite-debug-unit-spec-grid dt:not(:first-child) {
+  margin-top: 0.22rem;
+}
+
+.sprite-debug-unit-spec-grid dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.sprite-debug-motion-coverage-row {
+  display: grid;
+  grid-template-columns:
+    minmax(80px, auto)
+    minmax(150px, auto)
+    minmax(180px, auto)
+    minmax(150px, 1fr)
+    minmax(170px, 1fr)
+    minmax(72px, auto);
+  gap: 0.4rem;
+  align-items: center;
+  border: 1px solid rgba(145, 117, 92, 0.14);
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  background: rgba(12, 10, 9, 0.38);
+}
+
+.sprite-debug-motion-coverage-row-header {
+  font-size: 0.7rem;
+  color: #bca98f;
+  background: rgba(0, 0, 0, 0.14);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sprite-debug-motion-coverage-row code {
+  color: #f0dfc5;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.sprite-debug-motion-file-cell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sprite-debug-motion-file-preview {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid rgba(176, 149, 118, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.2rem;
+}
+
+.sprite-debug-motion-file-meta {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.sprite-debug-motion-file-meta code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sprite-debug-motion-file-meta span {
+  color: #bca98f;
+  font-size: 0.68rem;
+}
+
+.sprite-debug-coverage-chip {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(176, 149, 118, 0.32);
+  background: rgba(20, 17, 14, 0.8);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.sprite-debug-coverage-chip-ok {
+  color: #d8f0bf;
+  border-color: rgba(144, 201, 109, 0.35);
+  background: rgba(34, 57, 22, 0.85);
+}
+
+.sprite-debug-coverage-chip-partial {
+  color: #ffe1b4;
+  border-color: rgba(242, 197, 128, 0.44);
+  background: rgba(58, 38, 19, 0.9);
+}
+
+.sprite-debug-coverage-chip-ng {
+  color: #ffd0ca;
+  border-color: rgba(224, 108, 97, 0.42);
+  background: rgba(73, 24, 22, 0.9);
+}
+
+.sprite-debug-direction-coverage-list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  color: #ccb99d;
+  font-size: 0.78rem;
+}
+
+.sprite-debug-direction-coverage-list li {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid rgba(145, 117, 92, 0.14);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: rgba(12, 10, 9, 0.42);
+}
+
+.sprite-debug-unsupported-list {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sprite-debug-unsupported-item {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) 80px 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(145, 117, 92, 0.2);
+  background: rgba(12, 10, 9, 0.62);
+  color: #ccb99d;
+  font-size: 0.82rem;
+}
+
+.sprite-debug-unsupported-item code {
+  color: #f0dfc5;
+}
+
+.sprite-debug-page-tile-off .tile-samurai,
+.sprite-debug-page-tile-off .tile-sludge,
+.sprite-debug-page-tile-off .tile-thick-sludge,
+.sprite-debug-page-tile-off .tile-captive {
+  background: transparent;
+}
+
+/* Captive card redesign baseline (other cards will be migrated later) */
+.sprite-debug-card-captive {
+  grid-column: 1 / -1;
+  max-width: 980px;
+  width: 100%;
+  justify-self: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+  grid-template-areas:
+    "header header"
+    "preview controls"
+    "spec spec";
+  gap: 0.85rem 0.95rem;
+  padding: 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(104, 119, 154, 0.34);
+  background:
+    radial-gradient(130% 130% at 0% 0%, rgba(53, 67, 105, 0.22), transparent 50%),
+    radial-gradient(110% 140% at 100% 100%, rgba(46, 67, 110, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(22, 23, 30, 0.98), rgba(16, 17, 22, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.sprite-debug-card-captive > .sprite-debug-card-header {
+  grid-area: header;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sprite-debug-card-captive > .sprite-debug-card-header h3 {
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #f5f8ff;
+}
+
+.sprite-debug-card-captive > .sprite-debug-card-header .sprite-debug-state-chip {
+  min-width: 4.2rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 7px;
+  border-color: rgba(223, 96, 88, 0.45);
+  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
+  color: #fff0ee;
+  font-size: 0.74rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.sprite-debug-card-captive > .sprite-debug-preview-frame {
+  grid-area: preview;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(116, 132, 167, 0.2);
+  background: linear-gradient(180deg, rgba(20, 21, 27, 0.95), rgba(15, 16, 21, 0.95));
+}
+
+.sprite-debug-card-captive > .sprite-debug-preview-frame .board-grid {
+  width: 100%;
+}
+
+.sprite-debug-card-captive .board-tile {
+  border-radius: 6px;
+}
+
+.sprite-debug-card-captive .tile-captive {
+  background: linear-gradient(180deg, #857d6d, #766e5f);
+}
+
+.sprite-debug-card-captive > .sprite-debug-local-controls {
+  grid-area: controls;
+  align-content: start;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  border-radius: 10px;
+  border: 1px solid rgba(116, 132, 167, 0.18);
+  background: linear-gradient(180deg, rgba(21, 22, 28, 0.94), rgba(16, 17, 22, 0.94));
+}
+
+.sprite-debug-card-captive > .sprite-debug-local-controls .sprite-debug-global-state-label {
+  color: #c7d6ec;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.sprite-debug-card-captive > .sprite-debug-local-controls .sprite-debug-button-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+
+.sprite-debug-card-captive > .sprite-debug-local-controls .sprite-debug-button-row button {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.35rem;
+  border-radius: 8px;
+  border: 1px solid rgba(92, 126, 170, 0.38);
+  background: linear-gradient(180deg, rgba(72, 107, 148, 0.92), rgba(47, 72, 106, 0.92));
+  color: #e4f0ff;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-card-captive > .sprite-debug-local-controls .sprite-debug-button-row .sprite-debug-button-active {
+  border-color: rgba(147, 189, 235, 0.56);
+  background: linear-gradient(180deg, rgba(98, 146, 198, 0.96), rgba(58, 92, 136, 0.96));
+  color: #f4f9ff;
+}
+
+.sprite-debug-card-captive > .sprite-debug-motion-coverage {
+  grid-area: spec;
+  gap: 0.55rem;
+  justify-self: start;
+  width: calc(var(--sprite-debug-captive-content-width) + (0.75rem * 2));
+  max-width: 100%;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-list {
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-item {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(104, 119, 154, 0.24);
+  border-radius: 10px;
+  padding: 0.65rem 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(23, 24, 30, 0.95), rgba(18, 19, 24, 0.95));
+  gap: 0.45rem;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-header code {
+  color: #eef4ff;
+  font-size: 1.22rem;
+  font-weight: 700;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt {
+  color: #95a8c7;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  margin-top: 0;
+  text-align: left;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd {
+  color: #dbe5f3;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid {
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.24rem 0.55rem;
+  align-items: start;
+  margin-top: 0.22rem;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
+  margin-top: 0;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-grid dd code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sprite-debug-card-captive .sprite-debug-motion-file-preview {
+  width: auto;
+  max-width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 137, 172, 0.24);
+  background: linear-gradient(180deg, #857d6d, #766e5f);
+  padding: 0.45rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.sprite-debug-card-captive .sprite-debug-motion-file-meta {
+  gap: 0.1rem;
+}
+
+.sprite-debug-card-captive .sprite-debug-motion-file-meta code {
+  color: #e8f0fb;
+  font-size: 0.78rem;
+}
+
+.sprite-debug-card-captive .sprite-debug-motion-file-meta span {
+  color: #95a8c7;
+  font-size: 0.74rem;
+}
+
+.sprite-debug-card-captive .sprite-debug-unit-spec-art {
+  border: 1px solid rgba(121, 137, 172, 0.18);
+  border-radius: 8px;
+  padding: 0.45rem;
+  background: linear-gradient(180deg, rgba(20, 21, 27, 0.92), rgba(16, 17, 22, 0.92));
+}
+
+/* Enemy cards (new mock-aligned layout; forked before commonization) */
+.sprite-debug-card-enemy {
+  --sprite-debug-enemy-content-width: calc((146px * 4) + (0.55rem * 3));
+  max-width: min(100%, 700px);
+  justify-self: start;
+  width: fit-content;
+  gap: 0.8rem;
+  padding: 0.95rem;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(41, 62, 104, 0.22), transparent 48%),
+    linear-gradient(180deg, rgba(18, 20, 29, 0.96), rgba(14, 16, 23, 0.96));
+  border-color: rgba(106, 124, 160, 0.22);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-card-enemy > .sprite-debug-card-header h3 {
+  color: #f5f8ff;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sprite-debug-card-enemy > .sprite-debug-card-header .sprite-debug-state-chip {
+  min-width: 4.2rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 7px;
+  border-color: rgba(223, 96, 88, 0.45);
+  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
+  color: #fff0ee;
+  font-size: 0.74rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.sprite-debug-card-enemy > .sprite-debug-enemy-preview-panel {
+  justify-self: start;
+  width: calc(var(--sprite-debug-enemy-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  border: 1px solid rgba(106, 124, 160, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sprite-debug-enemy-preview-top {
+  display: grid;
+  gap: 0.55rem;
+  width: var(--sprite-debug-enemy-content-width);
+}
+
+.sprite-debug-enemy-animation-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: fit-content;
+}
+
+.sprite-debug-enemy-animation-buttons > button {
+  width: 146px;
+  min-height: 2.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(94, 129, 173, 0.36);
+  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
+  color: #e8f2ff;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  padding: 0.65rem 0.85rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-enemy-animation-buttons > button .icon-label {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.sprite-debug-enemy-animation-buttons > button.sprite-debug-button-active {
+  border-color: rgba(151, 191, 236, 0.56);
+  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
+  color: #f7fbff;
+}
+
+.sprite-debug-captive-animation-buttons > button:disabled,
+.sprite-debug-enemy-animation-buttons > button:disabled,
+.sprite-debug-samurai-animation-buttons > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-color: rgba(120, 137, 172, 0.2);
+  background: linear-gradient(180deg, rgba(53, 63, 82, 0.75), rgba(35, 42, 58, 0.78));
+  color: rgba(219, 229, 243, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sprite-debug-card-enemy > .sprite-debug-motion-coverage {
+  justify-self: start;
+  width: calc(var(--sprite-debug-enemy-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  box-sizing: border-box;
+  gap: 0.55rem;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-list {
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-item {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(104, 119, 154, 0.24);
+  border-radius: 10px;
+  padding: 0.65rem 0.7rem;
+  background: linear-gradient(180deg, rgba(23, 24, 30, 0.95), rgba(18, 19, 24, 0.95));
+  gap: 0.45rem;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-header code {
+  color: #eef4ff;
+  font-size: 1.22rem;
+  font-weight: 700;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.24rem 0.55rem;
+  align-items: start;
+  margin-top: 0.22rem;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt {
+  color: #95a8c7;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  margin-top: 0;
+  text-align: left;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd {
+  color: #dbe5f3;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
+  margin-top: 0;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-grid dd code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sprite-debug-card-enemy .sprite-debug-unit-spec-art {
+  border: 1px solid rgba(121, 137, 172, 0.18);
+  border-radius: 8px;
+  padding: 0.45rem;
+  background: linear-gradient(180deg, rgba(20, 21, 27, 0.92), rgba(16, 17, 22, 0.92));
+}
+
+.sprite-debug-card-enemy .sprite-debug-motion-file-preview {
+  width: auto;
+  max-width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 137, 172, 0.24);
+  background: linear-gradient(180deg, #857d6d, #766e5f);
+  padding: 0.45rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.sprite-debug-unit-spec-file-list {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.sprite-debug-unit-spec-art-grid-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+/* Samurai card (new mock-aligned layout; forked before commonization) */
+.sprite-debug-card-samurai {
+  --sprite-debug-samurai-content-width: calc((146px * 4) + (0.55rem * 3));
+  max-width: min(100%, 700px);
+  justify-self: start;
+  width: fit-content;
+  gap: 0.8rem;
+  padding: 0.95rem;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(41, 62, 104, 0.22), transparent 48%),
+    linear-gradient(180deg, rgba(18, 20, 29, 0.96), rgba(14, 16, 23, 0.96));
+  border-color: rgba(106, 124, 160, 0.22);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-card-samurai > .sprite-debug-card-header h3 {
+  color: #f5f8ff;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sprite-debug-card-samurai > .sprite-debug-card-header .sprite-debug-state-chip {
+  min-width: 4.2rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 7px;
+  border-color: rgba(223, 96, 88, 0.45);
+  background: linear-gradient(180deg, rgba(223, 82, 73, 0.96), rgba(157, 39, 35, 0.98));
+  color: #fff0ee;
+  font-size: 0.74rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.sprite-debug-card-samurai > .sprite-debug-samurai-preview-panel {
+  justify-self: start;
+  width: calc(var(--sprite-debug-samurai-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  border: 1px solid rgba(106, 124, 160, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sprite-debug-samurai-preview-top {
+  display: grid;
+  gap: 0.55rem;
+  width: var(--sprite-debug-samurai-content-width);
+}
+
+.sprite-debug-samurai-animation-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: fit-content;
+}
+
+.sprite-debug-samurai-animation-buttons > button {
+  width: 146px;
+  min-height: 2.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(94, 129, 173, 0.36);
+  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
+  color: #e8f2ff;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  padding: 0.65rem 0.85rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-samurai-animation-buttons > button .icon-label {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.sprite-debug-samurai-animation-buttons > button.sprite-debug-button-active {
+  border-color: rgba(151, 191, 236, 0.56);
+  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
+  color: #f7fbff;
+}
+
+.sprite-debug-card-samurai > .sprite-debug-motion-coverage {
+  justify-self: start;
+  width: calc(var(--sprite-debug-samurai-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  box-sizing: border-box;
+  gap: 0.55rem;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-list {
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-item {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(104, 119, 154, 0.24);
+  border-radius: 10px;
+  padding: 0.65rem 0.7rem;
+  background: linear-gradient(180deg, rgba(23, 24, 30, 0.95), rgba(18, 19, 24, 0.95));
+  gap: 0.45rem;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-header code {
+  color: #eef4ff;
+  font-size: 1.22rem;
+  font-weight: 700;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.24rem 0.55rem;
+  align-items: start;
+  margin-top: 0.22rem;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt {
+  color: #95a8c7;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  margin-top: 0;
+  text-align: left;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd {
+  color: #dbe5f3;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
+  margin-top: 0;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-grid dd code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.sprite-debug-card-samurai .sprite-debug-unit-spec-art {
+  border: 1px solid rgba(121, 137, 172, 0.18);
+  border-radius: 8px;
+  padding: 0.45rem;
+  background: linear-gradient(180deg, rgba(20, 21, 27, 0.92), rgba(16, 17, 22, 0.92));
+}
+
+.sprite-debug-card-samurai .sprite-debug-motion-file-preview {
+  width: auto;
+  max-width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 137, 172, 0.24);
+  background: linear-gradient(180deg, #857d6d, #766e5f);
+  padding: 0.45rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.sprite-debug-unit-spec-art-grid-quad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.sprite-debug-unit-spec-art-empty {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 137, 172, 0.18);
+  background: linear-gradient(180deg, rgba(135, 126, 107, 0.14), rgba(103, 97, 82, 0.12));
+}
+
+/* Captive final-ish mock-aligned layout (forked for now) */
+.sprite-debug-card-captive {
+  --sprite-debug-captive-content-width: calc((146px * 4) + (0.55rem * 3));
+  max-width: min(100%, 700px);
+  justify-self: start;
+  width: fit-content;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "header"
+    "preview"
+    "spec";
+  gap: 0.8rem;
+  padding: 0.95rem;
+}
+
+.sprite-debug-card-captive > .sprite-debug-captive-preview-panel {
+  grid-area: preview;
+  justify-self: start;
+  width: calc(var(--sprite-debug-captive-content-width) + (0.75rem * 2));
+  max-width: 100%;
+  border: 1px solid rgba(106, 124, 160, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background:
+    linear-gradient(180deg, rgba(21, 22, 29, 0.95), rgba(16, 17, 22, 0.95));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sprite-debug-captive-preview-top {
+  display: grid;
+  gap: 0.55rem;
+  width: var(--sprite-debug-captive-content-width);
+}
+
+.sprite-debug-captive-preview-row {
+  display: grid;
+  grid-template-columns: repeat(4, 146px);
+  gap: 0.55rem;
+}
+
+.sprite-debug-captive-preview-col {
+  display: grid;
+  gap: 0.35rem;
+  width: 146px;
+}
+
+.sprite-debug-captive-preview-box {
+  display: grid;
+  gap: 0.32rem;
+  align-content: start;
+  justify-items: stretch;
+  padding: 0.4rem 0.4rem 0.32rem;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 137, 172, 0.18);
+  background: rgba(11, 12, 16, 0.6);
+  width: 146px;
+  min-height: 112px;
+}
+
+.sprite-debug-captive-preview-box-active {
+  border-color: rgba(143, 186, 235, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(143, 186, 235, 0.12);
+}
+
+.sprite-debug-captive-preview-box .board-grid {
+  justify-content: center;
+}
+
+.sprite-debug-captive-preview-box .board-tile {
+  border-radius: 6px;
+}
+
+.sprite-debug-captive-preview-placeholder {
+  width: 80px;
+  height: 80px;
+  margin-inline: auto;
+  border-radius: 6px;
+  border: 1px solid rgba(122, 138, 171, 0.18);
+  background:
+    linear-gradient(180deg, rgba(135, 126, 107, 0.28), rgba(103, 97, 82, 0.22));
+}
+
+.sprite-debug-captive-preview-box .tile-captive {
+  background: linear-gradient(180deg, #8a816f, #756d5e);
+}
+
+.sprite-debug-captive-preview-caption {
+  text-align: center;
+  color: #aebfda;
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 0.05rem;
+}
+
+.sprite-debug-captive-preview-caption-empty {
+  visibility: hidden;
+}
+
+.sprite-debug-captive-animation-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: fit-content;
+}
+
+.sprite-debug-captive-animation-buttons > button .icon-label {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.sprite-debug-captive-animation-buttons > button {
+  width: 146px;
+  min-height: 2.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(94, 129, 173, 0.36);
+  background: linear-gradient(180deg, rgba(74, 113, 158, 0.94), rgba(49, 75, 111, 0.94));
+  color: #e8f2ff;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  padding: 0.65rem 0.85rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.sprite-debug-captive-animation-buttons > button.sprite-debug-button-active {
+  border-color: rgba(151, 191, 236, 0.56);
+  background: linear-gradient(180deg, rgba(102, 150, 205, 0.98), rgba(58, 93, 139, 0.98));
+  color: #f7fbff;
+}
+
+@media (max-width: 900px) {
+  .sprite-debug-header {
+    grid-template-columns: 1fr;
+  }
+
+  .sprite-debug-summary-cards {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .sprite-debug-direction-coverage-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .sprite-debug-motion-coverage-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sprite-debug-card-captive {
+    grid-template-columns: 1fr;
+    max-width: none;
+    width: auto;
+    grid-template-areas:
+      "header"
+      "preview"
+      "spec";
+  }
+
+  .sprite-debug-card-captive > .sprite-debug-captive-preview-panel {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-card-captive > .sprite-debug-motion-coverage {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-captive-preview-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sprite-debug-captive-animation-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .sprite-debug-card-captive .sprite-debug-unit-spec-grid {
+    grid-template-columns: 1fr;
+    gap: 0.16rem;
+  }
+
+  .sprite-debug-card-captive .sprite-debug-unit-spec-grid dt:not(:first-child) {
+    margin-top: 0.22rem;
+  }
+
+  .sprite-debug-card-enemy {
+    width: auto;
+    max-width: none;
+  }
+
+  .sprite-debug-card-enemy > .sprite-debug-enemy-preview-panel {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-card-enemy > .sprite-debug-motion-coverage {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-card-samurai {
+    width: auto;
+    max-width: none;
+  }
+
+  .sprite-debug-card-samurai > .sprite-debug-samurai-preview-panel {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-card-samurai > .sprite-debug-motion-coverage {
+    justify-self: stretch;
+    width: auto;
+  }
+
+  .sprite-debug-samurai-animation-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .sprite-debug-samurai-animation-buttons > button {
+    width: 100%;
+  }
+
+  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid {
+    grid-template-columns: 1fr;
+    gap: 0.16rem;
+  }
+
+  .sprite-debug-card-samurai .sprite-debug-unit-spec-grid dt:not(:first-child) {
+    margin-top: 0.22rem;
+  }
+
+  .sprite-debug-enemy-animation-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .sprite-debug-enemy-animation-buttons > button {
+    width: 100%;
+  }
+
+  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid {
+    grid-template-columns: 1fr;
+    gap: 0.16rem;
+  }
+
+  .sprite-debug-card-enemy .sprite-debug-unit-spec-grid dt:not(:first-child) {
+    margin-top: 0.22rem;
+  }
+
+  .sprite-debug-unit-spec-art-grid-pair {
+    grid-template-columns: 1fr;
+  }
+
+}

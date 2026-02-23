@@ -103,6 +103,41 @@
 
 - ゲームエンジン側では **80px フレームを読み込み**、描画時に中央48pxを使用
 
+### 方角表記（本仕様の定義）
+
+- 本仕様における4方角の表記は **`WEST / EAST / NORTH / SOUTH`** を使用する
+- **列挙順も固定で `WEST, EAST, NORTH, SOUTH`** とする（敵キャラの2方向差分が `WEST / EAST` 中心のため）
+- 2方向アセットは **`WEST / EAST`**
+- 方向を持たないアセットは **`NONE`**
+
+### アニメーションタイプ（デバッグ/横断比較用の抽象分類）
+
+> 各キャラの実アニメーション名（`walk`, `rescue`, `victory` など）を置き換えるものではない。  
+> `/_debug` などで複数キャラを横断比較するときの共通ラベルとして使用する。
+
+| アニメーションタイプ | 対応する具体アニメーション/事象 | 対象 |
+|---|---|---|
+| `Idle` | `idle`（例: Captive の `bound` 表示は `idle` へマッピング） | 全キャラ共通 |
+| `Disappear` | `death` / `rescued`（例: Captive の救出後消滅） | 条件付き |
+| `Offence` | `attack` / `shoot` | 戦闘キャラのみ |
+| `Damaged` | `damaged` | 戦闘キャラのみ |
+
+- `Offence` は近接 (`attack`) / 遠距離 (`shoot`) をまとめる抽象名
+- `Disappear` は「消える/退場する」という事実ベースの抽象名であり、`death` と `rescued` を同列に扱えるようにするための分類
+- `walk`, `rest`, `rescue`（Samurai能力としての演出）, `victory` などはこの4分類の対象外で、個別名をそのまま使う
+
+#### Samurai への適用ルール（`/_debug` 運用メモ）
+
+- Samurai も `/_debug` の横断比較では **上記4分類（`Idle` / `Disappear` / `Offence` / `Damaged`）** に揃える
+- `Offence` は **`attack()` と `shoot()` を共通モーション分類として扱う**
+  - `shoot()` 固有差分（飛翔物・エフェクト等）が必要な場合は、Samurai本体スプライトとは別レイヤーで表現する
+- `Disappear` は Samurai では **`death`（0HPでの退場）** を指す
+- `Damaged` は **被弾時の受動イベント** として扱う
+- `pivot()` は **アニメーションタイプではない**
+  - `pivot()` は向き変更（DirChange）のみで、`/_debug` では方向更新 + `idle` 表示として扱う
+- Samurai API の action methods（`walk`, `rest`, `rescue`, `bind`, `detonate` など）は、上記4分類と **1対1対応しない**
+  - 上記4分類は「Sprite Debug の横断比較用ラベル」であり、Samurai API の全メソッド分類を置き換えるものではない
+
 ---
 
 ## キャラクター一覧
@@ -116,18 +151,18 @@
 出典: オリジナルキャラクター
 特徴: 三毛猫・緑の麻の葉柄着物・茶袴・赤鞘の刀
 
-| アニメーション | フレーム数 | 方向数 | 内容 |
+| アニメーション | フレーム数 | 方向（定義順） | 内容 |
 |-------------|-----------|--------|------|
-| `idle` | 4f | 4方向 | 待機・呼吸モーション |
-| `walk` | 6f | 4方向 | 歩き移動 |
-| `attack` | 6f | 4方向 | 刀で斬る |
-| `rest` | 4f | 左右 | 座って休憩・回復 |
-| `rescue` | 6f | 左右 | 捕虜を解放する |
-| `damaged` | 3f | 左右 | ダメージでのけぞる |
-| `victory` | 8f | 1方向 | 勝利ポーズ・ガッツポーズ |
-| `death` | 4f | 左右 | 0HPで倒れる |
+| `idle` | 4f | `WEST / EAST / NORTH / SOUTH` | 待機・呼吸モーション |
+| `walk` | 6f | `WEST / EAST / NORTH / SOUTH` | 歩き移動 |
+| `attack` | 6f | `WEST / EAST / NORTH / SOUTH` | 刀で斬る |
+| `rest` | 4f | `WEST / EAST` | 座って休憩・回復 |
+| `rescue` | 6f | `WEST / EAST` | 捕虜を解放する |
+| `damaged` | 3f | `WEST / EAST` | ダメージでのけぞる |
+| `victory` | 8f | `NONE` | 勝利ポーズ・ガッツポーズ |
+| `death` | 4f | `WEST / EAST` | 0HPで倒れる |
 
-**シート数: idle/walk/attack × 4方向 + rest/rescue/damaged/death × 2方向 + victory × 1 = 21シート**
+**シート数: idle/walk/attack × 4方向（WEST/EAST/NORTH/SOUTH） + rest/rescue/damaged/death × 2方向（WEST/EAST） + victory × 1方向（NONE） = 21シート**
 
 ---
 
@@ -137,14 +172,14 @@
 特徴: ずんぐりした大蝦蟇・のっそり動く・紫の毒液を吐く
 スタイル: **敵キャラの画風基準**（黒輪郭・テクスチャ塗り・リアル寄り体型）
 
-| アニメーション | フレーム数 | 方向数 | 内容 |
+| アニメーション | フレーム数 | 方向（定義順） | 内容 |
 |-------------|-----------|--------|------|
-| `idle` | 3f | 左右 | じっとしている |
-| `attack` | 4f | 左右 | 紫の毒液を吐く |
-| `damaged` | 2f | 左右 | ひるむ（※マーク）|
-| `death` | 5f | 左右 | ひっくり返って倒れる |
+| `idle` | 3f | `WEST / EAST` | じっとしている |
+| `attack` | 4f | `WEST / EAST` | 紫の毒液を吐く |
+| `damaged` | 2f | `WEST / EAST` | ひるむ（※マーク）|
+| `death` | 5f | `WEST / EAST` | ひっくり返って倒れる |
 
-**シート数: 4状態 × 2方向 = 8シート**
+**シート数: 4状態 × 2方向（WEST/EAST） = 8シート**
 
 ---
 
@@ -156,14 +191,14 @@
 Python学習ゲームにちなんだシャレの効いた敵キャラ。
 スタイル: ガマ準拠（黒輪郭・テクスチャ塗り）だが、かわいさ寄り — 怖くない
 
-| アニメーション | フレーム数 | 方向数 | 内容 |
+| アニメーション | フレーム数 | 方向（定義順） | 内容 |
 |-------------|-----------|--------|------|
-| `idle` | 3f | 左右 | 鎌首をもたげてゆらゆら |
-| `attack` | 4f | 左右 | 噛みつき |
-| `damaged` | 2f | 左右 | ひるむ |
-| `death` | 4f | 左右 | ぐにゃりと倒れる |
+| `idle` | 3f | `WEST / EAST` | 鎌首をもたげてゆらゆら |
+| `attack` | 4f | `WEST / EAST` | 噛みつき |
+| `damaged` | 2f | `WEST / EAST` | ひるむ |
+| `death` | 4f | `WEST / EAST` | ぐにゃりと倒れる |
 
-**シート数: 4状態 × 2方向 = 8シート**
+**シート数: 4状態 × 2方向（WEST/EAST） = 8シート**
 
 ---
 
@@ -187,12 +222,12 @@ Python学習ゲームにちなんだシャレの効いた敵キャラ。
 特徴: 罠に捕まっている鶴・助けると羽ばたいて喜ぶ
 スタイル: 敵より可愛め・白くて清楚なイメージ
 
-| アニメーション | フレーム数 | 方向数 | 内容 |
+| アニメーション | フレーム数 | 方向（定義順） | 内容 |
 |-------------|-----------|--------|------|
-| `bound` | 3f | 1方向 | 縛られてうずくまる |
-| `rescued` | 6f | 1方向 | 解放されて羽ばたく・喜ぶ |
+| `bound` | 3f | `NONE` | 縛られてうずくまる |
+| `rescued` | 6f | `NONE` | 解放されて羽ばたく・喜ぶ |
 
-**シート数: 2状態 × 1方向 = 2シート**
+**シート数: 2状態 × 1方向（NONE） = 2シート**
 
 ---
 
@@ -205,15 +240,15 @@ Python学習ゲームにちなんだシャレの効いた敵キャラ。
 特徴: 金太郎と相撲で仲良くなった熊・プレイヤーが操作できる頼もしい味方
 スタイル: 敵より親しみやすく、どっしりした体格。表情は穏やか
 
-| アニメーション | フレーム数 | 方向数 | 内容 |
+| アニメーション | フレーム数 | 方向（定義順） | 内容 |
 |-------------|-----------|--------|------|
-| `idle` | 3f | 左右 | ゆったり立つ |
-| `walk` | 6f | 左右 | どすどす歩く |
-| `attack` | 4f | 左右 | 力強いパンチ・熊手 |
-| `damaged` | 2f | 左右 | うなりながらひるむ |
-| `death` | 4f | 左右 | ゆっくり倒れる |
+| `idle` | 3f | `WEST / EAST` | ゆったり立つ |
+| `walk` | 6f | `WEST / EAST` | どすどす歩く |
+| `attack` | 4f | `WEST / EAST` | 力強いパンチ・熊手 |
+| `damaged` | 2f | `WEST / EAST` | うなりながらひるむ |
+| `death` | 4f | `WEST / EAST` | ゆっくり倒れる |
 
-**シート数: 5状態 × 2方向 = 10シート**
+**シート数: 5状態 × 2方向（WEST/EAST） = 10シート**
 
 ---
 
@@ -348,36 +383,36 @@ Python学習ゲームにちなんだシャレの効いた敵キャラ。
 public/assets/
 ├── sprites/
 │   ├── samurai-cat/
-│   │   ├── idle-north.png      # 4f横並び 80×320px
+│   │   ├── idle-west.png       # 4f横並び 80×320px
 │   │   ├── idle-east.png
+│   │   ├── idle-north.png
 │   │   ├── idle-south.png
-│   │   ├── idle-west.png
-│   │   ├── walk-north.png      # 6f横並び 80×480px
+│   │   ├── walk-west.png       # 6f横並び 80×480px
 │   │   ├── walk-east.png
+│   │   ├── walk-north.png
 │   │   ├── walk-south.png
-│   │   ├── walk-west.png
-│   │   ├── attack-north.png
-│   │   ├── attack-east.png
-│   │   ├── attack-south.png
 │   │   ├── attack-west.png
-│   │   ├── rest-left.png
-│   │   ├── rest-right.png
-│   │   ├── rescue-left.png
-│   │   ├── rescue-right.png
-│   │   ├── damaged-left.png
-│   │   ├── damaged-right.png
+│   │   ├── attack-east.png
+│   │   ├── attack-north.png
+│   │   ├── attack-south.png
+│   │   ├── rest-west.png
+│   │   ├── rest-east.png
+│   │   ├── rescue-west.png
+│   │   ├── rescue-east.png
+│   │   ├── damaged-west.png
+│   │   ├── damaged-east.png
 │   │   ├── victory.png
-│   │   ├── death-left.png
-│   │   └── death-right.png
+│   │   ├── death-west.png
+│   │   └── death-east.png
 │   ├── gama/
-│   │   ├── idle-left.png       # 3f横並び 80×240px
-│   │   ├── idle-right.png
-│   │   ├── attack-left.png
-│   │   ├── attack-right.png
-│   │   ├── damaged-left.png
-│   │   ├── damaged-right.png
-│   │   ├── death-left.png
-│   │   └── death-right.png
+│   │   ├── idle-west.png       # 3f横並び 80×240px
+│   │   ├── idle-east.png
+│   │   ├── attack-west.png
+│   │   ├── attack-east.png
+│   │   ├── damaged-west.png
+│   │   ├── damaged-east.png
+│   │   ├── death-west.png
+│   │   └── death-east.png
 │   ├── orochi/                 # 大蛇（同上構成）
 │   ├── tsuru/
 │   │   ├── bound.png
@@ -405,7 +440,7 @@ public/assets/
 
 | 優先度 | アセット | 理由 |
 |--------|---------|------|
-| ★★★ 最優先 | サムライ猫: idle・walk・attack（4方向）| Phase 4動作確認の核 |
+| ★★★ 最優先 | サムライ猫: idle・walk・attack（WEST/EAST/NORTH/SOUTH）| Phase 4動作確認の核 |
 | ★★★ 最優先 | タイルセット: 洞窟4枚 | マップ描画に必須 |
 | ★★★ 最優先 | ガマ: 全4状態 | Beginner最序盤の敵 |
 | ★★☆ 推奨 | サムライ猫: rest・damaged・death | 戦闘演出に必要 |

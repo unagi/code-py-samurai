@@ -1,11 +1,10 @@
 :root {
+  /* Top dark band aligns with the app header/hero area (fixed-ish height). */
+  --app-top-band-height: 280px;
+  --app-top-band-edge: 2px;
   color-scheme: light;
   font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
   color: #2d1c12;
-  background:
-    radial-gradient(80% 50% at 20% 0%, rgba(150, 95, 36, 0.35), transparent 60%),
-    radial-gradient(70% 50% at 80% 0%, rgba(115, 70, 30, 0.32), transparent 60%),
-    linear-gradient(180deg, #3a2618 0%, #4c311f 26%, #efe0c4 26.2%, #e8d8b7 100%);
 }
 
 * {
@@ -15,6 +14,16 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background:
+    radial-gradient(80% 50% at 20% 0%, rgba(150, 95, 36, 0.35), transparent 60%),
+    radial-gradient(70% 50% at 80% 0%, rgba(115, 70, 30, 0.32), transparent 60%),
+    linear-gradient(
+      180deg,
+      #3a2618 0%,
+      #4c311f calc(var(--app-top-band-height) - var(--app-top-band-edge)),
+      #efe0c4 var(--app-top-band-height),
+      #e8d8b7 100%
+    );
 }
 
 .layout {

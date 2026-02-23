@@ -1,0 +1,61 @@
+{
+  "kind": "samurai",
+  "mode": "static",
+  "previewSlots": [
+    { "label": "WEST", "spriteDir": "left" },
+    { "label": "EAST", "spriteDir": "right" },
+    { "label": "NORTH", "spriteDir": "right" },
+    { "label": "SOUTH", "spriteDir": "left" }
+  ],
+  "entries": [
+    {
+      "animationType": "Idle",
+      "trigger": "通常時",
+      "spriteFiles": ["samurai-cat/idle-east-frames/frame_*.png"],
+      "frameCountText": "16 frames",
+      "motionSpec": "等間隔フレーム遷移（WEST / EAST / NORTH / SOUTH）",
+      "implementation": "idle は再生されるが、DIRごとの sprite mapping は未実装で全方向とも east idle frames を表示する。",
+      "status": "ng",
+      "previewImageSrcs": [
+        "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
+        "/assets/sprites/samurai-cat/idle-east-frames/frame_05.png",
+        "/assets/sprites/samurai-cat/idle-east-frames/frame_09.png",
+        "/assets/sprites/samurai-cat/idle-east-frames/frame_13.png"
+      ],
+      "artLayout": "quad-grid"
+    },
+    {
+      "animationType": "Disappear",
+      "trigger": "HPが0になる（death相当）",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite death 表示（Disappear相当）",
+      "implementation": "samurai の death sprite mapping は未実装。専用表示は出ない。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "quad-grid"
+    },
+    {
+      "animationType": "Offence",
+      "trigger": "攻撃行動時（attack/shoot相当）",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite attack/shoot 表示（Offence相当）",
+      "implementation": "Offence（attack/shoot）用の samurai sprite mapping は未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "quad-grid"
+    },
+    {
+      "animationType": "Damaged",
+      "trigger": "ダメージを受ける",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite damaged 表示",
+      "implementation": "damaged 用の samurai sprite mapping は未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "quad-grid"
+    }
+  ]
+}
