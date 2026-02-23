@@ -4,10 +4,10 @@ import { CHAR_SPRITES, resolveSpriteStateSrc } from "./sprite-config";
 import type { SpriteDir } from "./sprite-utils";
 
 import captiveDefJson from "./sprite-debug-unit-animation/captive.json";
+import thickSludgeDefJson from "./debug/unit-animation/thick-sludge.debug.json";
 import emojiFallbackDefJson from "./sprite-debug-unit-animation/emoji-fallback.json";
 import samuraiDefJson from "./sprite-debug-unit-animation/samurai.json";
 import sludgeDefJson from "./debug/unit-animation/sludge.debug.json";
-import thickSludgeDefJson from "./sprite-debug-unit-animation/thick-sludge.json";
 
 export type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
 export type UnitAnimationArtLayout = "single" | "pair-grid" | "quad-grid";

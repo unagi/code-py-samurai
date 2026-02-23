@@ -38,6 +38,13 @@ describe("sprite config", () => {
       .toBe("/assets/sprites/sludge/attack-east.png");
   });
 
+  it("resolves thick-sludge sprite paths from generated manifest", () => {
+    expect(resolveSpriteStateSrc(CHAR_SPRITES["thick-sludge"].idle, "left"))
+      .toBe("/assets/sprites/thick-sludge/idle-left.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES["thick-sludge"].attack, "right"))
+      .toBe("/assets/sprites/thick-sludge/attack-right.png");
+  });
+
   it("keeps animation timing constants stable", () => {
     expect(SAMURAI_IDLE_FRAME_COUNT).toBe(16);
     expect(SAMURAI_IDLE_FRAME_MS).toBe(140);

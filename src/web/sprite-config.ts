@@ -76,24 +76,19 @@ function buildDirectionalSpriteStateConfigFromManifest(
   };
 }
 
-function buildSludgeSpriteConfigFromManifest(): CharSpriteConfig {
+function buildCharSpriteConfigFromManifest(unitKind: string): CharSpriteConfig {
   return {
-    idle: buildDirectionalSpriteStateConfigFromManifest("sludge", "idle"),
-    attack: buildDirectionalSpriteStateConfigFromManifest("sludge", "attack"),
-    damaged: buildDirectionalSpriteStateConfigFromManifest("sludge", "damaged"),
-    death: buildDirectionalSpriteStateConfigFromManifest("sludge", "death"),
+    idle: buildDirectionalSpriteStateConfigFromManifest(unitKind, "idle"),
+    attack: buildDirectionalSpriteStateConfigFromManifest(unitKind, "attack"),
+    damaged: buildDirectionalSpriteStateConfigFromManifest(unitKind, "damaged"),
+    death: buildDirectionalSpriteStateConfigFromManifest(unitKind, "death"),
   };
 }
 
 /** キャラ種別 → スプライトシート定義 */
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
-  sludge: buildSludgeSpriteConfigFromManifest(),
-  "thick-sludge": {
-    idle:    { pathTemplate: "/assets/sprites/thick-sludge/idle-{dir}.png",    frames: 3 },
-    attack:  { pathTemplate: "/assets/sprites/thick-sludge/attack-{dir}.png",  frames: 4 },
-    damaged: { pathTemplate: "/assets/sprites/thick-sludge/damaged-{dir}.png", frames: 2 },
-    death:   { pathTemplate: "/assets/sprites/thick-sludge/death-{dir}.png",   frames: 4 },
-  },
+  sludge: buildCharSpriteConfigFromManifest("sludge"),
+  "thick-sludge": buildCharSpriteConfigFromManifest("thick-sludge"),
   captive: {
     idle:    { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
     attack:  { pathTemplate: "/assets/sprites/tsuru/bound.png",    frames: 3 },
