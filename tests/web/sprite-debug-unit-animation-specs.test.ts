@@ -56,6 +56,15 @@ describe("sprite debug unit animation specs", () => {
     expect(unitPreviewSlotSpecs({ kind: "unknown-unit" })).toEqual([]);
   });
 
+  it("returns captive static debug entries from captive.debug.json", () => {
+    const specs = unitAnimationTypeSpecs({ kind: "captive" });
+    const idle = specs.find((spec) => spec.animationType === "Idle");
+    const disappear = specs.find((spec) => spec.animationType === "Disappear");
+
+    expect(idle?.spriteFiles).toEqual(["captive/bound.png"]);
+    expect(disappear?.spriteFiles).toEqual(["captive/rescued.png"]);
+  });
+
   it("materializes sprite-config-based specs from unit cards", () => {
     const specs = unitAnimationTypeSpecs({
       kind: "sludge",
@@ -70,20 +79,20 @@ describe("sprite debug unit animation specs", () => {
       "Damaged",
     ]);
     expect(specs.find((spec) => spec.animationType === "Idle")).toMatchObject({
-      status: "ng",
-      spriteFiles: ["gama/idle-left.png", "gama/idle-right.png"],
+      status: "ok",
+      spriteFiles: ["sludge/idle-west.png", "sludge/idle-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Offence")).toMatchObject({
-      status: "ng",
-      spriteFiles: ["gama/attack-left.png", "gama/attack-right.png"],
+      status: "ok",
+      spriteFiles: ["sludge/attack-west.png", "sludge/attack-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Damaged")).toMatchObject({
       status: "ok",
-      spriteFiles: ["gama/damaged-left.png", "gama/damaged-right.png"],
+      spriteFiles: ["sludge/damaged-west.png", "sludge/damaged-east.png"],
     });
   });
 
-  it("marks thick-sludge idle as NG because base idle frames do not animate yet", () => {
+  it("marks thick-sludge idle as OK when base idle sheet animation is supported", () => {
     const specs = unitAnimationTypeSpecs({
       kind: "thick-sludge",
       renderMode: "sprite",
@@ -92,8 +101,26 @@ describe("sprite debug unit animation specs", () => {
 
     const idle = specs.find((spec) => spec.animationType === "Idle");
     expect(idle).toBeDefined();
-    expect(idle?.status).toBe("ng");
-    expect(idle?.implementation).toContain("静止表示");
+    expect(idle?.status).toBe("ok");
+    expect(idle?.implementation).not.toContain("静止表示");
+  });
+
+  it("materializes wizard sprite-config specs from wizard sprites", () => {
+    const specs = unitAnimationTypeSpecs({
+      kind: "wizard",
+      renderMode: "sprite",
+      cards: [buildEnemyCard("wizard", "left"), buildEnemyCard("wizard", "right")],
+    });
+
+    expect(specs.map((spec) => spec.animationType)).toEqual([
+      "Idle",
+      "Disappear",
+      "Offence",
+      "Damaged",
+    ]);
+    expect(specs.every((spec) => spec.status === "ok")).toBe(true);
+    expect(specs.find((spec) => spec.animationType === "Idle")?.spriteFiles)
+      .toEqual(["wizard/idle-west.png", "wizard/idle-east.png"]);
   });
 
   it("returns empty for unknown unit kind and supports sprite cards omission fallback", () => {

@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
+import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
+import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
+import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
+import wizardGameplay from "@engine/unit-data/wizard.gameplay.json";
 
 import { BoardGridView } from "./BoardGridView";
 import {
@@ -32,13 +37,11 @@ import { type SpriteDir } from "./sprite-utils";
 import "./sprite-debug.css";
 
 type DebugFilter = "all" | "preview-only" | "unsupported-only";
-type CaptiveLocalState = "bound" | "rescued";
-
 const EMPTY_DAMAGE_POPUPS: ReadonlyMap<number, DamagePopup[]> = new Map();
 const NOOP_HOVER = (): void => {};
 const DEFAULT_TILE_SIZE_PX = 80;
 const OTHER_UNIT_KINDS = new Set(["samurai", "captive"]);
-const ENEMY_EMOJI_KINDS = new Set(["archer", "wizard"]);
+const ENEMY_EMOJI_KINDS = new Set(["archer"]);
 interface EnemyPreviewGroup {
   kind: string;
   renderMode: "sprite" | "emoji";
@@ -86,11 +89,34 @@ const DEBUG_STATS_FORMATTER: StatsFormatter = {
   atk: (value) => `ATK ${value}`,
 };
 
+const SLUDGE_DEBUG_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
+const THICK_SLUDGE_DEBUG_ALT_KEY = `tiles.${thickSludgeGameplay.nameKey}`;
+const CAPTIVE_DEBUG_ALT_KEY = `tiles.${captiveGameplay.nameKey}`;
+const SAMURAI_DEBUG_ALT_KEY = `tiles.${samuraiGameplay.nameKey}`;
+const WIZARD_DEBUG_ALT_KEY = `tiles.${wizardGameplay.nameKey}`;
+
 const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
-  samurai: { symbol: "@", kind: "samurai", altKey: "tiles.samurai" },
-  sludge: { symbol: "s", kind: "sludge", altKey: "tiles.sludge" },
-  "thick-sludge": { symbol: "S", kind: "thick-sludge", altKey: "tiles.thickSludge" },
-  captive: { symbol: "C", kind: "captive", altKey: "tiles.captive" },
+  [samuraiGameplay.kind]: { symbol: samuraiGameplay.symbol, kind: samuraiGameplay.kind, altKey: SAMURAI_DEBUG_ALT_KEY },
+  [sludgeGameplay.kind]: {
+    symbol: sludgeGameplay.symbol,
+    kind: sludgeGameplay.kind,
+    altKey: SLUDGE_DEBUG_ALT_KEY,
+  },
+  [thickSludgeGameplay.kind]: {
+    symbol: thickSludgeGameplay.symbol,
+    kind: thickSludgeGameplay.kind,
+    altKey: THICK_SLUDGE_DEBUG_ALT_KEY,
+  },
+  [wizardGameplay.kind]: {
+    symbol: wizardGameplay.symbol,
+    kind: wizardGameplay.kind,
+    altKey: WIZARD_DEBUG_ALT_KEY,
+  },
+  [captiveGameplay.kind]: {
+    symbol: captiveGameplay.symbol,
+    kind: captiveGameplay.kind,
+    altKey: CAPTIVE_DEBUG_ALT_KEY,
+  },
   floor: { symbol: " ", kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
 };
 
@@ -146,7 +172,6 @@ export default function SpriteDebugPage() {
   const [tileSizePx, setTileSizePx] = useState(DEFAULT_TILE_SIZE_PX);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
   const [cardOverrides, setCardOverrides] = useState<Readonly<Record<string, SpriteOverride>>>({});
-  const [captiveLocalStates, setCaptiveLocalStates] = useState<Readonly<Record<string, CaptiveLocalState>>>({});
   const nextOverrideIdRef = useRef(1);
   const [, setSpriteRenderTick] = useState(0);
 
@@ -277,19 +302,7 @@ export default function SpriteDebugPage() {
 
   const handleReset = (): void => {
     setCardOverrides({});
-    setCaptiveLocalStates({});
     setSamuraiFrame(0);
-  };
-
-  const handleCaptiveLocalState = (card: SpriteDebugCardSpec, state: CaptiveLocalState): void => {
-    setCaptiveLocalStates((prev) => ({ ...prev, [card.id]: state }));
-    // Captive local preview is not driven by generic sprite override states.
-    setCardOverrides((prev) => {
-      if (!(card.id in prev)) return prev;
-      const next = { ...prev };
-      delete next[card.id];
-      return next;
-    });
   };
 
   const padUnitPreviewSlots = (slots: readonly UnitPreviewPanelSlotView[]): UnitPreviewPanelSlotView[] => {
@@ -711,15 +724,8 @@ export default function SpriteDebugPage() {
             })}
             {visibleCaptiveCards.map((card) => {
               const override = cardOverrides[card.id];
-              let captiveLocalState: CaptiveLocalState | null = null;
-              if (card.kind === "captive") {
-                captiveLocalState = captiveLocalStates[card.id] ?? "bound";
-              }
-              let currentStateLabel = override ? override.state : "idle";
-              if (card.kind === "captive") {
-                currentStateLabel = captiveLocalState === "rescued" ? "disappear" : "idle";
-              }
-              const currentCaptiveLocalState = captiveLocalState ?? "bound";
+              const currentState = override ? override.state : "idle";
+              const currentStateLabel = currentState === "death" ? "disappear" : currentState;
               const animationSpecs = unitAnimationTypeSpecs({ kind: card.kind });
               const captiveBoardGrid = boardGridByKind.get("captive") ?? null;
 
@@ -747,16 +753,17 @@ export default function SpriteDebugPage() {
                       boardGrid: captiveBoardGrid,
                       boardGridStyle: unitPreviewBoardGridStyle,
                       tileSizePx: unitPreviewTileSizePx,
-                      hideBoard: currentCaptiveLocalState === "rescued",
+                      hideBoard: false,
                     }),
-                    buttons: animationSpecs.map((spec) => ({
-                      id: `${card.id}-anim-${spec.animationType}`,
-                      label: spec.animationType,
-                      active:
-                        (spec.animationType === "Idle" && currentCaptiveLocalState === "bound")
-                        || (spec.animationType === "Disappear" && currentCaptiveLocalState === "rescued"),
-                      onClick: () => handleCaptiveLocalState(card, spec.animationType === "Disappear" ? "rescued" : "bound"),
-                    })),
+                    buttons: animationSpecs.map((spec) => {
+                      const state = animationTypeToDebugState(spec.animationType);
+                      return {
+                        id: `${card.id}-anim-${spec.animationType}`,
+                        label: spec.animationType,
+                        active: currentState === state,
+                        onClick: () => handleTriggerStateForCards([card], state),
+                      };
+                    }),
                   })}
                   {renderUnitFooter(
                     animationSpecs,

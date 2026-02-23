@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import wizardGameplay from "@engine/unit-data/wizard.gameplay.json";
 import { Wizard } from "@engine/units/wizard";
 import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
@@ -17,6 +18,15 @@ describe("Wizard", () => {
     const wizard = new Wizard();
     expect(wizard.hasAbility("look")).toBe(true);
     expect(wizard.hasAbility("shoot!")).toBe(true);
+  });
+
+  it("matches gameplay JSON for base parameters", () => {
+    const wizard = new Wizard();
+
+    expect(wizard.maxHealth).toBe(wizardGameplay.stats.maxHealth);
+    expect(wizard.shootPower).toBe(wizardGameplay.stats.shootPower ?? wizardGameplay.stats.attackPower);
+    expect(wizard.character).toBe(wizardGameplay.symbol);
+    expect(wizard.nameKey).toBe(wizardGameplay.nameKey);
   });
 
   it("shoots player at range with high damage", () => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
 import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
 import type { IPlayer } from "@engine/types";
@@ -30,6 +31,16 @@ describe("Samurai", () => {
     const samurai = new Samurai();
     expect(samurai.isSamurai()).toBe(true);
     expect(samurai.isGolem()).toBe(false);
+  });
+
+  it("matches gameplay JSON for base parameters", () => {
+    const samurai = new Samurai();
+
+    expect(samurai.attackPower).toBe(samuraiGameplay.stats.attackPower);
+    expect(samurai.shootPower).toBe(samuraiGameplay.stats.shootPower);
+    expect(samurai.maxHealth).toBe(samuraiGameplay.stats.maxHealth);
+    expect(samurai.character).toBe(samuraiGameplay.symbol);
+    expect(samurai.nameKey).toBe(samuraiGameplay.nameKey);
   });
 
   it("tracks score via earnPoints", () => {

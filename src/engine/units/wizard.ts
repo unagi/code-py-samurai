@@ -1,3 +1,4 @@
+import wizardGameplay from "../unit-data/wizard.gameplay.json";
 import { RangedEnemy } from "./ranged-enemy";
 
 /**
@@ -5,7 +6,8 @@ import { RangedEnemy } from "./ranged-enemy";
  * Ported from RubyWarrior::Units::Wizard
  */
 export class Wizard extends RangedEnemy {
-  protected static readonly SHOOT_POWER: number = 11;
-  protected static readonly MAX_HEALTH: number = 3;
-  protected static readonly CHARACTER: string = "w";
+  protected static readonly SHOOT_POWER: number = wizardGameplay.stats.shootPower ?? wizardGameplay.stats.attackPower;
+  protected static readonly MAX_HEALTH: number = wizardGameplay.stats.maxHealth;
+  protected static readonly CHARACTER: string = wizardGameplay.symbol;
+  protected static readonly NAME_KEY: string = wizardGameplay.nameKey;
 }

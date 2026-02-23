@@ -14,6 +14,7 @@ __pycache__/
 
 # Debug artifacts (regenerable)
 _debug/
+src/web/generated/*.generated.json
 
 # Creator source assets (large images, local only)
 from_creator/

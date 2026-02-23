@@ -1,14 +1,15 @@
 import type { ILogger, IPlayer } from "../types";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
+import samuraiGameplay from "../unit-data/samurai.gameplay.json";
 import { BaseUnit } from "./base";
 
 export class Samurai extends BaseUnit {
-  protected static readonly ATTACK_POWER: number = 5;
-  protected static readonly SHOOT_POWER: number = 3;
-  protected static readonly MAX_HEALTH: number = 20;
-  protected static readonly CHARACTER: string = "@";
-  protected static readonly NAME_KEY: string = "samurai";
+  protected static readonly ATTACK_POWER: number = samuraiGameplay.stats.attackPower;
+  protected static readonly SHOOT_POWER: number = samuraiGameplay.stats.shootPower;
+  protected static readonly MAX_HEALTH: number = samuraiGameplay.stats.maxHealth;
+  protected static readonly CHARACTER: string = samuraiGameplay.symbol;
+  protected static readonly NAME_KEY: string = samuraiGameplay.nameKey;
 
   private _score: number = 0;
   private _name: string = "";

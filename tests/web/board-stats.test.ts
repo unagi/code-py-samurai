@@ -17,6 +17,9 @@ describe("buildTileStatsText", () => {
   });
 
   it("formats enemy stats from static tile metadata", () => {
+    expect(buildTileStatsText("sludge", null, null, fmt)).toBe("HP(12/12)  ATK(3)");
+    expect(buildTileStatsText("thick-sludge", null, null, fmt)).toBe("HP(24/24)  ATK(3)");
+    expect(buildTileStatsText("archer", null, null, fmt)).toBe("HP(7/7)  ATK(3)");
     expect(buildTileStatsText("wizard", null, null, fmt)).toBe("HP(3/3)  ATK(11)");
     expect(buildTileStatsText("golem", null, null, fmt)).toBe("HP(--/--)  ATK(3)");
     expect(buildTileStatsText("captive", null, null, fmt)).toBe("HP(1/1)  ATK(0)");

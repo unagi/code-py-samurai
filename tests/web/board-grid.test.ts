@@ -48,6 +48,75 @@ describe("buildBoardGrid", () => {
     expect(nonVoid.some((tile) => tile.kind === "floor")).toBe(true);
   });
 
+  it("keeps sludge tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("s");
+    const sludgeTile = grid.tiles.find((tile) => tile.symbol === "s" && tile.kind !== "void");
+
+    expect(sludgeTile).toBeDefined();
+    expect(sludgeTile).toMatchObject({
+      symbol: "s",
+      kind: "sludge",
+      altKey: "tiles.sludge",
+    });
+  });
+
+  it("keeps thick-sludge tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("S");
+    const thickSludgeTile = grid.tiles.find((tile) => tile.symbol === "S" && tile.kind !== "void");
+
+    expect(thickSludgeTile).toBeDefined();
+    expect(thickSludgeTile).toMatchObject({
+      symbol: "S",
+      kind: "thick-sludge",
+      altKey: "tiles.thickSludge",
+    });
+  });
+
+  it("keeps captive tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("C");
+    const captiveTile = grid.tiles.find((tile) => tile.symbol === "C" && tile.kind !== "void");
+
+    expect(captiveTile).toBeDefined();
+    expect(captiveTile).toMatchObject({
+      symbol: "C",
+      kind: "captive",
+      altKey: "tiles.captive",
+    });
+  });
+
+  it("keeps samurai tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("@");
+    const samuraiTile = grid.tiles.find((tile) => tile.symbol === "@" && tile.kind !== "void");
+
+    expect(samuraiTile).toBeDefined();
+    expect(samuraiTile).toMatchObject({
+      symbol: "@",
+      kind: "samurai",
+      altKey: "tiles.samurai",
+    });
+  });
+
+  it("keeps archer/wizard/golem tile metadata stable via gameplay JSON", () => {
+    const grid = buildBoardGrid("awG");
+    const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
+
+    expect(nonVoid.find((tile) => tile.symbol === "a")).toMatchObject({
+      symbol: "a",
+      kind: "archer",
+      altKey: "tiles.archer",
+    });
+    expect(nonVoid.find((tile) => tile.symbol === "w")).toMatchObject({
+      symbol: "w",
+      kind: "wizard",
+      altKey: "tiles.wizard",
+    });
+    expect(nonVoid.find((tile) => tile.symbol === "G")).toMatchObject({
+      symbol: "G",
+      kind: "golem",
+      altKey: "tiles.golem",
+    });
+  });
+
   it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
     const grid = buildBoardGrid("@x");
     const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");

@@ -1,3 +1,4 @@
+import thickSludgeGameplay from "../unit-data/thick-sludge.gameplay.json";
 import { Sludge } from "./sludge";
 
 /**
@@ -5,8 +6,9 @@ import { Sludge } from "./sludge";
  * Ported from RubyWarrior::Units::ThickSludge
  */
 export class ThickSludge extends Sludge {
-  protected static readonly MAX_HEALTH: number = 24;
-  protected static readonly CHARACTER: string = "S";
-  protected static readonly DISPLAY_NAME: string = "Thick Sludge";
-  protected static readonly NAME_KEY: string = "thickSludge";
+  protected static readonly ATTACK_POWER: number = thickSludgeGameplay.stats.attackPower;
+  protected static readonly MAX_HEALTH: number = thickSludgeGameplay.stats.maxHealth;
+  protected static readonly CHARACTER: string = thickSludgeGameplay.symbol;
+  protected static readonly DISPLAY_NAME: string = thickSludgeGameplay.displayName;
+  protected static readonly NAME_KEY: string = thickSludgeGameplay.nameKey;
 }

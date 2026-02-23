@@ -8,8 +8,9 @@ import {
   CHAR_SPRITES,
   SPRITE_FRAME_MS,
   getSamuraiIdleFramePath,
+  resolveSpriteStateSrc,
 } from "./sprite-config";
-import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { computeSpriteFrameIndex, type SpriteDir } from "./sprite-utils";
 
 interface BoardGridViewProps {
   boardGrid: BoardGridData;
@@ -26,7 +27,7 @@ interface BoardGridViewProps {
   onHoveredEnemyStatsChange: (value: string | null) => void;
 }
 
-interface OverlayVisual {
+interface SpriteVisual {
   src?: string;
   frames: number;
   currentFrame: number;
@@ -44,32 +45,35 @@ function buildHoverText(tile: BoardTile, tileAlt: string, tileStats: string | nu
   return `${tileAlt.toUpperCase()}  ${tileStats}`;
 }
 
-function resolveBaseTileImageSrc(
+function resolveBaseTileVisual(
   tile: BoardTile,
   override: SpriteOverride | undefined,
   spriteDir: SpriteDir,
   samuraiFrame: number,
-): string | undefined {
+): SpriteVisual {
   if (tile.kind === "samurai") {
-    return getSamuraiIdleFramePath(samuraiFrame);
+    return { src: getSamuraiIdleFramePath(samuraiFrame), frames: 1, currentFrame: 0 };
   }
 
   const ownSpriteConfig = CHAR_SPRITES[tile.kind];
   if (!ownSpriteConfig) {
-    return tile.assetPath;
+    return { src: tile.assetPath, frames: 1, currentFrame: 0 };
   }
 
   if (override) {
-    return undefined;
+    return { src: undefined, frames: 1, currentFrame: 0 };
   }
 
-  return resolveSpriteDir(ownSpriteConfig.idle.pathTemplate, spriteDir);
+  const src = resolveSpriteStateSrc(ownSpriteConfig.idle, spriteDir);
+  const frames = ownSpriteConfig.idle.frames;
+  const currentFrame = computeSpriteFrameIndex(Date.now(), frames, SPRITE_FRAME_MS, true);
+  return { src, frames, currentFrame };
 }
 
 function resolveOverlayVisual(
   override: SpriteOverride | undefined,
   spriteDir: SpriteDir,
-): OverlayVisual {
+): SpriteVisual {
   if (!override) {
     return { src: undefined, frames: 1, currentFrame: 0 };
   }
@@ -80,7 +84,7 @@ function resolveOverlayVisual(
   }
 
   const stateConfig = overrideSpriteConfig[override.state];
-  const src = resolveSpriteDir(stateConfig.pathTemplate, spriteDir);
+  const src = resolveSpriteStateSrc(stateConfig, spriteDir);
   const frames = stateConfig.frames;
 
   if (frames <= 1) {
@@ -88,19 +92,38 @@ function resolveOverlayVisual(
   }
 
   const elapsed = Date.now() - override.startedAt;
-  const currentFrame = Math.min(Math.floor(elapsed / SPRITE_FRAME_MS), frames - 1);
+  const currentFrame = computeSpriteFrameIndex(elapsed, frames, SPRITE_FRAME_MS, false);
   return { src, frames, currentFrame };
 }
 
+function buildSpriteSheetStyle(visual: SpriteVisual): CSSProperties {
+  return {
+    backgroundImage: `url(${visual.src})`,
+    backgroundSize: `${visual.frames * 100}% 100%`,
+    backgroundPositionX: `${(visual.currentFrame / (visual.frames - 1)) * 100}%`,
+  };
+}
+
 function renderBaseTileVisual(
-  baseTileImageSrc: string | undefined,
+  baseVisual: SpriteVisual,
   overlaySrc: string | undefined,
   tileAlt: string,
   displaySymbol: string,
   tileSizePx: number,
 ): ReactElement | null {
-  if (baseTileImageSrc) {
-    return <img src={baseTileImageSrc} alt={tileAlt} className="tile-image" />;
+  if (baseVisual.src) {
+    if (baseVisual.frames <= 1) {
+      return <img src={baseVisual.src} alt={tileAlt} className="tile-image" />;
+    }
+
+    return (
+      <div
+        className="tile-sprite-sheet"
+        role="img"
+        aria-label={tileAlt}
+        style={buildSpriteSheetStyle(baseVisual)}
+      />
+    );
   }
 
   if (overlaySrc) {
@@ -119,7 +142,7 @@ function renderBaseTileVisual(
 }
 
 function renderOverlayVisual(
-  overlay: OverlayVisual,
+  overlay: SpriteVisual,
   tileAlt: string,
 ): ReactElement | null {
   if (!overlay.src) {
@@ -135,11 +158,7 @@ function renderOverlayVisual(
       className="tile-sprite-sheet tile-sprite-overlay"
       role="img"
       aria-label={tileAlt}
-      style={{
-        backgroundImage: `url(${overlay.src})`,
-        backgroundSize: `${overlay.frames * 100}% 100%`,
-        backgroundPositionX: `${(overlay.currentFrame / (overlay.frames - 1)) * 100}%`,
-      }}
+      style={buildSpriteSheetStyle(overlay)}
     />
   );
 }
@@ -181,7 +200,7 @@ function BoardTileCell(props: Readonly<{
 
   const override = spriteOverrideByTile.get(index);
   const spriteDir = spriteDirByTile.get(index) ?? "right";
-  const baseTileImageSrc = resolveBaseTileImageSrc(tile, override, spriteDir, samuraiFrame);
+  const baseVisual = resolveBaseTileVisual(tile, override, spriteDir, samuraiFrame);
   const overlay = resolveOverlayVisual(override, spriteDir);
 
   const handleHoverStart = (): void => {
@@ -204,7 +223,7 @@ function BoardTileCell(props: Readonly<{
       onFocus={handleHoverStart}
       onBlur={handleHoverEnd}
     >
-      {renderBaseTileVisual(baseTileImageSrc, overlay.src, tileAlt, displaySymbol, tileSizePx)}
+      {renderBaseTileVisual(baseVisual, overlay.src, tileAlt, displaySymbol, tileSizePx)}
       {renderOverlayVisual(overlay, tileAlt)}
       {tilePopups.map((popup) => (
         <span key={popup.id} className="damage-popup" aria-hidden="true">

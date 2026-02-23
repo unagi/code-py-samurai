@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
 import { Captive } from "@engine/units/captive";
 import { Floor } from "@engine/floor";
 
@@ -7,8 +8,18 @@ describe("Captive", () => {
     const captive = new Captive();
     expect(captive.maxHealth).toBe(1);
     expect(captive.health).toBe(1);
+    expect(captive.attackPower).toBe(0);
     expect(captive.character).toBe("C");
     expect(captive.name).toBe("Captive");
+  });
+
+  it("matches gameplay JSON for base parameters", () => {
+    const captive = new Captive();
+
+    expect(captive.maxHealth).toBe(captiveGameplay.stats.maxHealth);
+    expect(captive.attackPower).toBe(captiveGameplay.stats.attackPower);
+    expect(captive.character).toBe(captiveGameplay.symbol);
+    expect(captive.nameKey).toBe(captiveGameplay.nameKey);
   });
 
   it("starts bound", () => {

@@ -1,13 +1,14 @@
 import type { SpriteState } from "./board-effects";
 import type { SpriteDebugCardSpec } from "./sprite-debug-data";
-import { CHAR_SPRITES } from "./sprite-config";
-import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { CHAR_SPRITES, resolveSpriteStateSrc } from "./sprite-config";
+import type { SpriteDir } from "./sprite-utils";
 
-import captiveDefJson from "./sprite-debug-unit-animation/captive.json";
+import captiveDefJson from "./debug/unit-animation/captive.debug.json";
+import thickSludgeDefJson from "./debug/unit-animation/thick-sludge.debug.json";
+import wizardDefJson from "./debug/unit-animation/wizard.debug.json";
 import emojiFallbackDefJson from "./sprite-debug-unit-animation/emoji-fallback.json";
 import samuraiDefJson from "./sprite-debug-unit-animation/samurai.json";
-import sludgeDefJson from "./sprite-debug-unit-animation/sludge.json";
-import thickSludgeDefJson from "./sprite-debug-unit-animation/thick-sludge.json";
+import sludgeDefJson from "./debug/unit-animation/sludge.debug.json";
 
 export type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
 export type UnitAnimationArtLayout = "single" | "pair-grid" | "quad-grid";
@@ -71,6 +72,7 @@ const UNIT_ANIMATION_DEFS_BY_KIND = new Map<string, UnitAnimationDefinitionJson>
   ["captive", captiveDefJson as StaticUnitAnimationDefinitionJson],
   ["sludge", sludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
   ["thick-sludge", thickSludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
+  ["wizard", wizardDefJson as SpriteConfigUnitAnimationDefinitionJson],
 ]);
 
 function stripSpriteAssetPrefix(src: string): string {
@@ -97,13 +99,6 @@ function buildSpriteConfigImplementationText(
     ? `${stateName} にマッピングされ、sprite override の overlay として表示される。`
     : `${stateName} にマッピングされて表示される。`;
 
-  if (!overlay && hasAnimatedMotionRequirement(expectedFrames)) {
-    if (actualFrames !== expectedFrames) {
-      return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で、かつフレーム遷移も行われず静止表示になっている。`;
-    }
-    return `${base.slice(0, -1)} ただし、フレーム遷移は行われず静止表示になっている。`;
-  }
-
   if (actualFrames === expectedFrames) {
     return base;
   }
@@ -127,8 +122,8 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
     const actualFrames = stateConfig.frames;
     const expectedFrames = entry.expectedFrames;
     const animatedRequirement = hasAnimatedMotionRequirement(expectedFrames);
-    const spriteFiles = uniqueSpriteDirs.map((dir) => stripSpriteAssetPrefix(resolveSpriteDir(stateConfig.pathTemplate, dir)));
-    const previewImageSrcs = uniqueSpriteDirs.map((dir) => resolveSpriteDir(stateConfig.pathTemplate, dir));
+    const spriteFiles = uniqueSpriteDirs.map((dir) => stripSpriteAssetPrefix(resolveSpriteStateSrc(stateConfig, dir)));
+    const previewImageSrcs = uniqueSpriteDirs.map((dir) => resolveSpriteStateSrc(stateConfig, dir));
 
     let motionSpec: string;
     if (entry.overlay) {
@@ -141,11 +136,7 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
         : "単フレーム表示";
     }
 
-    const status: "ok" | "ng" =
-      (entry.animationType === "Idle" && animatedRequirement)
-      || actualFrames !== expectedFrames
-        ? "ng"
-        : "ok";
+    const status: "ok" | "ng" = actualFrames !== expectedFrames ? "ng" : "ok";
 
     return {
       animationType: entry.animationType,

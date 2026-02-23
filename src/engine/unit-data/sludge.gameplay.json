@@ -1,0 +1,9 @@
+{
+  "kind": "sludge",
+  "symbol": "s",
+  "nameKey": "sludge",
+  "stats": {
+    "maxHealth": 12,
+    "attackPower": 3
+  }
+}

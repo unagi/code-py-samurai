@@ -16,7 +16,7 @@ Gemini生成のグリッド画像から各アニメーション状態のスプ�
 例:
   uv run python scripts/process_sprite_grid.py \
     "C:/Users/ray/Downloads/Gemini_gama.png" \
-    public/assets/sprites/gama \
+    public/assets/sprites/sludge \
     --spec scripts/specs/gama.json
 """
 

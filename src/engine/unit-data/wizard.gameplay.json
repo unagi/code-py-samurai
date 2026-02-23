@@ -1,0 +1,10 @@
+{
+  "kind": "wizard",
+  "symbol": "w",
+  "nameKey": "wizard",
+  "stats": {
+    "maxHealth": 3,
+    "attackPower": 11,
+    "shootPower": 11
+  }
+}

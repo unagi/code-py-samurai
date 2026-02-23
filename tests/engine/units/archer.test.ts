@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import archerGameplay from "@engine/unit-data/archer.gameplay.json";
 import { Archer } from "@engine/units/archer";
 import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
@@ -18,6 +19,15 @@ describe("Archer", () => {
     const archer = new Archer();
     expect(archer.hasAbility("look")).toBe(true);
     expect(archer.hasAbility("shoot!")).toBe(true);
+  });
+
+  it("matches gameplay JSON for base parameters", () => {
+    const archer = new Archer();
+
+    expect(archer.maxHealth).toBe(archerGameplay.stats.maxHealth);
+    expect(archer.shootPower).toBe(archerGameplay.stats.shootPower ?? archerGameplay.stats.attackPower);
+    expect(archer.character).toBe(archerGameplay.symbol);
+    expect(archer.nameKey).toBe(archerGameplay.nameKey);
   });
 
   it("shoots player at range", () => {
