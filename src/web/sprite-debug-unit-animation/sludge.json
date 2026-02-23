@@ -1,0 +1,34 @@
+{
+  "kind": "sludge",
+  "mode": "sprite-config",
+  "entries": [
+    {
+      "animationType": "Idle",
+      "spriteState": "idle",
+      "trigger": "通常時",
+      "expectedFrames": 3,
+      "overlay": false
+    },
+    {
+      "animationType": "Disappear",
+      "spriteState": "death",
+      "trigger": "HPが0になる（death相当）",
+      "expectedFrames": 5,
+      "overlay": true
+    },
+    {
+      "animationType": "Offence",
+      "spriteState": "attack",
+      "trigger": "攻撃行動時（attack/shoot相当）",
+      "expectedFrames": 4,
+      "overlay": true
+    },
+    {
+      "animationType": "Damaged",
+      "spriteState": "damaged",
+      "trigger": "ダメージを受ける",
+      "expectedFrames": 2,
+      "overlay": true
+    }
+  ]
+}

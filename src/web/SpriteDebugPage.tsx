@@ -15,16 +15,15 @@ import {
   SAMURAI_IDLE_FRAME_COUNT,
   SAMURAI_IDLE_FRAME_MS,
   SPRITE_FRAME_MS,
-  CHAR_SPRITES,
-  getSamuraiIdleFramePath,
 } from "./sprite-config";
+import { unitAnimationTypeSpecs, type UnitAnimationTypeSpec } from "./sprite-debug-unit-animation-specs";
 import {
   type DebugSpriteButtonState,
   type SpriteDebugCardSpec,
   buildSpriteDebugCardSpecs,
   buildSpriteDebugUnsupportedUnitSpecs,
 } from "./sprite-debug-data";
-import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { type SpriteDir } from "./sprite-utils";
 import "./sprite-debug.css";
 
 type DebugFilter = "all" | "preview-only" | "unsupported-only";
@@ -35,31 +34,12 @@ const NOOP_HOVER = (): void => {};
 const DEFAULT_TILE_SIZE_PX = 80;
 const OTHER_UNIT_KINDS = new Set(["samurai", "captive"]);
 const ENEMY_EMOJI_KINDS = new Set(["archer", "wizard"]);
-const ENEMY_SLOT_LABEL_BY_DIR: Readonly<Record<SpriteDir, string>> = {
-  left: "WEST",
-  right: "EAST",
-};
 const DEBUG_ANIMATION_BUTTON_ORDER: readonly DebugSpriteButtonState[] = ["idle", "death", "attack", "damaged"];
 
 interface EnemyPreviewGroup {
   kind: string;
   renderMode: "sprite" | "emoji";
   cards: SpriteDebugCardSpec[];
-}
-
-type UnitAnimationType = "Idle" | "Disappear" | "Offence" | "Damaged";
-type UnitAnimationArtLayout = "single" | "enemy-grid" | "samurai-grid";
-
-interface UnitAnimationTypeSpec {
-  animationType: UnitAnimationType;
-  trigger: string;
-  spriteFiles: string[];
-  frameCountText: string;
-  motionSpec: string;
-  implementation: string;
-  status: "ok" | "ng";
-  previewImageSrcs: string[];
-  artLayout: UnitAnimationArtLayout;
 }
 
 const SAMURAI_SLOT_SPECS = [
@@ -78,292 +58,6 @@ function getAnimationTypeLabelFromDebugState(state: DebugSpriteButtonState): "Id
 
 function getAnimationTypeLabelFromCaptiveState(state: CaptiveLocalState): "Idle" | "Disappear" {
   return state === "bound" ? "Idle" : "Disappear";
-}
-
-function stripSpriteAssetPrefix(src: string): string {
-  return src.replace(/^\/assets\/sprites\//, "");
-}
-
-const ENEMY_EXPECTED_FRAMES_BY_KIND: Readonly<Partial<Record<string, Readonly<Record<UnitAnimationType, number>>>>> = {
-  sludge: {
-    Idle: 3,
-    Offence: 4,
-    Damaged: 2,
-    Disappear: 5,
-  },
-  "thick-sludge": {
-    Idle: 3,
-    Offence: 4,
-    Damaged: 2,
-    Disappear: 4,
-  },
-};
-
-const EMOJI_FALLBACK_UNIT_ANIMATION_SPECS: readonly UnitAnimationTypeSpec[] = [
-  {
-    animationType: "Idle",
-    trigger: "通常時",
-    spriteFiles: ["-"],
-    frameCountText: "-",
-    motionSpec: "sprite idle 表示（WEST/EAST）",
-    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-    status: "ng",
-    previewImageSrcs: [],
-    artLayout: "enemy-grid",
-  },
-  {
-    animationType: "Disappear",
-    trigger: "HPが0になる（death相当）",
-    spriteFiles: ["-"],
-    frameCountText: "-",
-    motionSpec: "sprite death 表示（Disappear相当）",
-    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-    status: "ng",
-    previewImageSrcs: [],
-    artLayout: "enemy-grid",
-  },
-  {
-    animationType: "Offence",
-    trigger: "攻撃行動時（attack/shoot相当）",
-    spriteFiles: ["-"],
-    frameCountText: "-",
-    motionSpec: "sprite attack/shoot 表示（Offence相当）",
-    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-    status: "ng",
-    previewImageSrcs: [],
-    artLayout: "enemy-grid",
-  },
-  {
-    animationType: "Damaged",
-    trigger: "ダメージを受ける",
-    spriteFiles: ["-"],
-    frameCountText: "-",
-    motionSpec: "sprite damaged 表示",
-    implementation: "emoji/fallback 表示。sprite mapping 未実装。",
-    status: "ng",
-    previewImageSrcs: [],
-    artLayout: "enemy-grid",
-  },
-] as const;
-
-const CAPTIVE_UNIT_ANIMATION_SPECS: readonly UnitAnimationTypeSpec[] = [
-  {
-    animationType: "Idle",
-    trigger: "通常時",
-    spriteFiles: ["tsuru/bound.png"],
-    frameCountText: "3 frames",
-    motionSpec: "等間隔フレーム遷移",
-    implementation: "idle にマッピングされて表示されるが、フレーム遷移は行われず静止表示になっている。",
-    status: "ng",
-    previewImageSrcs: ["/assets/sprites/tsuru/bound.png"],
-    artLayout: "single",
-  },
-  {
-    animationType: "Disappear",
-    trigger: "samurai.rescue()される",
-    spriteFiles: ["tsuru/rescued.png"],
-    frameCountText: "asset exists",
-    motionSpec: "視認可能な専用表示（rescued相当）",
-    implementation: "tsuru/rescued.png の asset は存在するがゲーム表示にマッピングされておらず、専用表示は出ずに即消滅する。",
-    status: "ng",
-    previewImageSrcs: ["/assets/sprites/tsuru/rescued.png"],
-    artLayout: "single",
-  },
-] as const;
-
-function buildSpriteConfigUnitAnimationTypeSpecs(
-  kind: string,
-  cards: readonly SpriteDebugCardSpec[],
-): UnitAnimationTypeSpec[] {
-  const config = CHAR_SPRITES[kind];
-  if (!config) return [...EMOJI_FALLBACK_UNIT_ANIMATION_SPECS];
-
-  const spriteDirs = cards.map((card) => card.spriteDir);
-  const uniqueSpriteDirs = Array.from(new Set(spriteDirs));
-  const spriteDirLabelText = uniqueSpriteDirs.map((dir) => ENEMY_SLOT_LABEL_BY_DIR[dir]).join(" / ");
-
-  const buildSpriteFiles = (state: SpriteState | "idle"): string[] => {
-    const stateConfig = state === "idle" ? config.idle : config[state];
-    return uniqueSpriteDirs.map((dir) => stripSpriteAssetPrefix(resolveSpriteDir(stateConfig.pathTemplate, dir)));
-  };
-
-  const buildPreviewImageSrcs = (state: SpriteState | "idle"): string[] => {
-    const stateConfig = state === "idle" ? config.idle : config[state];
-    return uniqueSpriteDirs.map((dir) => resolveSpriteDir(stateConfig.pathTemplate, dir));
-  };
-
-  const buildFrameCountText = (actualFrames: number, expectedFrames: number | undefined): string => {
-    const actualText = `${actualFrames} frame${actualFrames === 1 ? "" : "s"}`;
-    if (expectedFrames === undefined) return actualText;
-    const expectedText = `${expectedFrames} frame${expectedFrames === 1 ? "" : "s"}`;
-    return `${actualText}（expected: ${expectedText}）`;
-  };
-  const hasAnimatedMotionRequirement = (expectedFrames: number | undefined, actualFrames: number): boolean => {
-    if (expectedFrames !== undefined) return expectedFrames > 1;
-    return actualFrames > 1;
-  };
-
-  const expectedFramesByType = ENEMY_EXPECTED_FRAMES_BY_KIND[kind];
-  const resolveStatus = (animationType: UnitAnimationType, actualFrames: number): "ok" | "ng" => {
-    const expectedFrames = expectedFramesByType?.[animationType];
-    if (animationType === "Idle" && hasAnimatedMotionRequirement(expectedFrames, actualFrames)) {
-      return "ng";
-    }
-    if (expectedFrames === undefined) return "ok";
-    return actualFrames === expectedFrames ? "ok" : "ng";
-  };
-  const buildImplementationText = (
-    stateName: "idle" | SpriteState,
-    actualFrames: number,
-    expectedFrames: number | undefined,
-    overlay: boolean,
-  ): string => {
-    const base = overlay
-      ? `${stateName} にマッピングされ、sprite override の overlay として表示される。`
-      : `${stateName} にマッピングされて表示される。`;
-    if (!overlay && hasAnimatedMotionRequirement(expectedFrames, actualFrames)) {
-      if (expectedFrames !== undefined && actualFrames !== expectedFrames) {
-        return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で、かつフレーム遷移も行われず静止表示になっている。`;
-      }
-      return `${base.slice(0, -1)} ただし、フレーム遷移は行われず静止表示になっている。`;
-    }
-    if (expectedFrames === undefined || actualFrames === expectedFrames) {
-      return base;
-    }
-    return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で不一致。`;
-  };
-
-  const idleFrames = config.idle.frames;
-  const idleExpectedFrames = expectedFramesByType?.Idle;
-
-  return [
-    {
-      animationType: "Idle",
-      trigger: "通常時",
-      spriteFiles: buildSpriteFiles("idle"),
-      frameCountText: buildFrameCountText(idleFrames, idleExpectedFrames),
-      motionSpec: hasAnimatedMotionRequirement(idleExpectedFrames, idleFrames)
-        ? `等間隔フレーム遷移（${spriteDirLabelText}）`
-        : "単フレーム表示",
-      implementation: buildImplementationText("idle", idleFrames, idleExpectedFrames, false),
-      status: resolveStatus("Idle", idleFrames),
-      previewImageSrcs: buildPreviewImageSrcs("idle"),
-      artLayout: "enemy-grid",
-    },
-    {
-      animationType: "Disappear",
-      // Enemy cards use death as the disappear-equivalent abstract animation type.
-      trigger: "HPが0になる（death相当）",
-      spriteFiles: buildSpriteFiles("death"),
-      frameCountText: buildFrameCountText(config.death.frames, expectedFramesByType?.Disappear),
-      motionSpec: hasAnimatedMotionRequirement(expectedFramesByType?.Disappear, config.death.frames)
-        ? `等間隔フレーム遷移（overlay / ${spriteDirLabelText}）`
-        : "単フレームoverlay表示",
-      implementation: buildImplementationText("death", config.death.frames, expectedFramesByType?.Disappear, true),
-      status: resolveStatus("Disappear", config.death.frames),
-      previewImageSrcs: buildPreviewImageSrcs("death"),
-      artLayout: "enemy-grid",
-    },
-    {
-      animationType: "Offence",
-      trigger: "攻撃行動時（attack/shoot相当）",
-      spriteFiles: buildSpriteFiles("attack"),
-      frameCountText: buildFrameCountText(config.attack.frames, expectedFramesByType?.Offence),
-      motionSpec: hasAnimatedMotionRequirement(expectedFramesByType?.Offence, config.attack.frames)
-        ? `等間隔フレーム遷移（overlay / ${spriteDirLabelText}）`
-        : "単フレームoverlay表示",
-      implementation: buildImplementationText("attack", config.attack.frames, expectedFramesByType?.Offence, true),
-      status: resolveStatus("Offence", config.attack.frames),
-      previewImageSrcs: buildPreviewImageSrcs("attack"),
-      artLayout: "enemy-grid",
-    },
-    {
-      animationType: "Damaged",
-      trigger: "ダメージを受ける",
-      spriteFiles: buildSpriteFiles("damaged"),
-      frameCountText: buildFrameCountText(config.damaged.frames, expectedFramesByType?.Damaged),
-      motionSpec: hasAnimatedMotionRequirement(expectedFramesByType?.Damaged, config.damaged.frames)
-        ? `等間隔フレーム遷移（overlay / ${spriteDirLabelText}）`
-        : "単フレームoverlay表示",
-      implementation: buildImplementationText("damaged", config.damaged.frames, expectedFramesByType?.Damaged, true),
-      status: resolveStatus("Damaged", config.damaged.frames),
-      previewImageSrcs: buildPreviewImageSrcs("damaged"),
-      artLayout: "enemy-grid",
-    },
-  ];
-}
-
-function buildSamuraiUnitAnimationTypeSpecs(): UnitAnimationTypeSpec[] {
-  const idleSampleFrames = [0, 4, 8, 12];
-  const idleSpriteFiles = ["samurai-cat/idle-east-frames/frame_*.png"];
-  const idlePreviewImageSrcs = idleSampleFrames.map((frameIndex) => getSamuraiIdleFramePath(frameIndex));
-
-  return [
-    {
-      animationType: "Idle",
-      trigger: "通常時",
-      spriteFiles: idleSpriteFiles,
-      frameCountText: `${SAMURAI_IDLE_FRAME_COUNT} frames`,
-      motionSpec: "等間隔フレーム遷移（WEST / EAST / NORTH / SOUTH）",
-      implementation: "idle は再生されるが、DIRごとの sprite mapping は未実装で全方向とも east idle frames を表示する。",
-      status: "ng",
-      previewImageSrcs: idlePreviewImageSrcs,
-      artLayout: "samurai-grid",
-    },
-    {
-      animationType: "Disappear",
-      trigger: "HPが0になる（death相当）",
-      spriteFiles: ["-"],
-      frameCountText: "-",
-      motionSpec: "sprite death 表示（Disappear相当）",
-      implementation: "samurai の death sprite mapping は未実装。専用表示は出ない。",
-      status: "ng",
-      previewImageSrcs: [],
-      artLayout: "samurai-grid",
-    },
-    {
-      animationType: "Offence",
-      trigger: "攻撃行動時（attack/shoot相当）",
-      spriteFiles: ["-"],
-      frameCountText: "-",
-      motionSpec: "sprite attack/shoot 表示（Offence相当）",
-      implementation: "Offence（attack/shoot）用の samurai sprite mapping は未実装。",
-      status: "ng",
-      previewImageSrcs: [],
-      artLayout: "samurai-grid",
-    },
-    {
-      animationType: "Damaged",
-      trigger: "ダメージを受ける",
-      spriteFiles: ["-"],
-      frameCountText: "-",
-      motionSpec: "sprite damaged 表示",
-      implementation: "damaged 用の samurai sprite mapping は未実装。",
-      status: "ng",
-      previewImageSrcs: [],
-      artLayout: "samurai-grid",
-    },
-  ];
-}
-
-function unitAnimationTypeSpecs(source: {
-  kind: string;
-  renderMode?: "sprite" | "emoji";
-  cards?: readonly SpriteDebugCardSpec[];
-}): UnitAnimationTypeSpec[] {
-  if (source.kind === "samurai") {
-    return buildSamuraiUnitAnimationTypeSpecs();
-  }
-  if (source.kind === "captive") {
-    return [...CAPTIVE_UNIT_ANIMATION_SPECS];
-  }
-  if (source.renderMode === "emoji") {
-    return [...EMOJI_FALLBACK_UNIT_ANIMATION_SPECS];
-  }
-  if (source.renderMode === "sprite" && source.cards) {
-    return buildSpriteConfigUnitAnimationTypeSpecs(source.kind, source.cards);
-  }
-  return [];
 }
 
 const DEBUG_STATS_FORMATTER: StatsFormatter = {

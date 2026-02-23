@@ -1,0 +1,50 @@
+{
+  "kind": "emoji-fallback",
+  "mode": "static",
+  "entries": [
+    {
+      "animationType": "Idle",
+      "trigger": "通常時",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite idle 表示（WEST/EAST）",
+      "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "enemy-grid"
+    },
+    {
+      "animationType": "Disappear",
+      "trigger": "HPが0になる（death相当）",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite death 表示（Disappear相当）",
+      "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "enemy-grid"
+    },
+    {
+      "animationType": "Offence",
+      "trigger": "攻撃行動時（attack/shoot相当）",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite attack/shoot 表示（Offence相当）",
+      "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "enemy-grid"
+    },
+    {
+      "animationType": "Damaged",
+      "trigger": "ダメージを受ける",
+      "spriteFiles": ["-"],
+      "frameCountText": "-",
+      "motionSpec": "sprite damaged 表示",
+      "implementation": "emoji/fallback 表示。sprite mapping 未実装。",
+      "status": "ng",
+      "previewImageSrcs": [],
+      "artLayout": "enemy-grid"
+    }
+  ]
+}
