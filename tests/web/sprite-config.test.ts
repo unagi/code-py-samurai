@@ -29,13 +29,13 @@ describe("sprite config", () => {
 
   it("resolves sludge sprite paths to east/west assets while keeping left/right inputs", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.idle, "left"))
-      .toBe("/assets/sprites/gama/idle-west.png");
+      .toBe("/assets/sprites/sludge/idle-west.png");
     expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.idle, "right"))
-      .toBe("/assets/sprites/gama/idle-east.png");
+      .toBe("/assets/sprites/sludge/idle-east.png");
     expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "left"))
-      .toBe("/assets/sprites/gama/attack-west.png");
+      .toBe("/assets/sprites/sludge/attack-west.png");
     expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "right"))
-      .toBe("/assets/sprites/gama/attack-east.png");
+      .toBe("/assets/sprites/sludge/attack-east.png");
   });
 
   it("keeps animation timing constants stable", () => {

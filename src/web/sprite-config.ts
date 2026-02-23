@@ -25,29 +25,29 @@ export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
   sludge: {
     idle:    {
       pathByDir: {
-        left: "/assets/sprites/gama/idle-west.png",
-        right: "/assets/sprites/gama/idle-east.png",
+        left: "/assets/sprites/sludge/idle-west.png",
+        right: "/assets/sprites/sludge/idle-east.png",
       },
       frames: 4,
     },
     attack:  {
       pathByDir: {
-        left: "/assets/sprites/gama/attack-west.png",
-        right: "/assets/sprites/gama/attack-east.png",
+        left: "/assets/sprites/sludge/attack-west.png",
+        right: "/assets/sprites/sludge/attack-east.png",
       },
       frames: 1,
     },
     damaged: {
       pathByDir: {
-        left: "/assets/sprites/gama/damaged-west.png",
-        right: "/assets/sprites/gama/damaged-east.png",
+        left: "/assets/sprites/sludge/damaged-west.png",
+        right: "/assets/sprites/sludge/damaged-east.png",
       },
       frames: 2,
     },
     death:   {
       pathByDir: {
-        left: "/assets/sprites/gama/death-west.png",
-        right: "/assets/sprites/gama/death-east.png",
+        left: "/assets/sprites/sludge/death-west.png",
+        right: "/assets/sprites/sludge/death-east.png",
       },
       frames: 4,
     },

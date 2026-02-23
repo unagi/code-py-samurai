@@ -71,15 +71,15 @@ describe("sprite debug unit animation specs", () => {
     ]);
     expect(specs.find((spec) => spec.animationType === "Idle")).toMatchObject({
       status: "ok",
-      spriteFiles: ["gama/idle-west.png", "gama/idle-east.png"],
+      spriteFiles: ["sludge/idle-west.png", "sludge/idle-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Offence")).toMatchObject({
       status: "ng",
-      spriteFiles: ["gama/attack-west.png", "gama/attack-east.png"],
+      spriteFiles: ["sludge/attack-west.png", "sludge/attack-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Damaged")).toMatchObject({
       status: "ok",
-      spriteFiles: ["gama/damaged-west.png", "gama/damaged-east.png"],
+      spriteFiles: ["sludge/damaged-west.png", "sludge/damaged-east.png"],
     });
   });
 
