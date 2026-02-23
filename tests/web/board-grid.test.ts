@@ -48,6 +48,18 @@ describe("buildBoardGrid", () => {
     expect(nonVoid.some((tile) => tile.kind === "floor")).toBe(true);
   });
 
+  it("keeps sludge tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("s");
+    const sludgeTile = grid.tiles.find((tile) => tile.symbol === "s" && tile.kind !== "void");
+
+    expect(sludgeTile).toBeDefined();
+    expect(sludgeTile).toMatchObject({
+      symbol: "s",
+      kind: "sludge",
+      altKey: "tiles.sludge",
+    });
+  });
+
   it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
     const grid = buildBoardGrid("@x");
     const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
