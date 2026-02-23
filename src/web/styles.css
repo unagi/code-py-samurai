@@ -1059,7 +1059,8 @@ dialog.modal-backdrop::backdrop {
   margin-bottom: 0.75rem;
 }
 
-.refdoc-class-focus-header {
+.refdoc-class-focus-header,
+.refdoc-method-focus-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1073,14 +1074,8 @@ dialog.modal-backdrop::backdrop {
   line-height: 1.2;
 }
 
-.refdoc-method-focus-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.7rem;
-}
-
-.refdoc-method-focus-title {
+.refdoc-method-focus-title,
+.refdoc-entity-property-title {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -1123,13 +1118,6 @@ dialog.modal-backdrop::backdrop {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.6rem;
-}
-
-.refdoc-entity-property-title {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
 }
 
 .refdoc-entity-property-name {
