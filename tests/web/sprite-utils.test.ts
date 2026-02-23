@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { absoluteDirToSpriteDir, resolveSpriteDir } from "../../src/web/sprite-utils";
+import { absoluteDirToSpriteDir, computeSpriteFrameIndex, resolveSpriteDir } from "../../src/web/sprite-utils";
 import { Sludge } from "@engine/units/sludge";
 import { Samurai } from "@engine/units/samurai";
 import { Floor } from "@engine/floor";
@@ -33,6 +33,28 @@ describe("absoluteDirToSpriteDir", () => {
 
   it("maps south to left", () => {
     expect(absoluteDirToSpriteDir("south")).toBe("left");
+  });
+});
+
+describe("computeSpriteFrameIndex", () => {
+  it("loops frames at fixed intervals when loop=true", () => {
+    expect(computeSpriteFrameIndex(0, 4, 160, true)).toBe(0);
+    expect(computeSpriteFrameIndex(159, 4, 160, true)).toBe(0);
+    expect(computeSpriteFrameIndex(160, 4, 160, true)).toBe(1);
+    expect(computeSpriteFrameIndex(320, 4, 160, true)).toBe(2);
+    expect(computeSpriteFrameIndex(480, 4, 160, true)).toBe(3);
+    expect(computeSpriteFrameIndex(640, 4, 160, true)).toBe(0);
+  });
+
+  it("stops at the last frame when loop=false", () => {
+    expect(computeSpriteFrameIndex(0, 4, 160, false)).toBe(0);
+    expect(computeSpriteFrameIndex(160, 4, 160, false)).toBe(1);
+    expect(computeSpriteFrameIndex(999, 4, 160, false)).toBe(3);
+  });
+
+  it("returns frame 0 for single-frame sprites", () => {
+    expect(computeSpriteFrameIndex(999, 1, 160, true)).toBe(0);
+    expect(computeSpriteFrameIndex(999, 1, 160, false)).toBe(0);
   });
 });
 

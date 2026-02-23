@@ -70,20 +70,20 @@ describe("sprite debug unit animation specs", () => {
       "Damaged",
     ]);
     expect(specs.find((spec) => spec.animationType === "Idle")).toMatchObject({
-      status: "ng",
-      spriteFiles: ["gama/idle-left.png", "gama/idle-right.png"],
+      status: "ok",
+      spriteFiles: ["gama/idle-west.png", "gama/idle-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Offence")).toMatchObject({
       status: "ng",
-      spriteFiles: ["gama/attack-left.png", "gama/attack-right.png"],
+      spriteFiles: ["gama/attack-west.png", "gama/attack-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Damaged")).toMatchObject({
       status: "ok",
-      spriteFiles: ["gama/damaged-left.png", "gama/damaged-right.png"],
+      spriteFiles: ["gama/damaged-west.png", "gama/damaged-east.png"],
     });
   });
 
-  it("marks thick-sludge idle as NG because base idle frames do not animate yet", () => {
+  it("marks thick-sludge idle as OK when base idle sheet animation is supported", () => {
     const specs = unitAnimationTypeSpecs({
       kind: "thick-sludge",
       renderMode: "sprite",
@@ -92,8 +92,8 @@ describe("sprite debug unit animation specs", () => {
 
     const idle = specs.find((spec) => spec.animationType === "Idle");
     expect(idle).toBeDefined();
-    expect(idle?.status).toBe("ng");
-    expect(idle?.implementation).toContain("静止表示");
+    expect(idle?.status).toBe("ok");
+    expect(idle?.implementation).not.toContain("静止表示");
   });
 
   it("returns empty for unknown unit kind and supports sprite cards omission fallback", () => {

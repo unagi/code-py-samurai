@@ -10,7 +10,7 @@
       "animationType": "Idle",
       "spriteState": "idle",
       "trigger": "通常時",
-      "expectedFrames": 3,
+      "expectedFrames": 4,
       "overlay": false
     },
     {

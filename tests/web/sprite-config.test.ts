@@ -7,6 +7,7 @@ import {
   SPRITE_CAPABLE_KINDS,
   SPRITE_FRAME_MS,
   getSamuraiIdleFramePath,
+  resolveSpriteStateSrc,
 } from "../../src/web/sprite-config";
 
 describe("sprite config", () => {
@@ -21,8 +22,20 @@ describe("sprite config", () => {
     expect(SPRITE_CAPABLE_KINDS.has("thick-sludge")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("captive")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("archer")).toBe(false);
+    expect(CHAR_SPRITES.sludge.idle.frames).toBe(4);
     expect(CHAR_SPRITES.sludge.attack.frames).toBe(1);
     expect(CHAR_SPRITES["thick-sludge"].death.frames).toBe(4);
+  });
+
+  it("resolves sludge sprite paths to east/west assets while keeping left/right inputs", () => {
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.idle, "left"))
+      .toBe("/assets/sprites/gama/idle-west.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.idle, "right"))
+      .toBe("/assets/sprites/gama/idle-east.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "left"))
+      .toBe("/assets/sprites/gama/attack-west.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "right"))
+      .toBe("/assets/sprites/gama/attack-east.png");
   });
 
   it("keeps animation timing constants stable", () => {
