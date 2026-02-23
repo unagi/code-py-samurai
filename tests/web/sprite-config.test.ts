@@ -20,11 +20,14 @@ describe("sprite config", () => {
   it("exposes sprite-capable kinds derived from sprite definitions", () => {
     expect(SPRITE_CAPABLE_KINDS.has("sludge")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("thick-sludge")).toBe(true);
+    expect(SPRITE_CAPABLE_KINDS.has("wizard")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("captive")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("archer")).toBe(false);
     expect(CHAR_SPRITES.sludge.idle.frames).toBe(4);
-    expect(CHAR_SPRITES.sludge.attack.frames).toBe(1);
+    expect(CHAR_SPRITES.sludge.attack.frames).toBe(2);
+    expect(CHAR_SPRITES.sludge.death.frames).toBe(3);
     expect(CHAR_SPRITES["thick-sludge"].death.frames).toBe(4);
+    expect(CHAR_SPRITES.wizard.attack.frames).toBe(4);
   });
 
   it("resolves sludge sprite paths to east/west assets while keeping left/right inputs", () => {
@@ -51,6 +54,13 @@ describe("sprite config", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.death, "right"))
       .toBe("/assets/sprites/captive/bound.png");
     expect(CHAR_SPRITES.captive.idle.frames).toBe(3);
+  });
+
+  it("resolves wizard sprite paths from generated manifest", () => {
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.wizard.idle, "left"))
+      .toBe("/assets/sprites/wizard/idle-west.png");
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.wizard.attack, "right"))
+      .toBe("/assets/sprites/wizard/attack-east.png");
   });
 
   it("throws when sprite state config has no path source", () => {

@@ -33,8 +33,8 @@ export interface SpriteDebugDirectionCoverageSpec {
 export const DEBUG_SPRITE_TRIGGER_STATES = ["attack", "damaged", "death"] as const satisfies readonly SpriteState[];
 export const DEBUG_SPRITE_BUTTON_STATES = ["idle", ...DEBUG_SPRITE_TRIGGER_STATES] as const;
 
-const PREVIEW_KIND_ORDER = ["samurai", "sludge", "thick-sludge", "captive"] as const;
-const EMOJI_RENDERED_UNITS = ["archer", "golem", "wizard"] as const;
+const PREVIEW_KIND_ORDER = ["samurai", "sludge", "thick-sludge", "wizard", "captive"] as const;
+const EMOJI_RENDERED_UNITS = ["archer", "golem"] as const;
 type PreviewKind = (typeof PREVIEW_KIND_ORDER)[number];
 const DEBUG_DIR_SORT_ORDER: Readonly<Record<DebugSpritePreviewDir, number>> = {
   left: 0,

@@ -119,6 +119,7 @@ function buildCaptiveSpriteConfigFromManifest(): CharSpriteConfig {
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
   sludge: buildCharSpriteConfigFromManifest("sludge"),
   "thick-sludge": buildCharSpriteConfigFromManifest("thick-sludge"),
+  wizard: buildCharSpriteConfigFromManifest("wizard"),
   captive: buildCaptiveSpriteConfigFromManifest(),
 };
 

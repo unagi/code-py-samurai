@@ -1,5 +1,5 @@
 {
-  "kind": "sludge",
+  "kind": "wizard",
   "mode": "sprite-config",
   "previewSlots": [
     { "label": "WEST", "spriteDir": "left" },
@@ -24,7 +24,7 @@
       "animationType": "Offence",
       "spriteState": "attack",
       "trigger": "攻撃行動時（attack/shoot相当）",
-      "expectedFrames": 2,
+      "expectedFrames": 4,
       "overlay": true
     },
     {

@@ -18,6 +18,8 @@ describe("sprite debug data", () => {
       "sludge-right",
       "thick-sludge-left",
       "thick-sludge-right",
+      "wizard-left",
+      "wizard-right",
       "captive-none",
     ]);
   });
@@ -53,7 +55,6 @@ describe("sprite debug data", () => {
     expect(unsupported).toEqual([
       { kind: "archer", renderMode: "emoji", reason: "sprite logic not implemented" },
       { kind: "golem", renderMode: "emoji", reason: "sprite logic not implemented" },
-      { kind: "wizard", renderMode: "emoji", reason: "sprite logic not implemented" },
     ]);
   });
 
@@ -68,6 +69,7 @@ describe("sprite debug data", () => {
       { kind: "samurai", requiredDirs: ["left", "right"], missingDirs: [] },
       { kind: "sludge", requiredDirs: ["left", "right"], missingDirs: [] },
       { kind: "thick-sludge", requiredDirs: ["left", "right"], missingDirs: [] },
+      { kind: "wizard", requiredDirs: ["left"], missingDirs: [] },
       { kind: "captive", requiredDirs: ["none"], missingDirs: [] },
     ]);
   });

@@ -42,7 +42,7 @@ const EMPTY_DAMAGE_POPUPS: ReadonlyMap<number, DamagePopup[]> = new Map();
 const NOOP_HOVER = (): void => {};
 const DEFAULT_TILE_SIZE_PX = 80;
 const OTHER_UNIT_KINDS = new Set(["samurai", "captive"]);
-const ENEMY_EMOJI_KINDS = new Set(["archer", "wizard"]);
+const ENEMY_EMOJI_KINDS = new Set(["archer"]);
 interface EnemyPreviewGroup {
   kind: string;
   renderMode: "sprite" | "emoji";

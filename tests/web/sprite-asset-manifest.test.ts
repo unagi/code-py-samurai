@@ -21,9 +21,9 @@ describe("sprite asset manifest (generated)", () => {
       height: 320,
       frames: 4,
     });
-    expect(sludge.attack.east?.frames).toBe(1);
+    expect(sludge.attack.east?.frames).toBe(2);
     expect(sludge.damaged.east?.frames).toBe(2);
-    expect(sludge.death.east?.frames).toBe(4);
+    expect(sludge.death.east?.frames).toBe(3);
   });
 
   it("normalizes left/right named sprites into directional variants", () => {
@@ -49,5 +49,21 @@ describe("sprite asset manifest (generated)", () => {
       height: 80,
       frames: 6,
     });
+  });
+
+  it("indexes wizard directional entries from the wizard folder", () => {
+    const wizard = spriteAssetManifest.units.wizard;
+
+    expect(wizard.idle.east).toMatchObject({
+      path: "/assets/sprites/wizard/idle-east.png",
+      width: 1280,
+      height: 320,
+      frames: 4,
+    });
+    expect(wizard.attack.west).toMatchObject({
+      path: "/assets/sprites/wizard/attack-west.png",
+      frames: 4,
+    });
+    expect(wizard.death.east?.frames).toBe(3);
   });
 });

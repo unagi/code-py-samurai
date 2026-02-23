@@ -83,7 +83,7 @@ describe("sprite debug unit animation specs", () => {
       spriteFiles: ["sludge/idle-west.png", "sludge/idle-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Offence")).toMatchObject({
-      status: "ng",
+      status: "ok",
       spriteFiles: ["sludge/attack-west.png", "sludge/attack-east.png"],
     });
     expect(specs.find((spec) => spec.animationType === "Damaged")).toMatchObject({
@@ -103,6 +103,24 @@ describe("sprite debug unit animation specs", () => {
     expect(idle).toBeDefined();
     expect(idle?.status).toBe("ok");
     expect(idle?.implementation).not.toContain("静止表示");
+  });
+
+  it("materializes wizard sprite-config specs from wizard sprites", () => {
+    const specs = unitAnimationTypeSpecs({
+      kind: "wizard",
+      renderMode: "sprite",
+      cards: [buildEnemyCard("wizard", "left"), buildEnemyCard("wizard", "right")],
+    });
+
+    expect(specs.map((spec) => spec.animationType)).toEqual([
+      "Idle",
+      "Disappear",
+      "Offence",
+      "Damaged",
+    ]);
+    expect(specs.every((spec) => spec.status === "ok")).toBe(true);
+    expect(specs.find((spec) => spec.animationType === "Idle")?.spriteFiles)
+      .toEqual(["wizard/idle-west.png", "wizard/idle-east.png"]);
   });
 
   it("returns empty for unknown unit kind and supports sprite cards omission fallback", () => {

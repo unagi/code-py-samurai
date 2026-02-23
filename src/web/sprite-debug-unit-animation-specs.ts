@@ -5,6 +5,7 @@ import type { SpriteDir } from "./sprite-utils";
 
 import captiveDefJson from "./debug/unit-animation/captive.debug.json";
 import thickSludgeDefJson from "./debug/unit-animation/thick-sludge.debug.json";
+import wizardDefJson from "./debug/unit-animation/wizard.debug.json";
 import emojiFallbackDefJson from "./sprite-debug-unit-animation/emoji-fallback.json";
 import samuraiDefJson from "./sprite-debug-unit-animation/samurai.json";
 import sludgeDefJson from "./debug/unit-animation/sludge.debug.json";
@@ -71,6 +72,7 @@ const UNIT_ANIMATION_DEFS_BY_KIND = new Map<string, UnitAnimationDefinitionJson>
   ["captive", captiveDefJson as StaticUnitAnimationDefinitionJson],
   ["sludge", sludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
   ["thick-sludge", thickSludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
+  ["wizard", wizardDefJson as SpriteConfigUnitAnimationDefinitionJson],
 ]);
 
 function stripSpriteAssetPrefix(src: string): string {
