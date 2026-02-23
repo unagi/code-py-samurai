@@ -9,8 +9,9 @@ interface GameplayUnitJson {
   nameKey: string;
   displayName?: string;
   stats: {
-    maxHealth: number;
+    maxHealth: number | null;
     attackPower: number;
+    shootPower?: number;
   };
 }
 
@@ -35,6 +36,13 @@ function asInteger(value: unknown, label: string): number {
   return value;
 }
 
+function asNullableInteger(value: unknown, label: string): number | null {
+  if (value === null) {
+    return null;
+  }
+  return asInteger(value, label);
+}
+
 function toGameplayUnitJson(value: unknown): GameplayUnitJson {
   const root = asRecord(value, "root");
   const stats = asRecord(root.stats, "stats");
@@ -44,17 +52,22 @@ function toGameplayUnitJson(value: unknown): GameplayUnitJson {
   const nameKey = asNonEmptyString(root.nameKey, "nameKey");
   const displayNameRaw = root.displayName;
 
-  const maxHealth = asInteger(stats.maxHealth, "stats.maxHealth");
+  const maxHealth = asNullableInteger(stats.maxHealth, "stats.maxHealth");
   const attackPower = asInteger(stats.attackPower, "stats.attackPower");
+  const shootPowerRaw = stats.shootPower;
+  const shootPower = shootPowerRaw === undefined ? undefined : asInteger(shootPowerRaw, "stats.shootPower");
 
   if (symbol.length !== 1) {
     throw new Error("symbol must be a single character");
   }
-  if (maxHealth < 1) {
+  if (maxHealth !== null && maxHealth < 1) {
     throw new Error("stats.maxHealth must be >= 1");
   }
   if (attackPower < 0) {
     throw new Error("stats.attackPower must be >= 0");
+  }
+  if (shootPower !== undefined && shootPower < 0) {
+    throw new Error("stats.shootPower must be >= 0");
   }
 
   let displayName: string | undefined;
@@ -67,7 +80,7 @@ function toGameplayUnitJson(value: unknown): GameplayUnitJson {
     symbol,
     nameKey,
     displayName,
-    stats: { maxHealth, attackPower },
+    stats: { maxHealth, attackPower, shootPower },
   };
 }
 

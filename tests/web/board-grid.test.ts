@@ -84,6 +84,39 @@ describe("buildBoardGrid", () => {
     });
   });
 
+  it("keeps samurai tile metadata stable for symbol, kind, and alt key", () => {
+    const grid = buildBoardGrid("@");
+    const samuraiTile = grid.tiles.find((tile) => tile.symbol === "@" && tile.kind !== "void");
+
+    expect(samuraiTile).toBeDefined();
+    expect(samuraiTile).toMatchObject({
+      symbol: "@",
+      kind: "samurai",
+      altKey: "tiles.samurai",
+    });
+  });
+
+  it("keeps archer/wizard/golem tile metadata stable via gameplay JSON", () => {
+    const grid = buildBoardGrid("awG");
+    const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");
+
+    expect(nonVoid.find((tile) => tile.symbol === "a")).toMatchObject({
+      symbol: "a",
+      kind: "archer",
+      altKey: "tiles.archer",
+    });
+    expect(nonVoid.find((tile) => tile.symbol === "w")).toMatchObject({
+      symbol: "w",
+      kind: "wizard",
+      altKey: "tiles.wizard",
+    });
+    expect(nonVoid.find((tile) => tile.symbol === "G")).toMatchObject({
+      symbol: "G",
+      kind: "golem",
+      altKey: "tiles.golem",
+    });
+  });
+
   it("maps unsupported symbols to unknown tiles via fallback metadata", () => {
     const grid = buildBoardGrid("@x");
     const nonVoid = grid.tiles.filter((tile) => tile.kind !== "void");

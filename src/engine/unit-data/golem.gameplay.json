@@ -1,0 +1,9 @@
+{
+  "kind": "golem",
+  "symbol": "G",
+  "nameKey": "golem",
+  "stats": {
+    "maxHealth": null,
+    "attackPower": 3
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
+import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
 import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 
@@ -92,9 +93,10 @@ const DEBUG_STATS_FORMATTER: StatsFormatter = {
 const SLUDGE_DEBUG_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
 const THICK_SLUDGE_DEBUG_ALT_KEY = `tiles.${thickSludgeGameplay.nameKey}`;
 const CAPTIVE_DEBUG_ALT_KEY = `tiles.${captiveGameplay.nameKey}`;
+const SAMURAI_DEBUG_ALT_KEY = `tiles.${samuraiGameplay.nameKey}`;
 
 const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
-  samurai: { symbol: "@", kind: "samurai", altKey: "tiles.samurai" },
+  [samuraiGameplay.kind]: { symbol: samuraiGameplay.symbol, kind: samuraiGameplay.kind, altKey: SAMURAI_DEBUG_ALT_KEY },
   [sludgeGameplay.kind]: {
     symbol: sludgeGameplay.symbol,
     kind: sludgeGameplay.kind,

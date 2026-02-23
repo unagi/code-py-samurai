@@ -1,0 +1,10 @@
+{
+  "kind": "archer",
+  "symbol": "a",
+  "nameKey": "archer",
+  "stats": {
+    "maxHealth": 7,
+    "attackPower": 3,
+    "shootPower": 3
+  }
+}

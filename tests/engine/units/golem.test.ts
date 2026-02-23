@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import golemGameplay from "@engine/unit-data/golem.gameplay.json";
 import { Golem } from "@engine/units/golem";
 import { Floor } from "@engine/floor";
 import { Turn } from "@engine/turn";
@@ -33,6 +34,15 @@ describe("Golem", () => {
   it("has attackPower 3", () => {
     const { golem } = setup();
     expect(golem.attackPower).toBe(3);
+  });
+
+  it("matches gameplay JSON for static parameters", () => {
+    const { golem } = setup();
+
+    expect(golem.attackPower).toBe(golemGameplay.stats.attackPower);
+    expect(golem.character).toBe(golemGameplay.symbol);
+    expect(golem.nameKey).toBe(golemGameplay.nameKey);
+    expect(golemGameplay.stats.maxHealth).toBeNull();
   });
 
   it("executes turn callback", () => {

@@ -1,7 +1,8 @@
 import spriteAssetManifestJson from "./generated/sprite-assets.manifest.generated.json";
 import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
 
-export const SAMURAI_IDLE_FRAME_COUNT = 16;
+// Transitional fallback until the samurai spritesheet is recreated.
+export const SAMURAI_IDLE_FRAME_COUNT = 1;
 export const SAMURAI_IDLE_FRAME_MS = 140;
 /** スプライトフレームあたりの表示時間 (ms) */
 export const SPRITE_FRAME_MS = 160;

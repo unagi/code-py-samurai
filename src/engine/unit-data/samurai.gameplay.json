@@ -1,0 +1,10 @@
+{
+  "kind": "samurai",
+  "symbol": "@",
+  "nameKey": "samurai",
+  "stats": {
+    "maxHealth": 20,
+    "attackPower": 5,
+    "shootPower": 3
+  }
+}

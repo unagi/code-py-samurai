@@ -1,7 +1,11 @@
 import { towers } from "../levels";
+import archerGameplay from "@engine/unit-data/archer.gameplay.json";
+import golemGameplay from "@engine/unit-data/golem.gameplay.json";
+import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
 import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 import captiveGameplay from "@engine/unit-data/captive.gameplay.json";
+import wizardGameplay from "@engine/unit-data/wizard.gameplay.json";
 
 interface TileMeta {
   kind: string;
@@ -14,23 +18,27 @@ const VOID_TILE: TileMeta = { kind: "void", altKey: "tiles.empty" };
 const SLUDGE_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
 const THICK_SLUDGE_ALT_KEY = `tiles.${thickSludgeGameplay.nameKey}`;
 const CAPTIVE_ALT_KEY = `tiles.${captiveGameplay.nameKey}`;
+const SAMURAI_ALT_KEY = `tiles.${samuraiGameplay.nameKey}`;
+const ARCHER_ALT_KEY = `tiles.${archerGameplay.nameKey}`;
+const WIZARD_ALT_KEY = `tiles.${wizardGameplay.nameKey}`;
+const GOLEM_ALT_KEY = `tiles.${golemGameplay.nameKey}`;
 
 const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
   " ": { kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
   "-": { kind: "wall-h", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall.png" },
   "|": { kind: "wall-v", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall-top.png" },
   ">": { kind: "stairs", altKey: "tiles.stairs", assetPath: "/assets/tiles/cave-stairs.png" },
-  "@": {
-    kind: "samurai",
-    altKey: "tiles.samurai",
+  [samuraiGameplay.symbol]: {
+    kind: samuraiGameplay.kind,
+    altKey: SAMURAI_ALT_KEY,
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
   [sludgeGameplay.symbol]: { kind: sludgeGameplay.kind, altKey: SLUDGE_ALT_KEY },
   [thickSludgeGameplay.symbol]: { kind: thickSludgeGameplay.kind, altKey: THICK_SLUDGE_ALT_KEY, emoji: "\u{1F47E}" }, // 👾
-  a: { kind: "archer", altKey: "tiles.archer", emoji: "\u{1F3F9}" },         // 🏹
-  w: { kind: "wizard", altKey: "tiles.wizard", emoji: "\u{1F9D9}" },         // 🧙
+  [archerGameplay.symbol]: { kind: archerGameplay.kind, altKey: ARCHER_ALT_KEY, emoji: "\u{1F3F9}" }, // 🏹
+  [wizardGameplay.symbol]: { kind: wizardGameplay.kind, altKey: WIZARD_ALT_KEY, emoji: "\u{1F9D9}" }, // 🧙
   [captiveGameplay.symbol]: { kind: captiveGameplay.kind, altKey: CAPTIVE_ALT_KEY, emoji: "\u{1F64F}" }, // 🙏
-  G: { kind: "golem", altKey: "tiles.golem", emoji: "\u{1FAA8}" },           // 🪨
+  [golemGameplay.symbol]: { kind: golemGameplay.kind, altKey: GOLEM_ALT_KEY, emoji: "\u{1FAA8}" }, // 🪨
   "?": { kind: "unknown", altKey: "tiles.unknown", emoji: "\u{2753}" },      // ❓
 };
 

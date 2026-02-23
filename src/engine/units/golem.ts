@@ -1,6 +1,7 @@
 import type { ILogger } from "../types";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
+import golemGameplay from "../unit-data/golem.gameplay.json";
 import { BaseUnit } from "./base";
 
 /**
@@ -9,8 +10,9 @@ import { BaseUnit } from "./base";
  * Ported from RubyWarrior::Units::Golem
  */
 export class Golem extends BaseUnit {
-  protected static readonly ATTACK_POWER: number = 3;
-  protected static readonly CHARACTER: string = "G";
+  protected static readonly ATTACK_POWER: number = golemGameplay.stats.attackPower;
+  protected static readonly CHARACTER: string = golemGameplay.symbol;
+  protected static readonly NAME_KEY: string = golemGameplay.nameKey;
 
   private _maxHealth: number = 0;
   private _turnCallback: ((turn: Turn) => void) | null = null;

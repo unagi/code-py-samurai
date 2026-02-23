@@ -11,9 +11,9 @@ import {
 } from "../../src/web/sprite-config";
 
 describe("sprite config", () => {
-  it("builds samurai idle frame paths with zero-padded wrapping indices", () => {
+  it("uses a fixed samurai idle frame path while spritesheet is pending", () => {
     expect(getSamuraiIdleFramePath(0)).toBe("/assets/sprites/samurai-cat/idle-east-frames/frame_01.png");
-    expect(getSamuraiIdleFramePath(15)).toBe("/assets/sprites/samurai-cat/idle-east-frames/frame_16.png");
+    expect(getSamuraiIdleFramePath(15)).toBe("/assets/sprites/samurai-cat/idle-east-frames/frame_01.png");
     expect(getSamuraiIdleFramePath(16)).toBe("/assets/sprites/samurai-cat/idle-east-frames/frame_01.png");
   });
 
@@ -54,7 +54,7 @@ describe("sprite config", () => {
   });
 
   it("keeps animation timing constants stable", () => {
-    expect(SAMURAI_IDLE_FRAME_COUNT).toBe(16);
+    expect(SAMURAI_IDLE_FRAME_COUNT).toBe(1);
     expect(SAMURAI_IDLE_FRAME_MS).toBe(140);
     expect(SPRITE_FRAME_MS).toBe(160);
   });
