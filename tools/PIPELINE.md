@@ -94,6 +94,107 @@ cd tools && uv run python pipeline/extract_grid_cells.py \
 
 出力例: `r1c1.png` ... `r4c5.png`（4×5 = 20セル）
 
+### 赤検出失敗時のフォールバック
+
+キャラの茶色/赤系ピクセルが赤セパレータと誤検出されるケースがある（tanuki 等）。
+行・列セパレータが期待数を大幅に超える場合は、**手動均等分割** で対処する:
+
+```python
+# 均等分割 + rembg + tight crop
+img = Image.open(path).convert('RGBA')
+cell_w, cell_h = img.width // cols, img.height // rows
+for r in range(rows):
+    for c in range(cols):
+        cell = img.crop((c*cell_w, r*cell_h, (c+1)*cell_w, (r+1)*cell_h))
+        cell = remove(cell, session=sess)  # rembg
+        cell = tight_crop(cell)
+        cell.save(out / f'r{r+1}c{c+1}.png')
+```
+
+---
+
+## Gemini プロンプト設計ベストプラクティス
+
+gama / tanuki での試行錯誤から得た知見。
+
+### グリッド構成
+
+- **4×5 (20セル)** が最適。5×5 はセル品質が下がりやすい
+- **右下セル (r4c5) はダミー**（ウォーターマーク吸収用）→ 19セル利用
+- **赤セパレータ線**を明示指定（スライス精度向上）
+- 背景は **白** 指定（シアン等のカラー背景は rembg 精度低下）
+
+### 行単位アクション割り当て（重要）
+
+Gemini は行内でアクション種別が混在すると **数を無視する**。
+1行 = 1アクション種別に統一すること:
+
+```
+Row1: idle 1-5        ← idle 専用
+Row2: offence 1-5     ← offence 専用
+Row3: damaged 1-5     ← damaged 専用
+Row4: disappear 1-4 + DUMMY
+```
+
+❌ `Row2: idle 6, idle 7, offence 1, offence 2, offence 3` → Gemini が混同
+
+### 左右対称キャラ
+
+- **片方向（west or east）のみ** で全19セルをキャラポーズに使う
+- 反対方向は pipeline の flip で生成
+- Gemini は方向指定（west/east）を無視することが多いが、全セル同方向なら問題ない
+- 方向が指定と逆でも、デプロイ時に west/east マッピングを入れ替えるだけ
+
+### Overcollect 戦略
+
+最終必要フレーム数より多く生成し、pipeline + 目視で選別する:
+
+| 最終目標 | 生成数 | 選別 |
+|---------|-------|------|
+| idle 4f | 5セル | frame_order.py で cycle 選定 |
+| attack 2-4f | 5セル | contact sheet 目視で選択 |
+| damaged 2f | 5セル | contact sheet 目視で選択 |
+| death 3f | 4セル | 目視で選択（不採用セルは他アクションに転用可） |
+
+### 投射物・エフェクト
+
+- 遠距離キャラでも **投射物（火の玉等）は含めない** → キャラ本体ポーズに集中
+- 投射物はゲームエンジン側で別途描画する設計
+- offence フレームは「キャスティングポーズ」（手の光程度は OK）
+
+### プロンプトテンプレート
+
+キャラ別テンプレートは `from_creator/gemini/<char>_refresh_4x5_request.md` に格納。
+新キャラ作成時は既存テンプレを複製して CHARACTER DESIGN NOTES のみ変更する。
+
+---
+
+## フレーム選択の原則
+
+### pipeline は候補を出す、最終決定は人間
+
+`frame_order.py --ref` は全候補を距離順にソートした `ordered_contact.png` を出力する。
+しかし **最終採用フレームは contact sheet を目視して人間が決定** する。
+
+理由:
+- DT距離は姿勢の差異を測るが、アニメーション品質（滑らかさ、意味の通じやすさ）は測れない
+- 同距離でも「良い動き」と「不自然な動き」がある
+- フレーム数の増減も人間判断（tanuki attack: 目標2f → 実際4f に増やした）
+
+### フレーム転用
+
+あるアクションで不採用になったフレームを別アクションに転用できる:
+- 例: idle で不採用の r1c4（中立的だが idle ループに合わない）→ death の第1フレーム（よろめき開始）に転用
+- normalized/ ディレクトリから別アクションの spritesheet 組み立て時に混ぜる
+
+### Idle A→B1→C→B2 の A≠C
+
+ping-pong (A→B→A→B) ではなく 4フレーム全異なるサイクルを使う。
+A と C は両方とも「中立寄りの姿勢」だが **微妙に異なるフレーム** を選ぶ。
+
+理由: 左右対称キャラは flip で東西を作るため、A=C だとアニメーションが
+機械的な反復に見える。A≠C にすることで有機的な動きになる。
+
 ---
 
 ## Idle フレーム順序決定: frame_order.py

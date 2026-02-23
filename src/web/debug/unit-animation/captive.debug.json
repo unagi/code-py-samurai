@@ -9,10 +9,10 @@
       "animationType": "Idle",
       "trigger": "通常時",
       "spriteFiles": ["captive/bound.png"],
-      "frameCountText": "3 frames",
+      "frameCountText": "4 frames",
       "motionSpec": "等間隔フレーム遷移",
-      "implementation": "idle にマッピングされて表示されるが、フレーム遷移は行われず静止表示になっている。加えて source 高さ 80px のため高DPI（Retina）表示の余裕がない。",
-      "status": "ng",
+      "implementation": "idle にマッピングされて表示される。320px Retina スプライトシート（4f）。",
+      "status": "ok",
       "previewImageSrcs": ["/assets/sprites/captive/bound.png"],
       "artLayout": "single"
     },

@@ -26,12 +26,12 @@ describe("sprite asset manifest (generated)", () => {
     expect(sludge.death.east?.frames).toBe(3);
   });
 
-  it("normalizes left/right named sprites into directional variants", () => {
+  it("indexes thick-sludge east/west directional variants", () => {
     const thickSludge = spriteAssetManifest.units["thick-sludge"];
 
-    expect(thickSludge.idle.left?.path).toBe("/assets/sprites/thick-sludge/idle-left.png");
-    expect(thickSludge.idle.right?.frames).toBe(3);
-    expect(thickSludge.attack.left?.frames).toBe(4);
+    expect(thickSludge.idle.west?.path).toBe("/assets/sprites/thick-sludge/idle-west.png");
+    expect(thickSludge.idle.east?.frames).toBe(4);
+    expect(thickSludge.attack.west?.frames).toBe(4);
   });
 
   it("indexes captive sprite assets under the unit-kind folder", () => {
@@ -39,15 +39,15 @@ describe("sprite asset manifest (generated)", () => {
 
     expect(captive.idle.none).toMatchObject({
       path: "/assets/sprites/captive/bound.png",
-      width: 240,
-      height: 80,
-      frames: 3,
+      width: 1280,
+      height: 320,
+      frames: 4,
     });
     expect(captive.death.none).toMatchObject({
       path: "/assets/sprites/captive/rescued.png",
-      width: 480,
-      height: 80,
-      frames: 6,
+      width: 1280,
+      height: 320,
+      frames: 4,
     });
   });
 
