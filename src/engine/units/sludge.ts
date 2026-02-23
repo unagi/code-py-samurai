@@ -1,6 +1,7 @@
 import type { RelativeDirection } from "../direction";
 import type { ILogger } from "../types";
 import type { Space } from "../space";
+import sludgeGameplay from "../unit-data/sludge.gameplay.json";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
 import { BaseUnit } from "./base";
@@ -13,9 +14,10 @@ const SEARCH_DIRECTIONS = [
 ] as const satisfies readonly RelativeDirection[];
 
 export class Sludge extends BaseUnit {
-  protected static readonly ATTACK_POWER: number = 3;
-  protected static readonly MAX_HEALTH: number = 12;
-  protected static readonly CHARACTER: string = "s";
+  protected static readonly ATTACK_POWER: number = sludgeGameplay.stats.attackPower;
+  protected static readonly MAX_HEALTH: number = sludgeGameplay.stats.maxHealth;
+  protected static readonly CHARACTER: string = sludgeGameplay.symbol;
+  protected static readonly NAME_KEY: string = sludgeGameplay.nameKey;
 
   constructor(logger?: ILogger) {
     super(logger, createAbility);

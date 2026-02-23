@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 
 import { BoardGridView } from "./BoardGridView";
 import {
@@ -86,9 +87,15 @@ const DEBUG_STATS_FORMATTER: StatsFormatter = {
   atk: (value) => `ATK ${value}`,
 };
 
+const SLUDGE_DEBUG_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
+
 const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
   samurai: { symbol: "@", kind: "samurai", altKey: "tiles.samurai" },
-  sludge: { symbol: "s", kind: "sludge", altKey: "tiles.sludge" },
+  [sludgeGameplay.kind]: {
+    symbol: sludgeGameplay.symbol,
+    kind: sludgeGameplay.kind,
+    altKey: SLUDGE_DEBUG_ALT_KEY,
+  },
   "thick-sludge": { symbol: "S", kind: "thick-sludge", altKey: "tiles.thickSludge" },
   captive: { symbol: "C", kind: "captive", altKey: "tiles.captive" },
   floor: { symbol: " ", kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },

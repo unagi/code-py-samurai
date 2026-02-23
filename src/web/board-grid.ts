@@ -1,4 +1,5 @@
 import { towers } from "../levels";
+import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 
 interface TileMeta {
   kind: string;
@@ -8,6 +9,7 @@ interface TileMeta {
 }
 
 const VOID_TILE: TileMeta = { kind: "void", altKey: "tiles.empty" };
+const SLUDGE_ALT_KEY = `tiles.${sludgeGameplay.nameKey}`;
 
 const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
   " ": { kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
@@ -19,7 +21,7 @@ const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
     altKey: "tiles.samurai",
     assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
   },
-  s: { kind: "sludge", altKey: "tiles.sludge" },
+  [sludgeGameplay.symbol]: { kind: sludgeGameplay.kind, altKey: SLUDGE_ALT_KEY },
   S: { kind: "thick-sludge", altKey: "tiles.thickSludge", emoji: "\u{1F47E}" }, // 👾
   a: { kind: "archer", altKey: "tiles.archer", emoji: "\u{1F3F9}" },         // 🏹
   w: { kind: "wizard", altKey: "tiles.wizard", emoji: "\u{1F9D9}" },         // 🧙
