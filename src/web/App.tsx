@@ -71,9 +71,16 @@ export default function App() {
   const [tileSizePx, setTileSizePx] = useState(20);
   const [boardViewportWidthPx, setBoardViewportWidthPx] = useState(0);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
+  const [canScrollLevelProgressLeft, setCanScrollLevelProgressLeft] = useState(false);
+  const [canScrollLevelProgressRight, setCanScrollLevelProgressRight] = useState(false);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
+  const levelProgressScrollRef = useRef<HTMLDivElement | null>(null);
+  const activeLevelStepRef = useRef<HTMLButtonElement | null>(null);
+  const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -243,6 +250,7 @@ export default function App() {
   };
 
   const handleClearData = (): void => {
+    setIsSettingsMenuOpen(false);
     const ok = globalThis.confirm(t("app.clearDataConfirm"));
     if (!ok) return;
 
@@ -307,68 +315,223 @@ export default function App() {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  useEffect(() => {
+    if (!isSettingsMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (settingsMenuRef.current?.contains(target)) return;
+      if (settingsTriggerRef.current?.contains(target)) return;
+      setIsSettingsMenuOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      setIsSettingsMenuOpen(false);
+      settingsTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSettingsMenuOpen]);
+
+  useEffect(() => {
+    const scroller = levelProgressScrollRef.current;
+    if (!scroller) return;
+
+    const updateScrollState = (): void => {
+      const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      setCanScrollLevelProgressLeft(scroller.scrollLeft > 1);
+      setCanScrollLevelProgressRight(scroller.scrollLeft < maxScrollLeft - 1);
+    };
+
+    updateScrollState();
+
+    const handleScroll = (): void => updateScrollState();
+    scroller.addEventListener("scroll", handleScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(() => updateScrollState());
+    resizeObserver.observe(scroller);
+    if (scroller.firstElementChild instanceof HTMLElement) {
+      resizeObserver.observe(scroller.firstElementChild);
+    }
+
+    return () => {
+      scroller.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [allLevelSteps.length]);
+
+  useEffect(() => {
+    const scroller = levelProgressScrollRef.current;
+    const active = activeLevelStepRef.current;
+    if (!scroller || !active) return;
+    active.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [currentGlobalLevel]);
+
+  const scrollLevelProgressBy = (direction: -1 | 1): void => {
+    const scroller = levelProgressScrollRef.current;
+    if (!scroller) return;
+    const stepPx = Math.max(220, Math.floor(scroller.clientWidth * 0.68));
+    scroller.scrollBy({ left: direction * stepPx, behavior: "smooth" });
+  };
+
+  const handleLanguageChange = (lang: string): void => {
+    void i18n.changeLanguage(lang);
+    setIsSettingsMenuOpen(false);
+  };
+
   const levelDescKey = `levels.${towerName}.${localLevel}.description`;
   const levelTipKey = `levels.${towerName}.${localLevel}.tip`;
   const levelClueKey = `levels.${towerName}.${localLevel}.clue`;
   const hasClue = i18n.exists(levelClueKey);
 
   return (
-    <main className="layout">
-      <section className="hero">
-        <div className="hero-line" />
-        <h1>{t("app.title")} ⚔️🐱</h1>
-        <div className="hero-line" />
-        <select
-          className="lang-selector"
-          value={i18n.language}
-          onChange={(e) => i18n.changeLanguage(e.target.value)}
-          aria-label={t("nav.language")}
-        >
-          <option value="en">EN</option>
-          <option value="ja">JA</option>
-        </select>
-      </section>
+    <>
+      <header className="app-header-band">
+        <div className="layout app-header-layout">
+          <section className="hero">
+            <div className="hero-line" />
+            <h1>{t("app.title")} ⚔️🐱</h1>
+            <div className="hero-line" />
+          </section>
 
-      <div className="top-controls">
-        <div className="top-controls-main">
-          <nav className="level-progress" aria-label={t("nav.levelProgress")}>
-            {allLevelSteps.map((globalLvl) => {
-              const isActive = globalLvl === currentGlobalLevel;
-              const isCleared = globalLvl < samuraiLevel && !isActive;
-              const isLocked = !isLevelAccessible(globalLvl);
-
-              let className = "progress-step";
-              if (isActive) className += " active";
-              else if (isCleared) className += " cleared";
-              if (isLocked) className += " locked";
-
-              return (
+          <div className="top-controls">
+            <div className="top-controls-main">
+              <nav className="level-progress" aria-label={t("nav.levelProgress")}>
                 <button
-                  key={globalLvl}
                   type="button"
-                  className={className}
-                  disabled={isPlaying || isLocked}
-                  onClick={() => goToLevel(globalLvl)}
-                  aria-label={isLocked
-                    ? t("nav.levelLocked", { level: globalLvl })
-                    : t("board.lv", { level: globalLvl })}
+                  className="level-progress-nav level-progress-nav-left"
+                  onClick={() => scrollLevelProgressBy(-1)}
+                  disabled={!canScrollLevelProgressLeft}
+                  aria-label={`${t("nav.levelProgress")} ←`}
                 >
-                  {t("board.lv", { level: globalLvl })}
-                  {isActive ? <i className="bi bi-geo-alt-fill" /> : null}
-                  {isCleared ? <i className="bi bi-check-lg" /> : null}
+                  <i className="bi bi-chevron-left" aria-hidden="true" />
                 </button>
-              );
-            })}
-          </nav>
-        </div>
-        <div className="top-controls-side">
-          <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
-            <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
-          </button>
-        </div>
-      </div>
+                <div className="level-progress-shell">
+                  <span
+                    className={`level-progress-fade level-progress-fade-left${canScrollLevelProgressLeft ? " visible" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`level-progress-fade level-progress-fade-right${canScrollLevelProgressRight ? " visible" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <div className="level-progress-scroll" ref={levelProgressScrollRef}>
+                    <div className="level-progress-track">
+                      {allLevelSteps.map((globalLvl, index) => {
+                        const isActive = globalLvl === currentGlobalLevel;
+                        const isCleared = globalLvl < samuraiLevel && !isActive;
+                        const isLocked = !isLevelAccessible(globalLvl);
+                        const showsCompletedPath = globalLvl < samuraiLevel;
 
-      <section className="workspace">
+                        let className = "progress-step";
+                        if (isActive) className += " active";
+                        else if (isCleared) className += " cleared";
+                        if (isLocked) className += " locked";
+
+                        const connectorClass = showsCompletedPath
+                          ? "progress-connector progress-connector-cleared"
+                          : "progress-connector progress-connector-locked";
+
+                        return (
+                          <div key={globalLvl} className="progress-node-group">
+                            <button
+                              ref={isActive ? activeLevelStepRef : undefined}
+                              type="button"
+                              className={className}
+                              disabled={isPlaying || isLocked}
+                              onClick={() => goToLevel(globalLvl)}
+                              aria-label={isLocked
+                                ? t("nav.levelLocked", { level: globalLvl })
+                                : t("board.lv", { level: globalLvl })}
+                              aria-current={isActive ? "step" : undefined}
+                            >
+                              <span className="progress-step-number">{String(globalLvl).padStart(2, "0")}</span>
+                              {isCleared ? (
+                                <span className="progress-step-badge" aria-hidden="true">
+                                  <i className="bi bi-check" />
+                                </span>
+                              ) : null}
+                              {isLocked ? (
+                                <span className="progress-step-lock" aria-hidden="true">
+                                  <i className="bi bi-lock-fill" />
+                                </span>
+                              ) : null}
+                            </button>
+                            {index < allLevelSteps.length - 1 ? <span className={connectorClass} aria-hidden="true" /> : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="level-progress-nav level-progress-nav-right"
+                  onClick={() => scrollLevelProgressBy(1)}
+                  disabled={!canScrollLevelProgressRight}
+                  aria-label={`${t("nav.levelProgress")} →`}
+                >
+                  <i className="bi bi-chevron-right" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
+            <div className="top-controls-side">
+              <div className="settings-menu-container">
+                <button
+                  ref={settingsTriggerRef}
+                  type="button"
+                  className="settings-trigger"
+                  aria-label={t("app.settings")}
+                  aria-haspopup="dialog"
+                  aria-expanded={isSettingsMenuOpen}
+                  onClick={() => setIsSettingsMenuOpen((prev) => !prev)}
+                >
+                  <i className="bi bi-gear-fill" aria-hidden="true" />
+                </button>
+                {isSettingsMenuOpen ? (
+                  <div className="settings-menu-panel" ref={settingsMenuRef} aria-label={t("app.settings")}>
+                    <div className="settings-menu-arrow" aria-hidden="true" />
+                    <div className="settings-menu-section">
+                      <label className="settings-menu-label" htmlFor="settings-language-select">
+                        {t("nav.language")}
+                      </label>
+                      <select
+                        id="settings-language-select"
+                        className="settings-language-select"
+                        value={i18n.language}
+                        onChange={(e) => handleLanguageChange(e.target.value)}
+                        aria-label={t("nav.language")}
+                      >
+                        <option value="en">EN</option>
+                        <option value="ja">JA</option>
+                      </select>
+                    </div>
+                    <div className="settings-menu-divider" aria-hidden="true" />
+                    <button
+                      type="button"
+                      className="settings-menu-danger"
+                      onClick={handleClearData}
+                      disabled={isPlaying}
+                    >
+                      <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="layout app-main-layout">
+        <section className="workspace">
           <article className="console-panel">
             <div className="console-header">
               <h2>🗺️ {t("board.heading")}</h2>
@@ -480,20 +643,21 @@ export default function App() {
         </aside>
       </section>
 
-      <ResultModal
-        isOpen={showResultModal}
-        result={result}
-        t={t}
-        hasClue={hasClue}
-        levelClueKey={levelClueKey}
-        hasNextLevel={hasNextLevel}
-        onRetry={() => {
-          setShowResultModal(false);
-          startLevel();
-        }}
-        onNextLevel={() => goToLevel(currentGlobalLevel + 1)}
-        onClose={() => setShowResultModal(false)}
-      />
-    </main>
+        <ResultModal
+          isOpen={showResultModal}
+          result={result}
+          t={t}
+          hasClue={hasClue}
+          levelClueKey={levelClueKey}
+          hasNextLevel={hasNextLevel}
+          onRetry={() => {
+            setShowResultModal(false);
+            startLevel();
+          }}
+          onNextLevel={() => goToLevel(currentGlobalLevel + 1)}
+          onClose={() => setShowResultModal(false)}
+        />
+      </main>
+    </>
   );
 }

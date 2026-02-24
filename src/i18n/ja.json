@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "Python侍",
+    "settings": "設定",
     "clearData": "データ消去",
     "clearDataConfirm": "保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？"
   },

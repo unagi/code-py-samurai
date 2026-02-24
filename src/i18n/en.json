@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "Python侍",
+    "settings": "Settings",
     "clearData": "Clear Data",
     "clearDataConfirm": "This will erase your saved progress (Lv) and Player Code, resetting everything to the initial state. Are you sure?"
   },

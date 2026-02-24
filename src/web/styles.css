@@ -1,7 +1,21 @@
 :root {
-  /* Top dark band aligns with the app header/hero area (fixed-ish height). */
-  --app-top-band-height: 280px;
-  --app-top-band-edge: 2px;
+  /* Top dark band and header rows are fixed per display mode. */
+  --layout-top-margin: 0.8rem;
+  --timeline-node-size: 2.45rem;
+  --hero-row-height: 6rem;
+  --hero-row-margin-top: 0.4rem;
+  --hero-row-margin-bottom: 1rem;
+  --top-controls-row-height: 3.2rem;
+  --top-controls-row-margin-bottom: 0.8rem;
+  --app-header-bottom-gap: 0.85rem;
+  --app-top-band-height: calc(
+    var(--layout-top-margin) +
+    var(--hero-row-margin-top) +
+    var(--hero-row-height) +
+    var(--hero-row-margin-bottom) +
+    var(--top-controls-row-height) +
+    var(--top-controls-row-margin-bottom)
+  );
   color-scheme: light;
   font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
   color: #2d1c12;
@@ -15,27 +29,48 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(80% 50% at 20% 0%, rgba(150, 95, 36, 0.35), transparent 60%),
-    radial-gradient(70% 50% at 80% 0%, rgba(115, 70, 30, 0.32), transparent 60%),
-    linear-gradient(
-      180deg,
-      #3a2618 0%,
-      #4c311f calc(var(--app-top-band-height) - var(--app-top-band-edge)),
-      #efe0c4 var(--app-top-band-height),
-      #e8d8b7 100%
-    );
+    radial-gradient(85% 55% at 20% 0%, rgba(188, 146, 95, 0.12), transparent 62%),
+    radial-gradient(85% 55% at 80% 0%, rgba(170, 125, 78, 0.11), transparent 64%),
+    linear-gradient(180deg, #efe0c4 0%, #e8d8b7 100%);
 }
 
 .layout {
   width: min(1240px, 94vw);
-  margin: 0.8rem auto 1.4rem;
+  margin-inline: auto;
+}
+
+.app-header-band {
+  height: var(--app-top-band-height);
+  background:
+    radial-gradient(80% 50% at 20% 0%, rgba(150, 95, 36, 0.35), transparent 60%),
+    radial-gradient(70% 50% at 80% 0%, rgba(115, 70, 30, 0.32), transparent 60%),
+    linear-gradient(180deg, #3a2618 0%, #4c311f 100%);
+  border-bottom: 1px solid rgba(71, 46, 29, 0.48);
+  position: relative;
+  z-index: 1;
+}
+
+.app-header-layout {
+  height: 100%;
+  display: grid;
+  grid-template-rows: var(--hero-row-height) var(--top-controls-row-height);
+  align-content: start;
+  row-gap: var(--hero-row-margin-bottom);
+  padding-top: calc(var(--layout-top-margin) + var(--hero-row-margin-top));
+  padding-bottom: var(--top-controls-row-margin-bottom);
+}
+
+.app-main-layout {
+  margin-top: var(--app-header-bottom-gap);
+  margin-bottom: 1.4rem;
 }
 
 .hero {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 0.4rem 0 1rem;
+  height: var(--hero-row-height);
+  margin: 0;
 }
 
 .hero h1 {
@@ -86,46 +121,231 @@ body {
 
 .level-progress {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem;
-  margin: 0 0 0.55rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.level-progress-nav {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(92, 61, 38, 0.8);
+  background: linear-gradient(180deg, #38261b, #2a1d16);
+  color: #e8c8a0;
+  box-shadow: inset 0 0 0 1px rgba(198, 155, 110, 0.08);
+}
+
+.level-progress-nav:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(198, 155, 110, 0.12),
+    0 0 10px rgba(116, 78, 44, 0.22);
+}
+
+.level-progress-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.level-progress-shell {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.level-progress-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0.2rem 0.2rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  scroll-padding-inline: 1rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.level-progress-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.level-progress-fade {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 1.45rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  z-index: 2;
+}
+
+.level-progress-fade.visible {
+  opacity: 1;
+}
+
+.level-progress-fade-left {
+  left: 1px;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  background: transparent;
+}
+
+.level-progress-fade-right {
+  right: 1px;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  background: transparent;
+}
+
+.level-progress-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  padding: 0.15rem 0.55rem;
+}
+
+.progress-node-group {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .progress-step {
+  position: relative;
+  width: var(--timeline-node-size);
+  height: var(--timeline-node-size);
+  padding: 0;
   border: 1px solid #5b3821;
-  border-radius: 10px;
-  background: #2a1d16;
-  color: #bfa78d;
-  padding: 0.28rem 0.42rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f2118, #241913);
+  color: #ccb293;
+  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
   font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-shadow: inset 0 0 0 1px rgba(198, 155, 110, 0.08);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.progress-step-number {
+  letter-spacing: 0.04em;
+}
+
+.progress-step:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.04);
+}
+
+.progress-step:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(34, 24, 17, 0.95),
+    0 0 0 4px rgba(255, 205, 142, 0.7);
 }
 
 .progress-step.active {
-  background: linear-gradient(180deg, #f0c58f, #b77e43);
+  transform: scale(1.12);
+  border-color: #f0c58f;
+  background: linear-gradient(180deg, #f5d19e, #c5874a);
   color: #2b190f;
-  box-shadow: 0 0 16px rgba(255, 196, 120, 0.45);
+  box-shadow:
+    0 0 0 2px rgba(49, 28, 16, 0.85),
+    0 0 14px rgba(255, 201, 137, 0.42);
+  z-index: 1;
 }
 
 .progress-step.cleared {
-  background: #2a3628;
-  color: #a8d4a0;
-  border-color: #4a6b42;
+  background: linear-gradient(180deg, #304229, #24311e);
+  color: #bfe2b7;
+  border-color: #58764c;
+  box-shadow: 0 0 10px rgba(117, 167, 103, 0.18);
 }
 
 .progress-step.locked {
-  opacity: 0.4;
+  opacity: 1;
   cursor: not-allowed;
-  background: #1a1310;
-  color: #b0a090;
+  background: linear-gradient(180deg, #1d1511, #17110d);
+  color: #685b4f;
   border-color: #3a2e24;
+  box-shadow: none;
+}
+
+.progress-step.locked .progress-step-number {
+  opacity: 0.45;
+}
+
+.progress-step-badge {
+  position: absolute;
+  top: -0.22rem;
+  right: -0.22rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1px solid #58764c;
+  background: #182014;
+  color: #bfe2b7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.progress-step-lock {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(170, 158, 146, 0.58);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+
+.progress-connector {
+  width: 1.55rem;
+  height: 4px;
+  margin: 0 0.22rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  background: rgba(78, 62, 50, 0.85);
+}
+
+.progress-connector-cleared {
+  background: linear-gradient(90deg, #658f55, #89b277);
+  box-shadow: 0 0 8px rgba(117, 167, 103, 0.25);
+}
+
+.progress-connector-locked {
+  background: linear-gradient(90deg, #3f3229, #322821);
 }
 
 .top-controls {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.9rem;
-  margin-bottom: 0.8rem;
+  align-items: center;
+  gap: 0.65rem;
+  height: var(--top-controls-row-height);
+  min-height: 0;
+  margin: 0;
 }
 
 .top-controls-main {
@@ -135,7 +355,136 @@ body {
 
 .top-controls-side {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--timeline-node-size);
+  width: var(--timeline-node-size);
+}
+
+.settings-menu-container {
+  position: relative;
+  width: var(--timeline-node-size);
+  height: var(--timeline-node-size);
+  flex: 0 0 auto;
+}
+
+.settings-trigger {
+  width: var(--timeline-node-size);
+  height: var(--timeline-node-size);
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #dabb93;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.settings-trigger i {
+  font-size: 2.4rem;
+}
+
+.settings-trigger:hover {
+  transform: translateY(-1px) scale(1.03);
+  color: #f0d2aa;
+  text-shadow: 0 0 12px rgba(255, 201, 137, 0.18);
+}
+
+.settings-trigger:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(34, 24, 17, 0.95),
+    0 0 0 4px rgba(255, 205, 142, 0.55);
+}
+
+.settings-trigger[aria-expanded="true"] {
+  color: #ffe0b4;
+  text-shadow: 0 0 14px rgba(255, 201, 137, 0.3);
+  box-shadow: none;
+}
+
+.settings-menu-panel {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 40;
+  width: min(21rem, calc(100vw - 1rem));
+  border-radius: 14px;
+  border: 1px solid rgba(194, 158, 109, 0.62);
+  background:
+    linear-gradient(180deg, rgba(24, 33, 53, 0.92), rgba(21, 27, 42, 0.95)),
+    radial-gradient(circle at 88% 0%, rgba(232, 193, 132, 0.14), transparent 42%);
+  color: #f3ead7;
+  box-shadow:
+    0 16px 32px rgba(10, 10, 16, 0.35),
+    inset 0 0 0 1px rgba(229, 195, 143, 0.08);
+  padding: 0.8rem 0.9rem 0.85rem;
+  backdrop-filter: blur(6px);
+}
+
+.settings-menu-arrow {
+  position: absolute;
+  top: -0.4rem;
+  right: 0.95rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(194, 158, 109, 0.62);
+  border-top: 1px solid rgba(194, 158, 109, 0.62);
+  background: rgba(24, 33, 53, 0.94);
+}
+
+.settings-menu-section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.settings-menu-label {
+  color: #e7d2b2;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.settings-language-select {
+  width: 100%;
+  border: 1px solid rgba(205, 170, 123, 0.55);
+  border-radius: 10px;
+  background: rgba(24, 19, 16, 0.45);
+  color: #f3ead7;
+  font-size: 0.94rem;
+  font-weight: 700;
+  padding: 0.55rem 0.7rem;
+}
+
+.settings-language-select:hover {
+  background: rgba(28, 23, 19, 0.58);
+}
+
+.settings-menu-divider {
+  margin: 0.75rem 0 0.7rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(195, 156, 100, 0.12), rgba(195, 156, 100, 0.7), rgba(195, 156, 100, 0.12));
+}
+
+.settings-menu-danger {
+  width: 100%;
+  justify-content: flex-start;
+  border: 1px solid rgba(175, 86, 86, 0.38);
+  background: linear-gradient(180deg, rgba(92, 36, 36, 0.24), rgba(66, 27, 27, 0.18));
+  color: #e59090;
+  text-align: left;
+}
+
+.settings-menu-danger:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(109, 43, 43, 0.35), rgba(82, 32, 32, 0.24));
+  box-shadow: 0 0 12px rgba(175, 86, 86, 0.15);
+}
+
+.settings-menu-danger:disabled {
+  opacity: 0.45;
 }
 
 
@@ -1542,6 +1891,10 @@ dialog.modal-backdrop::backdrop {
    - 900-1079px: emergency layout band
    - >=1080px: full 13-column board target */
 @media (min-width: 1536px) {
+  :root {
+    --hero-row-height: 6.35rem;
+  }
+
   .layout {
     width: min(1560px, 98vw);
   }
@@ -1575,12 +1928,7 @@ dialog.modal-backdrop::backdrop {
 
 @media (max-width: 1079px) {
   .top-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .top-controls-side {
-    justify-content: flex-end;
+    align-items: center;
   }
 
   .console-header {
@@ -1604,10 +1952,23 @@ dialog.modal-backdrop::backdrop {
 }
 
 @media (max-width: 899px) {
+  :root {
+    --layout-top-margin: 0.6rem;
+    --hero-row-height: 4.85rem;
+    --hero-row-margin-top: 0.2rem;
+    --hero-row-margin-bottom: 0.6rem;
+    --top-controls-row-height: 3rem;
+    --top-controls-row-margin-bottom: 0.65rem;
+    --app-header-bottom-gap: 0.6rem;
+  }
+
   .layout {
     width: 100%;
-    margin: 0.6rem 0 1.2rem;
     padding: 0 0.5rem;
+  }
+
+  .app-main-layout {
+    margin-bottom: 1.2rem;
   }
 
   .hero {
@@ -1623,11 +1984,7 @@ dialog.modal-backdrop::backdrop {
   }
 
   .top-controls-side {
-    justify-content: stretch;
-  }
-
-  .top-controls-side > button {
-    width: 100%;
+    width: var(--timeline-node-size);
   }
 
   .api-panel {
