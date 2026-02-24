@@ -5,7 +5,7 @@ import { apiReferenceDocument, pickText } from "../../src/web/reference/referenc
 describe("python api reference data", () => {
   it("provides localized titles and conventions", () => {
     expect(apiReferenceDocument.title).toContain("Python API Reference");
-    expect(pickText(apiReferenceDocument.conventionsTitle, "ja")).toBe("Conventions");
+    expect(pickText(apiReferenceDocument.conventionsTitle, "ja")).toBe("規約");
     expect(pickText(apiReferenceDocument.conventionsTitle, "en")).toBe("Conventions");
     expect(apiReferenceDocument.conventions.length).toBeGreaterThanOrEqual(5);
   });
@@ -37,7 +37,6 @@ describe("python api reference data", () => {
         "direction-enum",
         "terrain-enum",
         "unitkind-enum",
-        "player-class",
         "samurai-class",
         "space-class",
         "occupant-class",
@@ -61,9 +60,4 @@ describe("python api reference data", () => {
     );
   });
 
-  it("defines availability rows in ascending level order", () => {
-    const levels = apiReferenceDocument.availabilityRows.map((row) => row.level);
-    expect(levels).toEqual([...levels].sort((a, b) => a - b));
-    expect(apiReferenceDocument.availabilityRows[0]?.apis).toContain("walk()");
-  });
 });

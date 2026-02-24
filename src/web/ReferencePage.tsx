@@ -13,27 +13,30 @@ function resolveLocale(language?: string): LocaleCode {
   return language?.toLowerCase().startsWith("ja") ? "ja" : "en";
 }
 
-function itemTypeLabel(item: ReferenceItem): string {
-  switch (item.kind) {
-    case "enum":
-      return "ENUM";
-    case "class":
-      return "CLASS";
-    case "method":
-      return "METHOD";
-    case "property":
-      return "PROPERTY";
-    case "group":
-      return "GROUP";
-    default:
-      return "ITEM";
-  }
+/** Convert backtick-delimited spans to <code> elements. */
+function renderInlineCode(text: string): React.ReactNode[] {
+  const parts = text.split(/(`[^`]+`)/);
+  return parts.map((part, i) =>
+    part.startsWith("`") && part.endsWith("`") ? (
+      <code key={i} className="refdoc-inline-code">{part.slice(1, -1)}</code>
+    ) : (
+      part
+    ),
+  );
+}
+
+
+
+interface NavLink {
+  href: string;
+  label: string;
+  children?: Array<{ href: string; label: string }>;
 }
 
 interface NavGroup {
   id: string;
   title: string;
-  links: Array<{ href: string; label: string }>;
+  links: NavLink[];
 }
 
 type SignatureTokenKind =
@@ -50,9 +53,7 @@ interface LocalizedTag {
 }
 
 interface ItemTagBuckets {
-  typeTag?: string;
   sinceTag?: string;
-  values: string[];
   primary: LocalizedTag[];
   secondary: LocalizedTag[];
 }
@@ -65,25 +66,18 @@ function localizeTags(tags: ReferenceTag[] | undefined, locale: LocaleCode): Loc
 function splitTagBuckets(item: ReferenceItem, locale: LocaleCode): ItemTagBuckets {
   const localized = localizeTags(item.tags, locale);
   const buckets: ItemTagBuckets = {
-    values: [],
     primary: [],
     secondary: [],
   };
 
   for (const tag of localized) {
     if (tag.name === "@type") {
-      buckets.typeTag = tag.value;
       continue;
     }
     if (tag.name === "@since") {
       buckets.sinceTag = tag.value;
       continue;
     }
-    if (tag.name === "@values") {
-      buckets.values = tag.value.split("|").map((value) => value.trim()).filter(Boolean);
-      continue;
-    }
-
     if (tag.name === "@param" || tag.name.startsWith("@param ") || tag.name === "@return") {
       buckets.primary.push(tag);
     } else {
@@ -129,28 +123,87 @@ function renderSignatureCode(signature: string, item: ReferenceItem) {
   );
 }
 
-function renderReferenceItem(item: ReferenceItem, locale: LocaleCode) {
+type PythonTokenKind = "plain" | "keyword" | "func" | "name" | "literal" | "punct" | "comment";
+
+function tokenizePythonExample(code: string): Array<{ text: string; kind: PythonTokenKind }> {
+  const result: Array<{ text: string; kind: PythonTokenKind }> = [];
+  const keywords = new Set(["if", "else", "elif", "for", "in", "is", "not", "and", "or", "return", "def", "class", "break", "continue"]);
+  const builtins = new Set(["None", "True", "False"]);
+  const codeTokenRe = /(\s+)|(\.{3})|(==|!=|->|[()[\].,=:])|([A-Za-z_]\w*)|(\d+)|(.)/g;
+
+  for (const [lineIdx, line] of code.split("\n").entries()) {
+    if (lineIdx > 0) result.push({ text: "\n", kind: "plain" });
+
+    const hashIdx = line.indexOf("#");
+    const codePart = hashIdx >= 0 ? line.slice(0, hashIdx) : line;
+    const comment = hashIdx >= 0 ? line.slice(hashIdx) : "";
+
+    let m: RegExpExecArray | null;
+    codeTokenRe.lastIndex = 0;
+    while ((m = codeTokenRe.exec(codePart)) !== null) {
+      const [, ws, ellipsis, punct, ident, num, other] = m;
+      if (ws) result.push({ text: ws, kind: "plain" });
+      else if (ellipsis) result.push({ text: ellipsis, kind: "punct" });
+      else if (punct) result.push({ text: punct, kind: "punct" });
+      else if (ident) {
+        if (keywords.has(ident)) result.push({ text: ident, kind: "keyword" });
+        else if (builtins.has(ident)) result.push({ text: ident, kind: "literal" });
+        else result.push({ text: ident, kind: "name" });
+      }
+      else if (num) result.push({ text: num, kind: "literal" });
+      else if (other) result.push({ text: other, kind: "plain" });
+    }
+
+    if (comment) result.push({ text: comment, kind: "comment" });
+  }
+
+  // Post-pass: name followed by "(" → func
+  for (let i = 0; i < result.length - 1; i++) {
+    if (result[i].kind === "name") {
+      let j = i + 1;
+      while (j < result.length && result[j].kind === "plain" && /^\s+$/.test(result[j].text)) j++;
+      if (j < result.length && result[j].text === "(") {
+        result[i] = { text: result[i].text, kind: "func" };
+      }
+    }
+  }
+
+  return result;
+}
+
+function renderExampleCode(code: string, itemId: string, label: string) {
+  const tokens = tokenizePythonExample(code);
+  return (
+    <div className="refdoc-example-block">
+      <span className="refdoc-example-label">{label}</span>
+      <pre className="refdoc-example-code">
+        <code>
+          {tokens.map((token, index) => (
+            <span
+              key={`${itemId}-ex-${index}-${token.text.slice(0, 8)}`}
+              className={token.kind === "plain" ? undefined : `refdoc-code-${token.kind}`}
+            >
+              {token.text}
+            </span>
+          ))}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
+function renderReferenceItem(item: ReferenceItem, locale: LocaleCode, exampleLabel: string) {
   const tags = splitTagBuckets(item, locale);
   const isProperty = item.kind === "property";
-  const isEnum = item.kind === "enum";
 
   return (
     <article key={item.id} id={item.id} className={`refdoc-item refdoc-item-${item.kind}`}>
       <header className="refdoc-item-header">
-        <div>
-          <p className="refdoc-item-kind">{itemTypeLabel(item)}</p>
-          <div className="refdoc-item-title-row">
-            <h4>
-              {item.owner ? <span className="refdoc-owner">{item.owner}.</span> : null}
-              {item.name}
-            </h4>
-            {tags.typeTag ? <span className="refdoc-inline-badge">{tags.typeTag}</span> : null}
-            {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
-          </div>
-        </div>
-        <a className="refdoc-anchor" href={`#${item.id}`} aria-label={`#${item.id}`}>
-          #
-        </a>
+        <h4>
+          {item.owner ? <span className="refdoc-owner">{item.owner}.</span> : null}
+          {item.name}
+        </h4>
+        {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
       </header>
 
       {item.signature ? (
@@ -160,23 +213,15 @@ function renderReferenceItem(item: ReferenceItem, locale: LocaleCode) {
       ) : null}
 
       <p className={`refdoc-description${isProperty ? " refdoc-description-property" : ""}`}>
-        {pickText(item.description, locale)}
+        {renderInlineCode(pickText(item.description, locale))}
       </p>
-
-      {isEnum && tags.values.length > 0 ? (
-        <div className="refdoc-enum-values" aria-label="Enum values">
-          {tags.values.map((value) => (
-            <code key={`${item.id}-value-${value}`} className="refdoc-enum-chip">{value}</code>
-          ))}
-        </div>
-      ) : null}
 
       {tags.primary.length > 0 ? (
         <dl className="refdoc-tag-primary-grid">
           {tags.primary.map((tag) => (
             <div key={`${item.id}:${tag.name}`} className="refdoc-tag-primary-row">
               <dt><code>{tag.name}</code></dt>
-              <dd>{tag.value}</dd>
+              <dd>{renderInlineCode(tag.value)}</dd>
             </div>
           ))}
         </dl>
@@ -189,11 +234,13 @@ function renderReferenceItem(item: ReferenceItem, locale: LocaleCode) {
               <dt>
                 <code>{tag.name}</code>
               </dt>
-              <dd>{tag.value}</dd>
+              <dd>{renderInlineCode(tag.value)}</dd>
             </div>
           ))}
         </dl>
       ) : null}
+
+      {item.examples ? renderExampleCode(pickText(item.examples, locale), item.id, exampleLabel) : null}
     </article>
   );
 }
@@ -204,7 +251,7 @@ function findTagValue(tags: ReferenceTag[] | undefined, locale: LocaleCode, name
   return tag ? pickText(tag.value, locale) : undefined;
 }
 
-function renderCompactMethodCard(item: ReferenceItem, locale: LocaleCode) {
+function renderCompactMethodCard(item: ReferenceItem, locale: LocaleCode, returnsLabel: string, exampleLabel: string) {
   const since = findTagValue(item.tags, locale, "@since");
   const returns = findTagValue(item.tags, locale, "@return");
 
@@ -219,18 +266,19 @@ function renderCompactMethodCard(item: ReferenceItem, locale: LocaleCode) {
           {renderSignatureCode(item.signature, item)}
         </pre>
       ) : null}
-      <p className="refdoc-compact-description">{pickText(item.description, locale)}</p>
+      <p className="refdoc-compact-description">{renderInlineCode(pickText(item.description, locale))}</p>
       {returns ? (
         <div className="refdoc-compact-meta">
-          <span className="refdoc-compact-meta-label">Returns</span>
-          <span>{returns}</span>
+          <span className="refdoc-compact-meta-label">{returnsLabel}</span>
+          <span>{renderInlineCode(returns)}</span>
         </div>
       ) : null}
+      {item.examples ? renderExampleCode(pickText(item.examples, locale), item.id, exampleLabel) : null}
     </article>
   );
 }
 
-function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode) {
+function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode, returnsLabel: string, exampleLabel: string) {
   const actionGroupIndex = section.items.findIndex((item) => item.id === "samurai-action-methods");
   const senseGroupIndex = section.items.findIndex((item) => item.id === "samurai-sense-methods");
 
@@ -257,7 +305,7 @@ function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[nu
 
       {introItems.length > 0 ? (
         <div className="refdoc-items">
-          {introItems.map((item) => renderReferenceItem(item, locale))}
+          {introItems.map((item) => renderReferenceItem(item, locale, exampleLabel))}
         </div>
       ) : null}
 
@@ -275,7 +323,7 @@ function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[nu
           </div>
           <p className="refdoc-subsection-description">{pickText(actionGroup.description, locale)}</p>
           <div className="refdoc-items refdoc-samurai-action-list">
-            {actionItems.map((item) => renderReferenceItem(item, locale))}
+            {actionItems.map((item) => renderReferenceItem(item, locale, exampleLabel))}
           </div>
         </section>
       ) : null}
@@ -294,7 +342,7 @@ function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[nu
           </div>
           <p className="refdoc-subsection-description">{pickText(senseGroup.description, locale)}</p>
           <div className="refdoc-samurai-sense-grid">
-            {senseItems.map((item) => renderCompactMethodCard(item, locale))}
+            {senseItems.map((item) => renderCompactMethodCard(item, locale, returnsLabel, exampleLabel))}
           </div>
         </section>
       ) : null}
@@ -302,82 +350,7 @@ function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[nu
   );
 }
 
-function renderPlayerSection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode) {
-  const classItem = section.items.find((item) => item.kind === "class");
-  const methodItems = section.items.filter((item) => item.kind === "method");
-  const extraItems = section.items.filter((item) => item.kind !== "class" && item.kind !== "method");
-
-  return (
-    <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
-      <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
-      {section.intro ? <p className="refdoc-intro">{pickText(section.intro, locale)}</p> : null}
-
-      {classItem ? (
-        <article id={classItem.id} className="refdoc-class-focus-card">
-          <header className="refdoc-class-focus-header">
-            <div>
-              <p className="refdoc-item-kind">{itemTypeLabel(classItem)}</p>
-              <h4>{classItem.name}</h4>
-            </div>
-            <a className="refdoc-anchor" href={`#${classItem.id}`} aria-label={`#${classItem.id}`}>#</a>
-          </header>
-          {classItem.signature ? (
-            <pre className="refdoc-signature">{renderSignatureCode(classItem.signature, classItem)}</pre>
-          ) : null}
-          <p className="refdoc-description">{pickText(classItem.description, locale)}</p>
-        </article>
-      ) : null}
-
-      {methodItems.map((item) => {
-        const tags = splitTagBuckets(item, locale);
-        return (
-          <article key={item.id} id={item.id} className="refdoc-method-focus-card">
-            <header className="refdoc-method-focus-header">
-              <div className="refdoc-method-focus-title">
-                <span className="refdoc-method-focus-badge">{itemTypeLabel(item)}</span>
-                <h4>{item.name}</h4>
-                {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
-              </div>
-              <a className="refdoc-anchor" href={`#${item.id}`} aria-label={`#${item.id}`}>#</a>
-            </header>
-            {item.signature ? (
-              <pre className="refdoc-signature">{renderSignatureCode(item.signature, item)}</pre>
-            ) : null}
-            <p className="refdoc-description">{pickText(item.description, locale)}</p>
-            {tags.primary.length > 0 ? (
-              <dl className="refdoc-tag-primary-grid">
-                {tags.primary.map((tag) => (
-                  <div key={`${item.id}:${tag.name}`} className="refdoc-tag-primary-row">
-                    <dt><code>{tag.name}</code></dt>
-                    <dd>{tag.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
-            {tags.secondary.length > 0 ? (
-              <dl className="refdoc-tags">
-                {tags.secondary.map((tag) => (
-                  <div key={`${item.id}:${tag.name}`} className="refdoc-tag-row">
-                    <dt><code>{tag.name}</code></dt>
-                    <dd>{tag.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
-          </article>
-        );
-      })}
-
-      {extraItems.length > 0 ? (
-        <div className="refdoc-items">
-          {extraItems.map((item) => renderReferenceItem(item, locale))}
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-function renderEntitySection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode) {
+function renderEntitySection(section: (typeof apiReferenceDocument.sections)[number], locale: LocaleCode, exampleLabel: string) {
   const classItem = section.items.find((item) => item.kind === "class");
   const propertyItems = section.items.filter((item) => item.kind === "property");
   const otherItems = section.items.filter((item) => item.kind !== "class" && item.kind !== "property");
@@ -391,16 +364,12 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
         {classItem ? (
           <>
             <header id={classItem.id} className="refdoc-class-focus-header">
-              <div>
-                <p className="refdoc-item-kind">{itemTypeLabel(classItem)}</p>
-                <h4>{classItem.name}</h4>
-              </div>
-              <a className="refdoc-anchor" href={`#${classItem.id}`} aria-label={`#${classItem.id}`}>#</a>
+              <h4>{classItem.name}</h4>
             </header>
             {classItem.signature ? (
               <pre className="refdoc-signature">{renderSignatureCode(classItem.signature, classItem)}</pre>
             ) : null}
-            <p className="refdoc-description">{pickText(classItem.description, locale)}</p>
+            <p className="refdoc-description">{renderInlineCode(pickText(classItem.description, locale))}</p>
           </>
         ) : null}
 
@@ -411,29 +380,26 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
               return (
                 <section key={item.id} id={item.id} className="refdoc-entity-property-row">
                   <div className="refdoc-entity-property-head">
-                    <div className="refdoc-entity-property-title">
-                      <code className="refdoc-entity-property-name">{item.name}</code>
-                      {tags.typeTag ? <span className="refdoc-inline-badge">{tags.typeTag}</span> : null}
-                      {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
-                    </div>
-                    <a className="refdoc-anchor" href={`#${item.id}`} aria-label={`#${item.id}`}>#</a>
+                    <code className="refdoc-entity-property-name">{item.name}</code>
+                    {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
                   </div>
                   {item.signature ? (
                     <pre className="refdoc-signature refdoc-signature-compact">
                       {renderSignatureCode(item.signature, item)}
                     </pre>
                   ) : null}
-                  <p className="refdoc-compact-description">{pickText(item.description, locale)}</p>
+                  <p className="refdoc-compact-description">{renderInlineCode(pickText(item.description, locale))}</p>
                   {tags.secondary.length > 0 ? (
                     <dl className="refdoc-tags">
                       {tags.secondary.map((tag) => (
                         <div key={`${item.id}:${tag.name}`} className="refdoc-tag-row">
                           <dt><code>{tag.name}</code></dt>
-                          <dd>{tag.value}</dd>
+                          <dd>{renderInlineCode(tag.value)}</dd>
                         </div>
                       ))}
                     </dl>
                   ) : null}
+                  {item.examples ? renderExampleCode(pickText(item.examples, locale), item.id, exampleLabel) : null}
                 </section>
               );
             })}
@@ -443,19 +409,25 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
 
       {otherItems.length > 0 ? (
         <div className="refdoc-items">
-          {otherItems.map((item) => renderReferenceItem(item, locale))}
+          {otherItems.map((item) => renderReferenceItem(item, locale, exampleLabel))}
         </div>
       ) : null}
     </section>
   );
 }
 
+const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
+
 export default function ReferencePage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const locale = useMemo(
     () => resolveLocale(i18n.resolvedLanguage ?? i18n.language),
     [i18n.language, i18n.resolvedLanguage],
   );
+
+  const returnsLabel = t("reference.returns");
+  const exampleLabel = t("reference.example");
+
   const navGroups = useMemo<NavGroup[]>(() => {
     const enumSections = apiReferenceDocument.sections.filter((section) => section.items.some((item) => item.kind === "enum"));
     const classSections = apiReferenceDocument.sections.filter((section) => section.items.some((item) => item.kind === "class"));
@@ -468,7 +440,7 @@ export default function ReferencePage() {
       },
       {
         id: "enums-nav",
-        title: "Enums",
+        title: t("reference.sidebarEnums"),
         links: enumSections.map((section) => ({
           href: `#${section.id}`,
           label: section.items.find((item) => item.kind === "enum")?.name ?? pickText(section.title, locale),
@@ -476,33 +448,29 @@ export default function ReferencePage() {
       },
       {
         id: "classes-nav",
-        title: "Classes",
-        links: classSections.map((section) => ({
-          href: `#${section.id}`,
-          label: section.items.find((item) => item.kind === "class")?.name ?? pickText(section.title, locale),
-        })),
-      },
-      {
-        id: "reference-nav",
-        title: "Reference",
-        links: [{ href: "#availability", label: pickText(apiReferenceDocument.availabilityTitle, locale) }],
+        title: t("reference.sidebarClasses"),
+        links: classSections.map((section) => {
+          const className = section.items.find((item) => item.kind === "class")?.name ?? pickText(section.title, locale);
+          const children = section.items
+            .filter((item) => item.kind === "method" || item.kind === "property")
+            .map((item) => ({
+              href: `#${item.id}`,
+              label: item.kind === "method" ? `${item.name}()` : item.name,
+            }));
+          return { href: `#${section.id}`, label: className, children };
+        }),
       },
     ].filter((group) => group.links.length > 0);
-  }, [locale]);
+  }, [locale, t]);
 
   return (
     <div className="refdoc-page">
       <header className="refdoc-topbar">
         <div className="refdoc-topbar-inner">
-          <div className="refdoc-topbar-brand">
-            <span className="refdoc-topbar-logo">Py</span>
-            <span className="refdoc-topbar-title">Game API Reference</span>
-          </div>
-          <nav className="refdoc-topbar-links" aria-label="Reference shortcuts">
-            <a className="refdoc-topbar-link" href="#conventions">Conventions</a>
-            <a className="refdoc-topbar-link" href="#availability">Availability</a>
-            <a className="refdoc-topbar-link refdoc-topbar-cta" href="/">Play Game</a>
-          </nav>
+          <a className="refdoc-topbar-brand" href="/">
+            <img className="refdoc-topbar-logo" src={APP_HEADER_LOGO_SRC} alt={t("app.title")} />
+            <span className="refdoc-topbar-title">{t("reference.pageTitle")}</span>
+          </a>
         </div>
       </header>
 
@@ -516,6 +484,15 @@ export default function ReferencePage() {
                   {group.links.map((link) => (
                     <li key={link.href}>
                       <a href={link.href}>{link.label}</a>
+                      {link.children && link.children.length > 0 ? (
+                        <ul className="refdoc-nav-children">
+                          {link.children.map((child) => (
+                            <li key={child.href}>
+                              <a href={child.href}>{child.label}</a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -525,26 +502,18 @@ export default function ReferencePage() {
         </aside>
 
         <section className="refdoc-layout" aria-label="API reference main">
-          <header className="refdoc-hero">
-            <div className="refdoc-hero-content">
-              <p className="refdoc-kicker">API</p>
-              <h1>{apiReferenceDocument.title}</h1>
-              <p className="refdoc-subtitle">{pickText(apiReferenceDocument.subtitle, locale)}</p>
-            </div>
-          </header>
-
           <div className="refdoc-main-scroll">
             <section id="conventions" className="refdoc-panel">
               <h2>{pickText(apiReferenceDocument.conventionsTitle, locale)}</h2>
               <ul className="refdoc-list">
                 {apiReferenceDocument.conventions.map((line) => (
-                  <li key={line.ja}>{pickText(line, locale)}</li>
+                  <li key={line.ja}>{renderInlineCode(pickText(line, locale))}</li>
                 ))}
               </ul>
             </section>
 
             <section className="refdoc-panel refdoc-overview-panel">
-              <h2>Contents</h2>
+              <h2>{t("reference.contents")}</h2>
               <nav aria-label="Reference contents">
                 <ul className="refdoc-contents">
                   {apiReferenceDocument.sections.map((section) => (
@@ -552,16 +521,13 @@ export default function ReferencePage() {
                       <a href={`#${section.id}`}>{pickText(section.title, locale)}</a>
                     </li>
                   ))}
-                  <li>
-                    <a href="#availability">{pickText(apiReferenceDocument.availabilityTitle, locale)}</a>
-                  </li>
                 </ul>
               </nav>
             </section>
 
             <section className="refdoc-section-block">
               <div className="refdoc-section-heading">
-                <h2>{locale === "ja" ? "Enums" : "Enumerations"}</h2>
+                <h2>{t("reference.enumerations")}</h2>
               </div>
               <div className="refdoc-section-stack">
                 {apiReferenceDocument.sections
@@ -569,7 +535,7 @@ export default function ReferencePage() {
                   .map((section) => (
                     <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
                       <div className="refdoc-items">
-                        {section.items.map((item) => renderReferenceItem(item, locale))}
+                        {section.items.map((item) => renderReferenceItem(item, locale, exampleLabel))}
                       </div>
                     </section>
                   ))}
@@ -578,27 +544,24 @@ export default function ReferencePage() {
 
             <section className="refdoc-section-block">
               <div className="refdoc-section-heading">
-                <h2>Classes</h2>
+                <h2>{t("reference.classes")}</h2>
               </div>
               <div className="refdoc-section-stack">
                 {apiReferenceDocument.sections
                   .filter((section) => section.items.some((item) => item.kind === "class"))
                   .map((section) => {
                     if (section.id === "samurai-class") {
-                      return renderSamuraiSection(section, locale);
-                    }
-                    if (section.id === "player-class") {
-                      return renderPlayerSection(section, locale);
+                      return renderSamuraiSection(section, locale, returnsLabel, exampleLabel);
                     }
                     if (section.id === "space-class" || section.id === "occupant-class") {
-                      return renderEntitySection(section, locale);
+                      return renderEntitySection(section, locale, exampleLabel);
                     }
                     return (
                       <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
                         <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
                         {section.intro ? <p className="refdoc-intro">{pickText(section.intro, locale)}</p> : null}
                         <div className="refdoc-items">
-                          {section.items.map((item) => renderReferenceItem(item, locale))}
+                          {section.items.map((item) => renderReferenceItem(item, locale, exampleLabel))}
                         </div>
                       </section>
                     );
@@ -606,33 +569,6 @@ export default function ReferencePage() {
               </div>
             </section>
 
-            <section id="availability" className="refdoc-panel refdoc-section">
-              <h2>{pickText(apiReferenceDocument.availabilityTitle, locale)}</h2>
-              <div className="refdoc-table-wrap">
-                <table className="refdoc-table">
-                  <thead>
-                    <tr>
-                      <th>Level</th>
-                      <th>API</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {apiReferenceDocument.availabilityRows.map((row) => (
-                      <tr key={row.level}>
-                        <td>{row.level}</td>
-                        <td>
-                          {row.apis.map((api) => (
-                            <code key={`${row.level}-${api}`} className="refdoc-chip">
-                              {api}
-                            </code>
-                          ))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
           </div>
         </section>
       </div>
