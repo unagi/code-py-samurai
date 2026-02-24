@@ -49,6 +49,11 @@ const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
 const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
+const SPEED_OPTIONS = [
+  { value: 700, key: "controls.slow" },
+  { value: 450, key: "controls.normal" },
+  { value: 220, key: "controls.fast" },
+] as const;
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -562,30 +567,40 @@ export default function App() {
               </div>
               <section className="board-log-panel" aria-label={t("logs.heading")}>
                 <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
+                <div className="board-controls-row">
+                  <div className="console-controls">
+                    <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
+                      <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
+                    </button>
+                    <button onClick={handlePause} disabled={!isPlaying}>
+                      <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
+                    </button>
+                    <button onClick={handleReset}>
+                      <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
+                    </button>
+                  </div>
+                  <div className="speed-control" role="group" aria-label={t("controls.speed")}>
+                    <span className="speed-control-label"><i className="bi bi-lightning-charge-fill" />{t("controls.speed")}</span>
+                    <div className="speed-control-buttons">
+                      {SPEED_OPTIONS.map((option) => {
+                        const selected = speedMs === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`speed-option${selected ? " active" : ""}`}
+                            onClick={() => setSpeedMs(option.value)}
+                            disabled={isPlaying}
+                            aria-pressed={selected}
+                          >
+                            <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t(option.key)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </section>
-            </div>
-            <div className="console-controls">
-              <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
-                <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
-              </button>
-              <button onClick={handlePause} disabled={!isPlaying}>
-                <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
-              </button>
-              <button onClick={handleReset}>
-                <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
-              </button>
-              <label className="speed-label">
-                <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t("controls.speed")}</span>
-                <select
-                  value={speedMs}
-                  disabled={isPlaying}
-                  onChange={(e) => setSpeedMs(Number(e.target.value))}
-                >
-                  <option value={700}>{t("controls.slow")}</option>
-                  <option value={450}>{t("controls.normal")}</option>
-                  <option value={220}>{t("controls.fast")}</option>
-                </select>
-              </label>
             </div>
           </article>
         <div className="bottom-columns">
