@@ -21,13 +21,17 @@ import { createCodeEditor } from "./code-editor";
 import { type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
 import {
+  type AppTheme,
+  APP_THEMES,
   buildSamuraiLevel,
   clearStoredAppData,
   migrateToGlobalLevel,
   readPlayerCodeStorage,
   readProgressStorage,
+  readThemeStorage,
   writePlayerCodeStorage,
   writeProgressStorage,
+  writeThemeStorage,
 } from "./progress-storage";
 import { ResultModal } from "./ResultModal";
 import { buildSamuraiApiStructureViewModel } from "./samurai-api-structure";
@@ -47,15 +51,101 @@ function buildStarterPlayerCode(comment: string): string {
 const BOARD_TILE_GAP_PX = 2;
 const BOARD_TILE_BASE_SIZE_PX = 80;
 const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
-const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 const API_REFERENCE_PATH = "/reference/python-api";
+const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
 const SPEED_OPTIONS = [
-  { value: 700, key: "controls.slow" },
-  { value: 450, key: "controls.normal" },
-  { value: 220, key: "controls.fast" },
+  { value: 1000, key: "controls.slow", rateLabel: "x0.5" },
+  { value: 500, key: "controls.normal", rateLabel: "x1" },
+  { value: 250, key: "controls.fast", rateLabel: "x2" },
 ] as const;
+
+const THEME_LABELS: Record<AppTheme, string> = {
+  "everforest-dark": "Everforest Dark",
+  "everforest-light": "Everforest Light",
+  "rose-pine-dark": "Ros\u00e9 Pine Dark",
+  "rose-pine-light": "Ros\u00e9 Pine Light",
+};
+
+type ApiStructureEntryKind = "method" | "property";
+
+interface ApiStructureEntryView {
+  kind: ApiStructureEntryKind;
+  signature: string;
+}
+
+function splitApiSignatureParams(raw: string): string[] {
+  const text = raw.trim();
+  if (text.length === 0) return [];
+  return text.split(",").map((part) => part.trim()).filter((part) => part.length > 0);
+}
+
+function renderApiSignatureParam(param: string): JSX.Element {
+  const text = param.trim();
+  if (text.length === 0) return <span className="api-structure-sig-text" />;
+  if (text === "self") {
+    return <span className="api-structure-sig-self">self</span>;
+  }
+
+  const colonIndex = text.indexOf(":");
+  if (colonIndex > 0) {
+    const name = text.slice(0, colonIndex).trim();
+    const typeName = text.slice(colonIndex + 1).trim();
+    return (
+      <span className="api-structure-sig-param">
+        <span className="api-structure-sig-text">{name}</span>
+        <span className="api-structure-sig-punct">: </span>
+        <span className="api-structure-sig-type">{typeName}</span>
+      </span>
+    );
+  }
+
+  return <span className="api-structure-sig-type">{text}</span>;
+}
+
+function renderApiStructureSignature(kind: ApiStructureEntryKind, signature: string): JSX.Element {
+  const text = signature.trim();
+
+  if (kind === "property") {
+    const colonIndex = text.indexOf(":");
+    if (colonIndex <= 0) {
+      return <span className="api-structure-sig-text">{text}</span>;
+    }
+    const name = text.slice(0, colonIndex).trim();
+    const typeName = text.slice(colonIndex + 1).trim();
+    return (
+      <span className="api-structure-sig-inline">
+        <span className="api-structure-sig-name-property">{name}</span>
+        <span className="api-structure-sig-punct">: </span>
+        <span className="api-structure-sig-type">{typeName}</span>
+      </span>
+    );
+  }
+
+  const openParen = text.indexOf("(");
+  const closeParen = text.lastIndexOf(")");
+  if (openParen <= 0 || closeParen !== text.length - 1 || closeParen < openParen) {
+    return <span className="api-structure-sig-text">{text}</span>;
+  }
+  const methodName = text.slice(0, openParen).trim();
+  const rawParams = text.slice(openParen + 1, closeParen);
+
+  const params = splitApiSignatureParams(rawParams);
+  return (
+    <span className="api-structure-sig-inline">
+      <span className="api-structure-sig-name-method">{methodName}</span>
+      <span className="api-structure-sig-punct">(</span>
+      {params.map((param, index) => (
+        <span key={`${methodName}-param-${index}`}>
+          {index > 0 ? <span className="api-structure-sig-punct">, </span> : null}
+          {renderApiSignatureParam(param)}
+        </span>
+      ))}
+      <span className="api-structure-sig-punct">)</span>
+    </span>
+  );
+}
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -72,7 +162,7 @@ export default function App() {
     [currentGlobalLevel],
   );
   const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= samuraiLevel;
-  const [speedMs, setSpeedMs] = useState(450);
+  const [speedMs, setSpeedMs] = useState(500);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
@@ -82,6 +172,8 @@ export default function App() {
   const [canScrollLevelProgressLeft, setCanScrollLevelProgressLeft] = useState(false);
   const [canScrollLevelProgressRight, setCanScrollLevelProgressRight] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [isTipsOpen, setIsTipsOpen] = useState(false);
+  const [theme, setTheme] = useState<AppTheme>(() => readThemeStorage());
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
@@ -89,6 +181,8 @@ export default function App() {
   const activeLevelStepRef = useRef<HTMLButtonElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const tipsPopoverRef = useRef<HTMLElement | null>(null);
+  const tipsTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -140,6 +234,12 @@ export default function App() {
     () => buildSamuraiApiStructureViewModel(unlockedSamuraiAbilities),
     [unlockedSamuraiAbilities],
   );
+  const apiStructureEntries = useMemo<ApiStructureEntryView[]>(() => {
+    return [
+      ...samuraiApiStructure.propertySignatures.map((signature) => ({ kind: "property" as const, signature })),
+      ...samuraiApiStructure.methodSignatures.map((signature) => ({ kind: "method" as const, signature })),
+    ];
+  }, [samuraiApiStructure]);
   const statsFmt: StatsFormatter = useMemo(() => ({
     hp: (current, max) => t("board.hp", { current, max }),
     atk: (value) => t("board.atk", { value }),
@@ -153,7 +253,41 @@ export default function App() {
   );
   const formattedLogs = useMemo(() => {
     if (logEntries.length === 0) return "";
-    return logEntries.map((entry) => formatLogEntry(entry, t)).join("\n");
+    const lines: string[] = [];
+    let currentTurnLabel: string | null = null;
+    let currentTurnEvents: string[] = [];
+
+    const flushTurnLine = (): void => {
+      if (!currentTurnLabel) return;
+      if (currentTurnEvents.length === 0) {
+        lines.push(currentTurnLabel);
+      } else {
+        lines.push(`${currentTurnLabel} ${currentTurnEvents.join(" / ")}`);
+      }
+      currentTurnLabel = null;
+      currentTurnEvents = [];
+    };
+
+    for (const entry of logEntries) {
+      if (entry.key === "engine.turn") {
+        flushTurnLine();
+        const turn = entry.params.turn;
+        currentTurnLabel = t("logs.turnCompact", {
+          turn: typeof turn === "number" || typeof turn === "string" ? String(turn) : "?",
+        });
+        continue;
+      }
+
+      const line = formatLogEntry(entry, t);
+      if (currentTurnLabel) {
+        currentTurnEvents.push(line);
+      } else {
+        lines.push(line);
+      }
+    }
+
+    flushTurnLine();
+    return lines.join("\n");
   }, [logEntries, t]);
   const allLevelSteps = useMemo(() => {
     return Array.from({ length: TOTAL_LEVELS }, (_, i) => i + 1);
@@ -307,8 +441,20 @@ export default function App() {
   }, [playerCode]);
 
   useEffect(() => {
+    writeThemeStorage(theme);
+  }, [theme]);
+
+  useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
+
+  useLayoutEffect(() => {
+    if (theme === "everforest-dark") {
+      document.documentElement.removeAttribute("data-theme");
+      return;
+    }
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     if (!isSettingsMenuOpen) return;
@@ -334,6 +480,21 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isSettingsMenuOpen]);
+
+  useEffect(() => {
+    if (!isTipsOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      setIsTipsOpen(false);
+      tipsTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isTipsOpen]);
 
   useEffect(() => {
     const scroller = levelProgressScrollRef.current;
@@ -381,6 +542,11 @@ export default function App() {
     setIsSettingsMenuOpen(false);
   };
 
+  const handleThemeChange = (nextTheme: string): void => {
+    if (!APP_THEMES.includes(nextTheme as AppTheme)) return;
+    setTheme(nextTheme as AppTheme);
+  };
+
   const levelDescKey = `levels.${towerName}.${localLevel}.description`;
   const levelTipKey = `levels.${towerName}.${localLevel}.tip`;
   const levelClueKey = `levels.${towerName}.${localLevel}.clue`;
@@ -392,7 +558,9 @@ export default function App() {
         <div className="layout app-header-layout">
           <section className="hero">
             <div className="hero-line" />
-            <h1>{t("app.title")} ⚔️🐱</h1>
+            <h1 className="hero-brand">
+              <img className="hero-logo" src={APP_HEADER_LOGO_SRC} alt={t("app.title")} />
+            </h1>
             <div className="hero-line" />
           </section>
 
@@ -505,8 +673,26 @@ export default function App() {
                       onChange={(e) => handleLanguageChange(e.target.value)}
                       aria-label={t("nav.language")}
                     >
-                      <option value="en">EN</option>
-                      <option value="ja">JA</option>
+                      <option value="en">English</option>
+                      <option value="ja">日本語</option>
+                    </select>
+                  </div>
+                  <div className="settings-menu-section">
+                    <label className="settings-menu-label" htmlFor="settings-theme-select">
+                      {t("nav.theme")}
+                    </label>
+                    <select
+                      id="settings-theme-select"
+                      className="settings-language-select"
+                      value={theme}
+                      onChange={(e) => handleThemeChange(e.target.value)}
+                      aria-label={t("nav.theme")}
+                    >
+                      {APP_THEMES.map((themeId) => (
+                        <option key={themeId} value={themeId}>
+                          {THEME_LABELS[themeId]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="settings-menu-divider" aria-hidden="true" />
@@ -533,7 +719,6 @@ export default function App() {
               className="board-viewport"
               ref={boardViewportRef}
               style={{
-                "--board-desc-height": `${BOARD_DESC_PANEL_HEIGHT_PX}px`,
                 "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px`,
               } as CSSProperties}
             >
@@ -543,7 +728,8 @@ export default function App() {
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
-              <section className="board-description-panel" aria-label={t("board.heading")}>
+              <section className="board-description-panel" aria-label={t("board.stageIntro")}>
+                <p className="board-description-label">{t("board.stageIntro")}</p>
                 <p className="board-description-text">{t(levelDescKey)}</p>
               </section>
               <div className="board-stage">
@@ -567,13 +753,13 @@ export default function App() {
                 <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
                 <div className="board-controls-row">
                   <div className="console-controls">
-                    <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
+                    <button className="console-button-play" onClick={handlePlay} disabled={isPlaying || !canPlay}>
                       <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
                     </button>
-                    <button onClick={handlePause} disabled={!isPlaying}>
+                    <button className="console-button-pause" onClick={handlePause} disabled={!isPlaying}>
                       <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
                     </button>
-                    <button onClick={handleReset}>
+                    <button className="console-button-reset" onClick={handleReset}>
                       <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
                     </button>
                   </div>
@@ -590,8 +776,9 @@ export default function App() {
                             onClick={() => setSpeedMs(option.value)}
                             disabled={isPlaying}
                             aria-pressed={selected}
+                            aria-label={`${t(option.key)} (${option.rateLabel})`}
                           >
-                            <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t(option.key)}</span>
+                            {option.rateLabel}
                           </button>
                         );
                       })}
@@ -605,11 +792,18 @@ export default function App() {
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>👨‍💻 {t("editor.heading")}</h3>
-              <div className="tip-anchor">
-                <button type="button" className="tip-trigger" aria-describedby="tips-popover">
+              <div className={`tip-anchor${isTipsOpen ? " open" : ""}`}>
+                <button
+                  ref={tipsTriggerRef}
+                  type="button"
+                  className="tip-trigger"
+                  aria-controls="tips-popover"
+                  aria-expanded={isTipsOpen}
+                  onClick={() => setIsTipsOpen((prev) => !prev)}
+                >
                   <span className="icon-label"><i className="bi bi-lightbulb-fill" />{t("editor.tips")}</span>
                 </button>
-                <aside id="tips-popover" className="tips-popover" role="tooltip">
+                <aside id="tips-popover" ref={tipsPopoverRef} className="tips-popover" role="dialog" aria-label={t("editor.tips")}>
                   <h4>💡 {t("editor.tip")}</h4>
                   <p>{t(levelTipKey)}</p>
                   {hasClue ? (
@@ -631,7 +825,7 @@ export default function App() {
         </div>
         <aside className="api-panel api-panel-standalone" aria-labelledby="api-block-heading">
           <div className="api-panel-header">
-            <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
+            <h3 id="api-block-heading">API Outline</h3>
             <a
               className="api-panel-link"
               href={API_REFERENCE_PATH}
@@ -646,67 +840,36 @@ export default function App() {
               <li className="api-structure-node api-structure-node-class">
                 <div className="api-structure-row api-structure-row-class">
                   <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                  <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-person-fill" /></span>
                   <span className="api-structure-label">{samuraiApiStructure.className}</span>
                 </div>
-                <ul className="api-structure-branch">
-                  <li className="api-structure-node api-structure-node-group">
-                    <div className="api-structure-row api-structure-row-group">
-                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
-                      <span className="api-structure-label">{t("editor.methods")}</span>
-                    </div>
-                    <ul className="api-structure-branch api-structure-branch-leaves">
-                      {samuraiApiStructure.methodSignatures.length > 0 ? (
-                        samuraiApiStructure.methodSignatures.map((item) => (
-                          <li key={item} className="api-structure-node api-structure-node-leaf">
-                            <div className="api-structure-row api-structure-row-leaf">
-                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                                •
-                              </span>
-                              <code className="api-structure-signature">{item}</code>
-                            </div>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
-                          <div className="api-structure-row api-structure-row-leaf">
-                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                              •
-                            </span>
-                            <span className="api-structure-empty">{t("editor.none")}</span>
-                          </div>
-                        </li>
-                      )}
-                    </ul>
-                  </li>
-                  <li className="api-structure-node api-structure-node-group">
-                    <div className="api-structure-row api-structure-row-group">
-                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
-                      <span className="api-structure-label">{t("editor.properties")}</span>
-                    </div>
-                    <ul className="api-structure-branch api-structure-branch-leaves">
-                      {samuraiApiStructure.propertySignatures.length > 0 ? (
-                        samuraiApiStructure.propertySignatures.map((item) => (
-                          <li key={item} className="api-structure-node api-structure-node-leaf">
-                            <div className="api-structure-row api-structure-row-leaf">
-                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                                •
-                              </span>
-                              <code className="api-structure-signature">{item}</code>
-                            </div>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
-                          <div className="api-structure-row api-structure-row-leaf">
-                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                              •
-                            </span>
-                            <span className="api-structure-empty">{t("editor.none")}</span>
-                          </div>
-                        </li>
-                      )}
-                    </ul>
-                  </li>
+                <ul className="api-structure-branch api-structure-branch-leaves">
+                  {apiStructureEntries.length > 0 ? (
+                    apiStructureEntries.map((entry) => (
+                      <li
+                        key={`${entry.kind}:${entry.signature}`}
+                        className={`api-structure-node api-structure-node-leaf api-structure-node-leaf-${entry.kind}`}
+                      >
+                        <div className={`api-structure-row api-structure-row-leaf api-structure-row-leaf-${entry.kind}`}>
+                          <span className={`api-structure-item-icon api-structure-item-icon-${entry.kind}`} aria-hidden="true">
+                            <i className={entry.kind === "method" ? "bi bi-gear-fill" : "bi bi-key-fill"} />
+                          </span>
+                          <code className="api-structure-signature">
+                            {renderApiStructureSignature(entry.kind, entry.signature)}
+                          </code>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                      <div className="api-structure-row api-structure-row-leaf">
+                        <span className="api-structure-item-icon api-structure-item-icon-empty" aria-hidden="true">
+                          <i className="bi bi-dot" />
+                        </span>
+                        <span className="api-structure-empty">{t("editor.none")}</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </li>
             </ul>

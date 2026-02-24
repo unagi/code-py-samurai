@@ -62,7 +62,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
   sections: [
     {
       id: "direction-enum",
-      title: t("Enum: Direction", "Enum: Direction"),
+      title: t("Direction", "Direction"),
       items: [
         {
           id: "direction",
@@ -78,7 +78,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
     },
     {
       id: "terrain-enum",
-      title: t("Enum: Terrain", "Enum: Terrain"),
+      title: t("Terrain", "Terrain"),
       items: [
         {
           id: "terrain",
@@ -94,7 +94,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
     },
     {
       id: "unitkind-enum",
-      title: t("Enum: UnitKind", "Enum: UnitKind"),
+      title: t("UnitKind", "UnitKind"),
       items: [
         {
           id: "unitkind",

@@ -7,6 +7,7 @@
   },
   "board": {
     "heading": "Board",
+    "stageIntro": "Stage Intro",
     "ariaLabel": "Board {{rows}}x{{columns}}",
     "samurai": "SAMURAI",
     "lv": "Lv.{{level}}",
@@ -38,6 +39,7 @@
   "logs": {
     "heading": "System Logs",
     "empty": "(No logs)",
+    "turnCompact": "Turn {{turn}}:",
     "systemFallback": "[system] Using last valid player code. Fix syntax and retry to apply new code.",
     "systemTimeout": "[system] Stopped at {{maxTurns}} turns (timeout).",
     "pythonError": "[error] {{message}}"
@@ -58,7 +60,8 @@
   "nav": {
     "levelProgress": "Level Progress",
     "levelLocked": "Lv.{{level}} (Locked)",
-    "language": "Language"
+    "language": "Language",
+    "theme": "Theme"
   },
   "ranks": {
     "novice": "Novice",
@@ -139,17 +142,17 @@
         "clue": "When there is no enemy ahead of you call samurai.rest() until health is full before walking forward."
       },
       "4": {
-        "description": "You can hear bow strings being stretched.",
+        "description": "Something whistles through the air ahead. A monkey is hurling persimmons.",
         "tip": "No new abilities this time, but be careful not to rest while taking damage. Save your previous health in a variable (for example prev_hp) and compare it each turn.",
         "clue": "Set prev_hp = samurai.hp at the end of each turn. If samurai.hp dropped since last turn then you're taking damage and should not rest."
       },
       "5": {
-        "description": "You hear cries for help. Captives must need rescuing.",
+        "description": "You hear cries for help. You need to rescue the crane.",
         "tip": "Use space = samurai.feel() and check space is not None and space.is_captive() to detect captives, then call samurai.rescue(). Don't attack captives.",
         "clue": "Don't forget to constantly check if you're taking damage. Rest until your health is full if you aren't taking damage."
       },
       "6": {
-        "description": "The wall behind you feels a bit further away in this room. And you hear more cries for help.",
+        "description": "This room stretches deeper than usual. You hear another crane calling for help.",
         "tip": "You can walk backward by passing 'backward' as an argument to walk(). Same goes for feel(), rescue() and attack(). Archers have a limited attack distance.",
         "clue": "Walk backward if you are taking damage from afar and do not have enough health to attack. You may also want to consider walking backward until samurai.feel('backward').is_wall()."
       },
@@ -158,7 +161,7 @@
         "tip": "You are not as effective at attacking backward. Use samurai.feel().is_wall() and samurai.pivot() to turn around."
       },
       "8": {
-        "description": "You hear the mumbling of wizards. Beware of their deadly wands! Good thing you found a bow.",
+        "description": "You hear a tanuki muttering. Its sorcery feels dangerous.",
         "tip": "Use samurai.look() to determine your surroundings, and samurai.shoot() to fire an arrow.",
         "clue": "Wizards are deadly but low in health. Kill them before they have time to attack."
       },
@@ -184,7 +187,7 @@
         "clue": "Count the number of enemies around you. Bind an enemy if there are two or more."
       },
       "4": {
-        "description": "Your ears become more in tune with the surroundings. Listen to find enemies and captives!",
+        "description": "Your hearing sharpens. Use sound to find enemies and cranes.",
         "tip": "Use samurai.listen() to find spaces with other units, and samurai.direction_of(space) to determine what direction they're in.",
         "clue": "Walk towards an enemy or captive with samurai.walk(samurai.direction_of(samurai.listen()[0])). Once samurai.listen() is empty then head for the stairs."
       },
@@ -194,12 +197,12 @@
         "clue": "If going towards a unit is the same direction as the stairs, try moving another empty direction until you can safely move toward the enemies."
       },
       "6": {
-        "description": "What's that ticking? Some captives have a timed bomb at their feet!",
+        "description": "A ticking sound is close... A crane has a timed bomb at its feet!",
         "tip": "Hurry and rescue captives first; one of them has a timed bomb.",
         "clue": "Avoid fighting enemies at first. Use samurai.listen() to find nearby units and rescue captives as quickly as possible."
       },
       "7": {
-        "description": "Another ticking sound, but some toads are blocking the way.",
+        "description": "Another ticking sound. Toads are blocking the path.",
         "tip": "Quickly kill the toads and rescue the captive before the bomb goes off. You can't simply go around them.",
         "clue": "Determine the direction of the ticking captive and kill any enemies blocking that path. You may need to bind surrounding enemies first."
       },

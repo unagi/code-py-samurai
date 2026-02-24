@@ -3,13 +3,16 @@ import { afterEach, describe, expect, it } from "vitest";
 import { getGlobalLevelFromTowerLevel, getMaxSamuraiLevel } from "@engine/samurai-abilities";
 
 import {
+  DEFAULT_APP_THEME,
   buildSamuraiLevel,
   clearStoredAppData,
   migrateToGlobalLevel,
   readPlayerCodeStorage,
   readProgressStorage,
+  readThemeStorage,
   writePlayerCodeStorage,
   writeProgressStorage,
+  writeThemeStorage,
 } from "../../src/web/progress-storage";
 
 type StorageMock = {
@@ -119,6 +122,11 @@ describe("storage wrappers", () => {
     expect(readPlayerCodeStorage("fallback")).toBe("fallback");
     writePlayerCodeStorage("print('hi')");
     expect(readPlayerCodeStorage("fallback")).toBe("print('hi')");
+    expect(readThemeStorage()).toBe(DEFAULT_APP_THEME);
+    writeThemeStorage("rose-pine-light");
+    expect(readThemeStorage()).toBe("rose-pine-light");
+    store.set("py-samurai:theme", "not-a-theme");
+    expect(readThemeStorage()).toBe(DEFAULT_APP_THEME);
     writePlayerCodeStorage("");
     expect(readPlayerCodeStorage("fallback")).toBe("fallback");
     writeProgressStorage(5, 6);
@@ -139,8 +147,10 @@ describe("storage wrappers", () => {
     });
 
     expect(readPlayerCodeStorage("fallback")).toBe("fallback");
+    expect(readThemeStorage()).toBe(DEFAULT_APP_THEME);
     expect(() => writePlayerCodeStorage("x")).not.toThrow();
     expect(() => writeProgressStorage(1, 1)).not.toThrow();
+    expect(() => writeThemeStorage("everforest-light")).not.toThrow();
     expect(() => clearStoredAppData()).not.toThrow();
   });
 });

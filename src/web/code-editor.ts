@@ -12,13 +12,13 @@ export function createCodeEditor(
   onChange: (code: string) => void,
 ): EditorView {
   const readableHighlight = HighlightStyle.define([
-    { tag: [tags.keyword, tags.controlKeyword], color: "#7ec7ff", fontWeight: "700" },
-    { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "#ffd58e" },
-    { tag: [tags.variableName, tags.propertyName], color: "#d9e8f5" },
-    { tag: [tags.number, tags.bool, tags.null], color: "#ffb88c" },
-    { tag: [tags.string], color: "#b6f29a" },
-    { tag: [tags.comment], color: "#7f96ac", fontStyle: "italic" },
-    { tag: [tags.operator, tags.punctuation], color: "#b6c8d8" },
+    { tag: [tags.keyword, tags.controlKeyword], color: "var(--syntax-keyword)", fontWeight: "700" },
+    { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "var(--syntax-function)" },
+    { tag: [tags.variableName, tags.propertyName], color: "var(--syntax-variable)" },
+    { tag: [tags.number, tags.bool, tags.null], color: "var(--syntax-number)" },
+    { tag: [tags.string], color: "var(--syntax-string)" },
+    { tag: [tags.comment], color: "var(--syntax-comment)", fontStyle: "italic" },
+    { tag: [tags.operator, tags.punctuation], color: "var(--syntax-punctuation)" },
   ]);
 
   return new EditorView({
@@ -35,36 +35,36 @@ export function createCodeEditor(
         "&": {
           minHeight: "220px",
           fontSize: "14px",
-          color: "#dce8f3",
-          backgroundColor: "#15191f",
+          color: "var(--cm-editor-fg)",
+          backgroundColor: "var(--cm-editor-bg)",
         },
         ".cm-scroller": {
           overflow: "auto",
           fontFamily: "\"UDEV Gothic 35\", \"SFMono-Regular\", Consolas, monospace",
         },
         ".cm-content": {
-          caretColor: "#9dd7ff",
+          caretColor: "var(--cm-caret)",
         },
         "&.cm-focused .cm-cursor": {
-          borderLeftColor: "#9dd7ff",
+          borderLeftColor: "var(--cm-caret)",
         },
         "&.cm-focused .cm-selectionBackground, ::selection": {
-          backgroundColor: "#2b4561",
+          backgroundColor: "var(--cm-selection-bg)",
         },
         ".cm-activeLine": {
-          backgroundColor: "#1b222b",
+          backgroundColor: "var(--cm-active-line-bg)",
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "#1b222b",
-          color: "#9bb2c8",
+          backgroundColor: "var(--cm-active-line-bg)",
+          color: "var(--cm-gutter-active-fg)",
         },
         ".cm-gutters": {
-          backgroundColor: "#15191f",
-          color: "#7f93a8",
+          backgroundColor: "var(--cm-gutter-bg)",
+          color: "var(--cm-gutter-fg)",
           border: "none",
         },
         ".cm-lineNumbers .cm-gutterElement": {
-          color: "#7f93a8",
+          color: "var(--cm-gutter-fg)",
         },
       }),
       EditorView.updateListener.of((update) => {

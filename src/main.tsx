@@ -5,6 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./web/styles.css";
 import "./i18n/config";
 import App from "./web/App";
+import { readThemeStorage } from "./web/progress-storage";
 import ReferencePage from "./web/ReferencePage";
 import SpriteDebugPage from "./web/SpriteDebugPage";
 
@@ -25,6 +26,12 @@ const normalizePathname = (pathname: string): string => {
 };
 
 const pathname = normalizePathname(globalThis.location.pathname);
+const theme = readThemeStorage();
+if (theme === "everforest-dark") {
+  document.documentElement.removeAttribute("data-theme");
+} else {
+  document.documentElement.dataset.theme = theme;
+}
 let rootNode = <App />;
 if (pathname === API_REFERENCE_PATH) {
   rootNode = <ReferencePage />;

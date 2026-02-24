@@ -15,6 +15,25 @@ describe("createDamagePopupsFromEntries", () => {
     expect(createDamagePopupsFromEntries([], "@s", 1, new Map())).toEqual([]);
   });
 
+  it("skips entries that do not include unitId", () => {
+    const entries: LogEntry[] = [
+      { key: "engine.takeDamage", params: { amount: 4 } },
+      { key: "engine.restHeal", params: { amount: 2 } },
+    ];
+
+    expect(createDamagePopupsFromEntries(entries, "@s", 1, new Map())).toEqual([]);
+  });
+
+  it("skips damage/heal entries when amount is invalid", () => {
+    const entries: LogEntry[] = [
+      { key: "engine.takeDamage", params: { amount: "4" }, unitId: "samurai#1" },
+      { key: "engine.takeDamage", params: { amount: 0 }, unitId: "samurai#1" },
+      { key: "engine.restHeal", params: { amount: -1 }, unitId: "samurai#1" },
+    ];
+
+    expect(createDamagePopupsFromEntries(entries, "@s", 1, new Map())).toEqual([]);
+  });
+
   it("creates popups for takeDamage logs using direct unitId lookup", () => {
     vi.spyOn(Date, "now").mockReturnValue(1000);
     const entries: LogEntry[] = [
@@ -26,6 +45,25 @@ describe("createDamagePopupsFromEntries", () => {
 
     expect(popups).toEqual([
       { id: 10, tileIndex: 42, text: "-4", expiresAt: 1000 + DAMAGE_POPUP_MS },
+    ]);
+  });
+
+  it("creates heal popups for restHeal logs", () => {
+    vi.spyOn(Date, "now").mockReturnValue(1200);
+    const entries: LogEntry[] = [
+      { key: "engine.restHeal", params: { amount: 2 }, unitId: "samurai#1" },
+    ];
+
+    const popups = createDamagePopupsFromEntries(entries, "@s", 15, new Map());
+
+    expect(popups).toEqual([
+      {
+        id: 15,
+        tileIndex: expect.any(Number),
+        text: "+2",
+        expiresAt: 1200 + DAMAGE_POPUP_MS,
+        variant: "heal",
+      },
     ]);
   });
 
@@ -84,6 +122,15 @@ describe("createDamagePopupsFromEntries", () => {
 describe("createSpriteOverridesFromEntries", () => {
   it("returns an empty list when there are no entries", () => {
     expect(createSpriteOverridesFromEntries([], "@s", 1, new Map(), new Set(["sludge"]))).toEqual([]);
+  });
+
+  it("skips entries that do not include unitId", () => {
+    const entries: LogEntry[] = [
+      { key: "engine.attackHit", params: {} },
+      { key: "engine.dies", params: {} },
+    ];
+
+    expect(createSpriteOverridesFromEntries(entries, "@s", 1, new Map(), new Set(["samurai"]))).toEqual([]);
   });
 
   it("maps log keys to sprite states and skips unsupported kinds", () => {

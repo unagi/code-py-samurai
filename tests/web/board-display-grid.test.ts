@@ -4,16 +4,18 @@ import { buildBoardDisplayGrid } from "../../src/web/board-display-grid";
 import { buildBoardGrid, type BoardGridData } from "../../src/web/board-grid";
 
 describe("buildBoardDisplayGrid", () => {
-  it("returns full grid entries with original indices in full mode", () => {
+  it("hides void tiles in full mode while preserving original indices", () => {
     const boardGrid = buildBoardGrid("---@\n|  |\n----");
 
     const displayGrid = buildBoardDisplayGrid(boardGrid, "full");
 
-    expect(displayGrid.columns).toBe(boardGrid.columns);
-    expect(displayGrid.rows).toBe(boardGrid.rows);
-    expect(displayGrid.tiles).toHaveLength(boardGrid.tiles.length);
-    expect(displayGrid.tiles[0]?.originalIndex).toBe(0);
-    expect(displayGrid.tiles.at(-1)?.originalIndex).toBe(boardGrid.tiles.length - 1);
+    expect(displayGrid.columns).toBeGreaterThan(0);
+    expect(displayGrid.rows).toBeGreaterThan(0);
+    expect(displayGrid.tiles.length).toBeLessThan(boardGrid.tiles.length);
+    expect(displayGrid.tiles.every((cell) => cell.tile.kind !== "void")).toBe(true);
+    expect(
+      displayGrid.tiles.every((cell) => boardGrid.tiles[cell.originalIndex] === cell.tile),
+    ).toBe(true);
   });
 
   it("compacts away void and wall tiles while preserving original tile indices", () => {
@@ -50,10 +52,50 @@ describe("buildBoardDisplayGrid", () => {
     expect(displayGrid.tiles).toHaveLength(boardGrid.tiles.length);
   });
 
-  it("compacts away only void tiles in void-only mode while keeping walls", () => {
+  it("falls back to raw grid when full mode void compaction would become non-rectangular", () => {
+    const boardGrid: BoardGridData = {
+      columns: 3,
+      rows: 2,
+      tiles: [
+        { symbol: ".", kind: "floor", altKey: "tiles.empty" },
+        { symbol: " ", kind: "void", altKey: "tiles.empty" },
+        { symbol: ".", kind: "floor", altKey: "tiles.empty" },
+        { symbol: ".", kind: "floor", altKey: "tiles.empty" },
+        { symbol: ".", kind: "floor", altKey: "tiles.empty" },
+        { symbol: ".", kind: "floor", altKey: "tiles.empty" },
+      ],
+    };
+
+    const displayGrid = buildBoardDisplayGrid(boardGrid, "full");
+
+    expect(displayGrid.columns).toBe(boardGrid.columns);
+    expect(displayGrid.rows).toBe(boardGrid.rows);
+    expect(displayGrid.tiles).toHaveLength(boardGrid.tiles.length);
+  });
+
+  it("falls back to raw grid when compaction hides every tile", () => {
+    const boardGrid: BoardGridData = {
+      columns: 2,
+      rows: 2,
+      tiles: [
+        { symbol: "-", kind: "wall-h", altKey: "tiles.frame" },
+        { symbol: "|", kind: "wall-v", altKey: "tiles.frame" },
+        { symbol: " ", kind: "void", altKey: "tiles.empty" },
+        { symbol: "-", kind: "wall-h", altKey: "tiles.frame" },
+      ],
+    };
+
+    const displayGrid = buildBoardDisplayGrid(boardGrid, "floor-only");
+
+    expect(displayGrid.columns).toBe(boardGrid.columns);
+    expect(displayGrid.rows).toBe(boardGrid.rows);
+    expect(displayGrid.tiles).toHaveLength(boardGrid.tiles.length);
+  });
+
+  it("compacts away only void tiles in full mode while keeping walls", () => {
     const boardGrid = buildBoardGrid("----\n|@>|\n----");
 
-    const displayGrid = buildBoardDisplayGrid(boardGrid, "void-only");
+    const displayGrid = buildBoardDisplayGrid(boardGrid, "full");
 
     expect(displayGrid.columns).toBe(4);
     expect(displayGrid.rows).toBe(3);
