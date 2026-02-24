@@ -18,6 +18,7 @@ export interface ReferenceItem {
   signature?: string;
   description: LocalizedText;
   tags?: ReferenceTag[];
+  examples?: LocalizedText;
 }
 
 export interface ReferenceSection {
@@ -27,30 +28,18 @@ export interface ReferenceSection {
   items: ReferenceItem[];
 }
 
-export interface AvailabilityRow {
-  level: number;
-  apis: string[];
-}
-
 export interface ApiReferenceDocument {
   title: string;
-  subtitle: LocalizedText;
   conventionsTitle: LocalizedText;
   conventions: LocalizedText[];
   sections: ReferenceSection[];
-  availabilityTitle: LocalizedText;
-  availabilityRows: AvailabilityRow[];
 }
 
 const t = (ja: string, en: string): LocalizedText => ({ ja, en });
 
 export const apiReferenceDocument: ApiReferenceDocument = {
   title: "Python API Reference (Player / Samurai / Space)",
-  subtitle: t(
-    "学習者向け Python API の仕様（ドキュメント先行）です。",
-    "Learner-facing Python API specification (docs-first).",
-  ),
-  conventionsTitle: t("Conventions", "Conventions"),
+  conventionsTitle: t("規約", "Conventions"),
   conventions: [
     t("方向は `Direction` を使う（`FORWARD`, `RIGHT`, `BACKWARD`, `LEFT`）", "Use `Direction` (`FORWARD`, `RIGHT`, `BACKWARD`, `LEFT`) for relative directions."),
     t("地形は `Terrain` を使う（`FLOOR`, `WALL`, `STAIRS`）", "Use `Terrain` (`FLOOR`, `WALL`, `STAIRS`) for map terrain."),
@@ -58,6 +47,8 @@ export const apiReferenceDocument: ApiReferenceDocument = {
     t("アクションメソッドは 1 ターンに 1 回のみ実行可能", "Action methods can be executed only once per turn."),
     t("感知メソッドは同一ターン内で複数回呼び出し可能", "Sense methods may be called multiple times within a turn."),
     t("`feel()` / `look()` は常に `Space` を返す（空マスは `space.unit is None` で判定する）", "`feel()` / `look()` always return `Space`; detect empty cells with `space.unit is None`."),
+    t("無効な `Direction` を渡すと `RuntimeError` が発生する", "Passing an invalid `Direction` raises `RuntimeError`."),
+    t("無効な `Space` を渡すと `RuntimeError` が発生する", "Passing an invalid `Space` raises `RuntimeError`."),
   ],
   sections: [
     {
@@ -70,9 +61,6 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           name: "Direction",
           signature: "enum Direction { FORWARD, RIGHT, BACKWARD, LEFT }",
           description: t("Samurai API で使用する相対方向。", "Relative direction values used by the Samurai API."),
-          tags: [
-            { name: "@values", value: t("FORWARD | RIGHT | BACKWARD | LEFT", "FORWARD | RIGHT | BACKWARD | LEFT") },
-          ],
         },
       ],
     },
@@ -86,9 +74,6 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           name: "Terrain",
           signature: "enum Terrain { FLOOR, WALL, STAIRS }",
           description: t("Space の地形種別。", "Terrain type of a Space."),
-          tags: [
-            { name: "@values", value: t("FLOOR | WALL | STAIRS", "FLOOR | WALL | STAIRS") },
-          ],
         },
       ],
     },
@@ -102,40 +87,6 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           name: "UnitKind",
           signature: "enum UnitKind { ENEMY, CAPTIVE, ALLY }",
           description: t("Space にいるユニットの種別。", "Unit category stored in `Space.unit`."),
-          tags: [
-            { name: "@values", value: t("ENEMY | CAPTIVE | ALLY", "ENEMY | CAPTIVE | ALLY") },
-          ],
-        },
-      ],
-    },
-    {
-      id: "player-class",
-      title: t("Class: Player", "Class: Player"),
-      items: [
-        {
-          id: "player",
-          kind: "class",
-          name: "Player",
-          signature: "class Player",
-          description: t(
-            "各ターンで実行されるユーザー定義クラス。実装必須メソッドは `play_turn(samurai)` のみ。",
-            "User-defined class executed each turn. The only required method is `play_turn(samurai)`.",
-          ),
-        },
-        {
-          id: "player-play-turn",
-          kind: "method",
-          owner: "Player",
-          name: "play_turn",
-          signature: "play_turn(self, samurai) -> None",
-          description: t(
-            "1ターン分の行動を決定する。行動メソッド（walk / attack / rest ...）はこのメソッド内で 1 回だけ実行できる。",
-            "Decides the action for one turn. Action methods (walk / attack / rest ...) may be executed only once inside this method.",
-          ),
-          tags: [
-            { name: "@param samurai", value: t("Samurai 現在ターンの操作対象", "Samurai control object for the current turn") },
-            { name: "@return", value: t("None", "None") },
-          ],
         },
       ],
     },
@@ -161,6 +112,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           signature: "hp: int",
           description: t("現在HP。", "Current HP."),
           tags: [{ name: "@type", value: t("int", "int") }, { name: "@since", value: t("Level 3", "Level 3") }],
+          examples: t("health = samurai.hp  # 現在のHP", "health = samurai.hp  # current HP"),
         },
         {
           id: "samurai-action-methods",
@@ -171,7 +123,6 @@ export const apiReferenceDocument: ApiReferenceDocument = {
             "Action methods are mutually exclusive within a turn. Do not call multiple action methods in the same turn.",
           ),
           tags: [
-            { name: "@category", value: t("action", "action") },
             { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
           ],
         },
@@ -185,11 +136,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
             { name: "@since", value: t("Level 1", "Level 1") },
           ],
+          examples: t(
+            "samurai.walk()               # 前に歩く\nsamurai.walk(Direction.LEFT)  # 左に歩く",
+            "samurai.walk()               # walk forward\nsamurai.walk(Direction.LEFT)  # walk left",
+          ),
         },
         {
           id: "samurai-attack",
@@ -201,12 +153,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@remarks", value: t("後方攻撃はダメージが低下する。", "Backward attacks deal less damage.") },
             { name: "@since", value: t("Level 2", "Level 2") },
           ],
+          examples: t(
+            "samurai.attack()                # 前方を攻撃\nsamurai.attack(Direction.RIGHT)  # 右を攻撃",
+            "samurai.attack()                # attack forward\nsamurai.attack(Direction.RIGHT)  # attack right",
+          ),
         },
         {
           id: "samurai-rest",
@@ -217,10 +169,9 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           description: t("HPを回復する。最大HP時は回復しない。", "Recover HP. No effect at max HP."),
           tags: [
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
             { name: "@since", value: t("Level 3", "Level 3") },
           ],
+          examples: t("samurai.rest()  # HPを回復", "samurai.rest()  # recover HP"),
         },
         {
           id: "samurai-rescue",
@@ -232,12 +183,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@remarks", value: t("捕虜でない対象には効果なし。", "No effect when the target is not a captive.") },
             { name: "@since", value: t("Level 5", "Level 5") },
           ],
+          examples: t(
+            "samurai.rescue()               # 前方の捕虜を救出\nsamurai.rescue(Direction.LEFT)  # 左の捕虜を救出",
+            "samurai.rescue()               # rescue captive ahead\nsamurai.rescue(Direction.LEFT)  # rescue captive left",
+          ),
         },
         {
           id: "samurai-shoot",
@@ -249,12 +200,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@remarks", value: t("射程は 1〜3 マス。最初に見つかったユニットに命中する。", "Range is 1-3 tiles and it hits the first unit found.") },
             { name: "@since", value: t("Level 8", "Level 8") },
           ],
+          examples: t(
+            "samurai.shoot()               # 前方に射撃\nsamurai.shoot(Direction.LEFT)  # 左に射撃",
+            "samurai.shoot()               # shoot forward\nsamurai.shoot(Direction.LEFT)  # shoot left",
+          ),
         },
         {
           id: "samurai-pivot",
@@ -266,11 +217,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 回転先の相対方向。省略時は `Direction.BACKWARD`。", "Direction to rotate to. Defaults to `Direction.BACKWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
             { name: "@since", value: t("Level 7", "Level 7") },
           ],
+          examples: t(
+            "samurai.pivot()               # 後ろを向く\nsamurai.pivot(Direction.LEFT)  # 左を向く",
+            "samurai.pivot()               # turn around\nsamurai.pivot(Direction.LEFT)  # face left",
+          ),
         },
         {
           id: "samurai-bind",
@@ -282,12 +234,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@remarks", value: t("対象がいない場合は効果なし。", "No effect if there is no target.") },
             { name: "@since", value: t("Level 12", "Level 12") },
           ],
+          examples: t(
+            "samurai.bind()               # 前方の敵を拘束\nsamurai.bind(Direction.LEFT)  # 左の敵を拘束",
+            "samurai.bind()               # bind enemy ahead\nsamurai.bind(Direction.LEFT)  # bind enemy left",
+          ),
         },
         {
           id: "samurai-detonate",
@@ -299,11 +251,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("None", "None") },
-            { name: "@category", value: t("action", "action") },
-            { name: "@constraint", value: t("one-action-per-turn", "one-action-per-turn") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
             { name: "@since", value: t("Level 17", "Level 17") },
           ],
+          examples: t(
+            "samurai.detonate()               # 前方に爆弾を起爆\nsamurai.detonate(Direction.LEFT)  # 左に爆弾を起爆",
+            "samurai.detonate()               # detonate bomb ahead\nsamurai.detonate(Direction.LEFT)  # detonate bomb left",
+          ),
         },
         {
           id: "samurai-sense-methods",
@@ -311,7 +264,6 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           name: "Sense Methods",
           description: t("Sense methods は同一ターン内で複数回呼び出し可能。", "Sense methods may be called multiple times within a turn."),
           tags: [
-            { name: "@category", value: t("sense", "sense") },
             { name: "@constraint", value: t("repeatable-within-turn", "repeatable-within-turn") },
           ],
         },
@@ -325,11 +277,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("Space 感知したマス。", "Space object for the sensed tile.") },
-            { name: "@category", value: t("sense", "sense") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@apiNote", value: t("空マス判定は `space.unit is None` を使用する。", "Use `space.unit is None` to check for empty cells.") },
             { name: "@since", value: t("Level 2", "Level 2") },
           ],
+          examples: t(
+            "space = samurai.feel()            # 前方のSpaceを取得\nspace = samurai.feel(Direction.BACKWARD)\nspace.unit                        # Occupant | None",
+            "space = samurai.feel()            # get Space ahead\nspace = samurai.feel(Direction.BACKWARD)\nspace.unit                        # Occupant | None",
+          ),
         },
         {
           id: "samurai-look",
@@ -341,11 +294,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param direction", value: t("Direction 相対方向。省略時は `Direction.FORWARD`。", "Direction. Defaults to `Direction.FORWARD`.") },
             { name: "@return", value: t("list[Space] 長さ 3 の配列。", "list[Space] of length 3.") },
-            { name: "@category", value: t("sense", "sense") },
-            { name: "@throws", value: t("RuntimeError 無効な方向を指定した場合。", "RuntimeError when an invalid direction is given.") },
-            { name: "@apiNote", value: t("空マス判定は各要素の `space.unit is None` を使用する。", "Use `space.unit is None` on each element to check emptiness.") },
             { name: "@since", value: t("Level 8", "Level 8") },
           ],
+          examples: t(
+            "spaces = samurai.look()  # 前方のSpace配列\nfor space in spaces:\n    space.unit           # Occupant | None",
+            "spaces = samurai.look()  # list of Spaces ahead\nfor space in spaces:\n    space.unit           # Occupant | None",
+          ),
         },
         {
           id: "samurai-listen",
@@ -356,11 +310,13 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           description: t("フロア上の他ユニットの位置を取得する。自分自身は含まない。", "Return spaces occupied by other units on the floor. The samurai itself is excluded."),
           tags: [
             { name: "@return", value: t("list[Space] 他ユニットが存在するマスの配列。", "list[Space] containing spaces occupied by other units.") },
-            { name: "@category", value: t("sense", "sense") },
-            { name: "@remarks", value: t("自分自身は含まない。", "Does not include the samurai itself.") },
             { name: "@guarantee", value: t("返される各 `Space` では `space.unit is not None`。", "For each returned `Space`, `space.unit is not None`.") },
             { name: "@since", value: t("Level 13", "Level 13") },
           ],
+          examples: t(
+            "units = samurai.listen()       # 他ユニットのSpace配列\ntarget = units[0]\nsamurai.direction_of(target)  # 方向を取得",
+            "units = samurai.listen()       # Spaces of other units\ntarget = units[0]\nsamurai.direction_of(target)  # get direction",
+          ),
         },
         {
           id: "samurai-direction-of-stairs",
@@ -371,9 +327,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           description: t("階段の方向を相対方向で返す。", "Return the relative direction of the stairs."),
           tags: [
             { name: "@return", value: t("Direction 階段の方向。", "Direction of the stairs.") },
-            { name: "@category", value: t("sense", "sense") },
             { name: "@since", value: t("Level 10", "Level 10") },
           ],
+          examples: t(
+            "d = samurai.direction_of_stairs()  # 階段の方向\nsamurai.walk(d)",
+            "d = samurai.direction_of_stairs()  # stairs direction\nsamurai.walk(d)",
+          ),
         },
         {
           id: "samurai-direction-of",
@@ -385,10 +344,12 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param space", value: t("Space 対象マス。", "Target Space.") },
             { name: "@return", value: t("Direction 対象マスの方向。", "Relative direction to the target space.") },
-            { name: "@category", value: t("sense", "sense") },
-            { name: "@throws", value: t("RuntimeError 無効な Space を渡した場合。", "RuntimeError when an invalid Space is provided.") },
             { name: "@since", value: t("Level 13", "Level 13") },
           ],
+          examples: t(
+            "d = samurai.direction_of(space)  # Spaceへの方向\nsamurai.walk(d)",
+            "d = samurai.direction_of(space)  # direction to Space\nsamurai.walk(d)",
+          ),
         },
         {
           id: "samurai-distance-of",
@@ -400,10 +361,9 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@param space", value: t("Space 対象マス。", "Target Space.") },
             { name: "@return", value: t("int マンハッタン距離。", "Manhattan distance as int.") },
-            { name: "@category", value: t("sense", "sense") },
-            { name: "@throws", value: t("RuntimeError 無効な Space を渡した場合。", "RuntimeError when an invalid Space is provided.") },
             { name: "@since", value: t("Level 18", "Level 18") },
           ],
+          examples: t("n = samurai.distance_of(space)  # マンハッタン距離", "n = samurai.distance_of(space)  # Manhattan distance"),
         },
       ],
     },
@@ -428,6 +388,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           tags: [
             { name: "@type", value: t("Terrain", "Terrain") },
           ],
+          examples: t("space.terrain == Terrain.WALL  # 壁かどうか", "space.terrain == Terrain.WALL  # is it a wall?"),
         },
         {
           id: "space-unit",
@@ -440,6 +401,10 @@ export const apiReferenceDocument: ApiReferenceDocument = {
             { name: "@type", value: t("Occupant | None", "Occupant | None") },
             { name: "@apiNote", value: t("階段の上にユニットがいる場合、`terrain == Terrain.STAIRS` かつ `unit is not None` になりうる。", "A unit may stand on stairs (`terrain == Terrain.STAIRS` and `unit is not None`).") },
           ],
+          examples: t(
+            "if space.unit is None:  # 空きマス\n    ...\nunit = space.unit\nunit.kind               # UnitKind",
+            "if space.unit is None:  # empty tile\n    ...\nunit = space.unit\nunit.kind               # UnitKind",
+          ),
         },
       ],
     },
@@ -462,6 +427,7 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           signature: "kind: UnitKind",
           description: t("ユニット種別。", "Occupant category."),
           tags: [{ name: "@type", value: t("UnitKind", "UnitKind") }],
+          examples: t("unit.kind == UnitKind.ENEMY  # 敵かどうか", "unit.kind == UnitKind.ENEMY  # is it an enemy?"),
         },
         {
           id: "occupant-ticking",
@@ -474,23 +440,10 @@ export const apiReferenceDocument: ApiReferenceDocument = {
             { name: "@type", value: t("bool", "bool") },
             { name: "@remarks", value: t("典型用途は `kind == UnitKind.CAPTIVE` と組み合わせた優先救出判定。", "Typical use: prioritize rescue when combined with `kind == UnitKind.CAPTIVE`.") },
           ],
+          examples: t("if unit.ticking:  # 時限爆弾あり\n    ...", "if unit.ticking:  # has timed bomb\n    ..."),
         },
       ],
     },
-  ],
-  availabilityTitle: t("Availability by Level", "Availability by Level"),
-  availabilityRows: [
-    { level: 1, apis: ["walk()"] },
-    { level: 2, apis: ["feel()", "attack()"] },
-    { level: 3, apis: ["rest()", "hp"] },
-    { level: 5, apis: ["rescue()"] },
-    { level: 7, apis: ["pivot()"] },
-    { level: 8, apis: ["look()", "shoot()"] },
-    { level: 10, apis: ["direction_of_stairs()"] },
-    { level: 12, apis: ["bind()"] },
-    { level: 13, apis: ["listen()", "direction_of(space)"] },
-    { level: 17, apis: ["detonate()"] },
-    { level: 18, apis: ["distance_of(space)"] },
   ],
 };
 

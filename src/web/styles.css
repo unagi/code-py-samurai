@@ -21,6 +21,7 @@
   );
   color-scheme: dark;
   font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
+  --code-font-family: var(--code-font-family);
   color: var(--ui-text);
 
   /* Palette layer (Everforest dark-ish) */
@@ -304,9 +305,7 @@
   --refdoc-topbar-cta-hover-border: rgba(var(--pal-green-rgb), 0.8);
   --refdoc-topbar-cta-hover-bg: linear-gradient(180deg, rgba(var(--pal-green-rgb), 0.95), rgba(var(--pal-aqua-rgb), 0.96));
 
-  --refdoc-kicker: var(--pal-subtle);
-  --refdoc-hero-title: var(--pal-yellow);
-  --refdoc-subtitle: var(--pal-muted);
+
 
   --refdoc-panel-border: rgba(var(--pal-hl-high-rgb), 0.85);
   --refdoc-panel-bg: rgba(var(--pal-bg-1-rgb), 0.8);
@@ -356,30 +355,23 @@
   --refdoc-compact-meta-fg: var(--pal-fg);
   --refdoc-compact-meta-label-fg: var(--pal-subtle);
 
-  --refdoc-anchor-border: rgba(var(--pal-hl-high-rgb), 0.95);
-  --refdoc-anchor-bg: rgba(var(--pal-bg-0-rgb), 0.6);
-  --refdoc-anchor-fg: var(--pal-fg);
-  --refdoc-anchor-hover-bg: rgba(var(--pal-blue-rgb), 0.12);
-  --refdoc-anchor-hover-border: rgba(var(--pal-blue-rgb), 0.55);
-  --refdoc-anchor-hover-fg: var(--pal-fg);
-  --refdoc-anchor-active-border: rgba(var(--pal-blue-rgb), 0.4);
+
 
   --refdoc-signature-border: rgba(var(--pal-hl-med-rgb), 0.95);
   --refdoc-signature-bg: var(--pal-bg-0);
   --refdoc-signature-fg: var(--pal-fg);
   --refdoc-code-keyword: var(--syntax-keyword);
   --refdoc-code-func: var(--syntax-function);
-  --refdoc-code-name: var(--cm-editor-fg);
-  --refdoc-code-literal: var(--syntax-string);
+  --refdoc-code-name: var(--syntax-variable);
+  --refdoc-code-literal: var(--syntax-number);
   --refdoc-code-punct: var(--syntax-punctuation);
+  --refdoc-code-comment: var(--syntax-comment);
   --refdoc-description-fg: var(--pal-muted);
 
   --refdoc-enum-title-border: rgba(var(--pal-hl-high-rgb), 0.7);
   --refdoc-enum-title-bg: rgba(var(--pal-white-rgb), 0.02);
   --refdoc-enum-title-fg: var(--pal-fg);
-  --refdoc-enum-chip-border: rgba(var(--pal-hl-high-rgb), 0.95);
-  --refdoc-enum-chip-bg: rgba(var(--pal-bg-0-rgb), 0.8);
-  --refdoc-enum-chip-fg: var(--pal-fg);
+
 
   --refdoc-tag-separator: rgba(var(--pal-hl-high-rgb), 0.55);
   --refdoc-tag-separator-strong: rgba(var(--pal-hl-high-rgb), 0.65);
@@ -390,13 +382,6 @@
   --refdoc-tag-code-muted-fg: var(--pal-subtle);
   --refdoc-tag-text-fg: var(--pal-fg);
   --refdoc-tag-text-muted-fg: var(--pal-muted);
-
-  --refdoc-table-border: rgba(var(--pal-hl-high-rgb), 0.55);
-  --refdoc-table-th-fg: var(--pal-yellow);
-  --refdoc-table-row-hover-bg: rgba(var(--pal-blue-rgb), 0.04);
-  --refdoc-chip-border: rgba(var(--pal-hl-high-rgb), 0.8);
-  --refdoc-chip-bg: rgba(var(--pal-bg-0-rgb), 0.78);
-  --refdoc-chip-fg: var(--pal-fg);
 }
 
 :root[data-theme="everforest-light"] {
@@ -726,9 +711,7 @@
   --refdoc-topbar-cta-hover-border: rgba(var(--pal-orange-rgb), 0.8);
   --refdoc-topbar-cta-hover-bg: linear-gradient(180deg, rgba(var(--pal-orange-rgb), 0.95), rgba(var(--pal-purple-rgb), 0.95));
 
-  --refdoc-kicker: var(--pal-muted);
-  --refdoc-hero-title: var(--pal-orange);
-  --refdoc-subtitle: var(--pal-muted);
+
 
   --refdoc-panel-border: rgba(var(--pal-hl-high-rgb), 0.85);
   --refdoc-panel-bg: rgba(var(--pal-bg-2-rgb), 0.8);
@@ -778,30 +761,23 @@
   --refdoc-compact-meta-fg: var(--pal-fg);
   --refdoc-compact-meta-label-fg: var(--pal-muted);
 
-  --refdoc-anchor-border: rgba(var(--pal-hl-high-rgb), 0.95);
-  --refdoc-anchor-bg: rgba(var(--pal-bg-0-rgb), 0.6);
-  --refdoc-anchor-fg: var(--pal-fg);
-  --refdoc-anchor-hover-bg: rgba(var(--pal-blue-rgb), 0.12);
-  --refdoc-anchor-hover-border: rgba(var(--pal-blue-rgb), 0.55);
-  --refdoc-anchor-hover-fg: var(--pal-fg);
-  --refdoc-anchor-active-border: rgba(var(--pal-blue-rgb), 0.4);
+
 
   --refdoc-signature-border: rgba(var(--pal-hl-high-rgb), 0.95);
   --refdoc-signature-bg: var(--pal-bg-1);
   --refdoc-signature-fg: var(--pal-fg);
   --refdoc-code-keyword: var(--syntax-keyword);
   --refdoc-code-func: var(--syntax-function);
-  --refdoc-code-name: var(--cm-editor-fg);
-  --refdoc-code-literal: var(--syntax-string);
+  --refdoc-code-name: var(--syntax-variable);
+  --refdoc-code-literal: var(--syntax-number);
   --refdoc-code-punct: var(--syntax-punctuation);
+  --refdoc-code-comment: var(--syntax-comment);
   --refdoc-description-fg: var(--pal-muted);
 
   --refdoc-enum-title-border: rgba(var(--pal-hl-high-rgb), 0.7);
   --refdoc-enum-title-bg: rgba(var(--pal-white-rgb), 0.02);
   --refdoc-enum-title-fg: var(--pal-fg);
-  --refdoc-enum-chip-border: rgba(var(--pal-hl-high-rgb), 0.95);
-  --refdoc-enum-chip-bg: rgba(var(--pal-bg-0-rgb), 0.8);
-  --refdoc-enum-chip-fg: var(--pal-fg);
+
 
   --refdoc-tag-separator: rgba(var(--pal-hl-high-rgb), 0.55);
   --refdoc-tag-separator-strong: rgba(var(--pal-hl-high-rgb), 0.65);
@@ -812,13 +788,6 @@
   --refdoc-tag-code-muted-fg: var(--pal-muted);
   --refdoc-tag-text-fg: var(--pal-fg);
   --refdoc-tag-text-muted-fg: var(--pal-muted);
-
-  --refdoc-table-border: rgba(var(--pal-hl-high-rgb), 0.55);
-  --refdoc-table-th-fg: var(--pal-orange);
-  --refdoc-table-row-hover-bg: rgba(var(--pal-blue-rgb), 0.04);
-  --refdoc-chip-border: rgba(var(--pal-hl-high-rgb), 0.8);
-  --refdoc-chip-bg: rgba(var(--pal-bg-0-rgb), 0.78);
-  --refdoc-chip-fg: var(--pal-fg);
 }
 
 :root[data-theme="rose-pine-light"] {
@@ -1075,7 +1044,7 @@ body {
   border-radius: 999px;
   background: var(--timeline-step-bg);
   color: var(--timeline-step-fg);
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
   font-size: 0.82rem;
   font-weight: 700;
   line-height: 1;
@@ -1779,7 +1748,7 @@ button:disabled {
   border: 1px solid var(--logs-border);
   background: var(--logs-bg);
   color: var(--logs-fg);
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
   font-size: 0.84rem;
   line-height: 1.35;
   scrollbar-gutter: stable;
@@ -2035,7 +2004,7 @@ button:disabled {
 }
 
 .api-structure-signature {
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
   font-size: 0.84rem;
   line-height: 1.35;
   color: inherit;
@@ -2079,7 +2048,7 @@ button:disabled {
   position: relative;
   padding-left: 1rem;
   margin: 0.22rem 0;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
   font-size: 0.85rem;
 }
 
@@ -2212,9 +2181,9 @@ dialog.modal-backdrop::backdrop {
 
 .refdoc-sidebar {
   position: sticky;
-  top: 4.45rem;
+  top: 4.4rem;
   align-self: start;
-  height: calc(100vh - 5.35rem);
+  height: calc(100vh - 5.4rem);
   overflow: auto;
   border: 1px solid var(--refdoc-sidebar-border);
   border-radius: 12px;
@@ -2241,7 +2210,7 @@ dialog.modal-backdrop::backdrop {
   line-height: 1.2;
 }
 
-.refdoc-nav-group ul {
+.refdoc-nav-group > ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -2272,6 +2241,21 @@ dialog.modal-backdrop::backdrop {
 :where(.refdoc-nav-group a):focus-visible {
   outline: 2px solid var(--refdoc-focus-outline);
   outline-offset: 1px;
+}
+
+.refdoc-nav-children {
+  margin: 0.15rem 0 0.15rem 0;
+  padding: 0 0 0 0.75rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.refdoc-nav-children a {
+  font-size: 0.78rem;
+  padding: 0.28rem 0.5rem;
+  font-family: var(--code-font-family);
 }
 
 .refdoc-layout {
@@ -2315,20 +2299,18 @@ dialog.modal-backdrop::backdrop {
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.refdoc-topbar-brand:hover {
+  opacity: 0.85;
 }
 
 .refdoc-topbar-logo {
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--refdoc-topbar-logo-bg);
-  color: var(--refdoc-topbar-logo-fg);
-  font-weight: 700;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  box-shadow: var(--refdoc-topbar-logo-shadow);
+  height: 2rem;
+  width: auto;
+  display: block;
 }
 
 .refdoc-topbar-title {
@@ -2338,87 +2320,45 @@ dialog.modal-backdrop::backdrop {
   white-space: nowrap;
 }
 
-.refdoc-topbar-links {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+
+.refdoc-inline-code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--refdoc-signature-bg);
+  border: 1px solid var(--refdoc-signature-border);
+  font-family: var(--code-font-family);
+  font-size: 0.85em;
 }
 
-.refdoc-topbar-link {
-  color: var(--refdoc-topbar-link);
-  text-decoration: none;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 8px;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.84rem;
-  line-height: 1;
-  transition:
-    color 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease;
+.refdoc-example-code {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--refdoc-signature-bg);
+  border: 1px solid var(--refdoc-signature-border);
+  border-radius: 6px;
+  font-family: var(--code-font-family);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  color: var(--refdoc-signature-fg);
 }
 
-.refdoc-topbar-link:hover {
-  color: var(--refdoc-topbar-link-hover-fg);
-  background: var(--refdoc-topbar-link-hover-bg);
+.refdoc-example-block {
+  margin-top: 0.5rem;
 }
 
-.refdoc-topbar-link:focus-visible {
-  outline: 2px solid var(--refdoc-focus-outline);
-  outline-offset: 1px;
-}
-
-.refdoc-topbar-cta {
-  margin-left: 0.35rem;
-  color: var(--refdoc-topbar-cta-fg);
-  border-color: var(--refdoc-topbar-cta-border);
-  background: var(--refdoc-topbar-cta-bg);
-  box-shadow: var(--refdoc-topbar-cta-shadow);
-}
-
-.refdoc-topbar-cta:hover {
-  color: var(--refdoc-topbar-cta-hover-fg);
-  border-color: var(--refdoc-topbar-cta-hover-border);
-  background: var(--refdoc-topbar-cta-hover-bg);
-}
-
-.refdoc-hero {
-  margin: 0;
-  padding: 0.35rem 0 1.15rem;
-  position: static;
-  background: transparent;
-  backdrop-filter: none;
-}
-
-.refdoc-hero-content {
-  padding: 0.55rem 0 0;
-}
-
-.refdoc-kicker {
-  margin: 0;
-  color: var(--refdoc-kicker);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+.refdoc-example-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--refdoc-description-fg);
 }
 
-.refdoc-hero h1 {
-  margin: 0.28rem 0 0;
-  color: var(--refdoc-hero-title);
-  font-size: clamp(1.55rem, 2.6vw, 2.15rem);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
-}
-
-.refdoc-subtitle {
-  margin: 0.42rem 0 0;
-  color: var(--refdoc-subtitle);
-  line-height: 1.45;
-  max-width: 60ch;
+.refdoc-example-block .refdoc-example-code {
+  margin-top: 0;
 }
 
 .refdoc-panel {
@@ -2429,6 +2369,7 @@ dialog.modal-backdrop::backdrop {
   box-shadow: var(--refdoc-panel-shadow);
   padding: 1rem;
   margin-bottom: 1rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .refdoc-main-scroll {
@@ -2562,7 +2503,7 @@ dialog.modal-backdrop::backdrop {
   background: var(--refdoc-card-bg);
   box-shadow: var(--refdoc-card-shadow);
   padding: 0.95rem;
-  scroll-margin-top: 4.25rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .refdoc-section[id$="-enum"] {
@@ -2743,7 +2684,7 @@ dialog.modal-backdrop::backdrop {
 .refdoc-entity-property-name {
   color: var(--refdoc-property-name-fg);
   font-weight: 700;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
 }
 
 .refdoc-samurai-action-list .refdoc-item-method {
@@ -2775,7 +2716,7 @@ dialog.modal-backdrop::backdrop {
 .refdoc-compact-name {
   color: var(--refdoc-compact-name-fg);
   font-weight: 700;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
 }
 
 .refdoc-signature-compact {
@@ -2823,22 +2764,7 @@ dialog.modal-backdrop::backdrop {
   display: flex;
   justify-content: space-between;
   gap: 0.8rem;
-  align-items: flex-start;
-}
-
-.refdoc-item-title-row {
-  display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.refdoc-item-kind {
-  margin: 0;
-  color: var(--refdoc-card-title-muted);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  font-weight: 700;
 }
 
 .refdoc-item-header h3,
@@ -2872,46 +2798,6 @@ dialog.modal-backdrop::backdrop {
   color: var(--refdoc-owner-fg);
 }
 
-.refdoc-anchor {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.55rem;
-  height: 1.55rem;
-  border-radius: 6px;
-  border: 1px solid var(--refdoc-anchor-border);
-  background: var(--refdoc-anchor-bg);
-  color: var(--refdoc-anchor-fg);
-  text-decoration: none;
-  flex-shrink: 0;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
-}
-
-.refdoc-anchor:hover {
-  background: var(--refdoc-anchor-hover-bg);
-  border-color: var(--refdoc-anchor-hover-border);
-  color: var(--refdoc-anchor-hover-fg);
-}
-
-.refdoc-anchor:focus-visible {
-  outline: 2px solid var(--refdoc-focus-outline);
-  outline-offset: 1px;
-}
-
-.refdoc-item:hover .refdoc-anchor,
-.refdoc-item:focus-within .refdoc-anchor,
-.refdoc-class-focus-card:hover .refdoc-anchor,
-.refdoc-class-focus-card:focus-within .refdoc-anchor,
-.refdoc-method-focus-card:hover .refdoc-anchor,
-.refdoc-method-focus-card:focus-within .refdoc-anchor,
-.refdoc-entity-property-row:hover .refdoc-anchor,
-.refdoc-entity-property-row:focus-within .refdoc-anchor {
-  border-color: var(--refdoc-anchor-active-border);
-}
-
 .refdoc-signature {
   margin: 0.55rem 0 0;
   padding: 0.62rem 0.72rem;
@@ -2924,7 +2810,7 @@ dialog.modal-backdrop::backdrop {
 
 .refdoc-signature code {
   white-space: pre;
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--code-font-family);
   font-size: 0.88rem;
 }
 
@@ -2949,6 +2835,11 @@ dialog.modal-backdrop::backdrop {
   color: var(--refdoc-code-punct);
 }
 
+.refdoc-code-comment {
+  color: var(--refdoc-code-comment);
+  font-style: italic;
+}
+
 .refdoc-description {
   margin: 0.6rem 0 0;
   color: var(--refdoc-description-fg);
@@ -2971,28 +2862,6 @@ dialog.modal-backdrop::backdrop {
   padding: 0.45rem 0.55rem;
 }
 
-.refdoc-enum-values {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.42rem;
-  margin-top: 0.65rem;
-}
-
-.refdoc-enum-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.75rem;
-  padding: 0 0.7rem;
-  border-radius: 8px;
-  border: 1px solid var(--refdoc-enum-chip-border);
-  background: var(--refdoc-enum-chip-bg);
-  color: var(--refdoc-enum-chip-fg);
-  font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  font-size: 0.78rem;
-}
 
 .refdoc-tag-primary-grid {
   margin: 0.65rem 0 0;
@@ -3070,41 +2939,6 @@ dialog.modal-backdrop::backdrop {
   font-size: 0.8rem;
 }
 
-.refdoc-table-wrap {
-  overflow-x: auto;
-}
-
-.refdoc-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.refdoc-table th,
-.refdoc-table td {
-  padding: 0.55rem 0.45rem;
-  text-align: left;
-  vertical-align: top;
-  border-top: 1px solid var(--refdoc-table-border);
-}
-
-.refdoc-table th {
-  border-top: none;
-  color: var(--refdoc-table-th-fg);
-}
-
-.refdoc-table tbody tr:hover {
-  background: var(--refdoc-table-row-hover-bg);
-}
-
-.refdoc-chip {
-  display: inline-block;
-  margin: 0 0.35rem 0.3rem 0;
-  padding: 0.1rem 0.42rem;
-  border-radius: 999px;
-  border: 1px solid var(--refdoc-chip-border);
-  background: var(--refdoc-chip-bg);
-  color: var(--refdoc-chip-fg);
-}
 
 /* Game layout breakpoints (content-based):
    - <900px: non-guaranteed / 100% width base
@@ -3335,12 +3169,6 @@ dialog.modal-backdrop::backdrop {
     overflow: visible;
   }
 
-  .refdoc-hero {
-    position: static;
-    padding-top: 0.1rem;
-    background: transparent;
-    backdrop-filter: none;
-  }
 
   .refdoc-topbar {
     position: static;
@@ -3376,9 +3204,6 @@ dialog.modal-backdrop::backdrop {
 }
 
 @media (max-width: 700px) {
-  .refdoc-item-title-row {
-    align-items: flex-start;
-  }
 
   .refdoc-tag-primary-row {
     grid-template-columns: 1fr;

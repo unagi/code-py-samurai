@@ -122,6 +122,16 @@
     "earnPoints": "{{points}}ポイント獲得",
     "idle": "何もしない"
   },
+  "reference": {
+    "pageTitle": "Python API リファレンス",
+    "contents": "目次",
+    "enumerations": "Enums",
+    "classes": "クラス",
+    "returns": "戻り値",
+    "example": "Example",
+    "sidebarEnums": "Enums",
+    "sidebarClasses": "Classes"
+  },
   "starterCode": {
     "comment": "# ここに1ターン分の処理を書く"
   },

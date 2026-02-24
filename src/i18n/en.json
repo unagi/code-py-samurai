@@ -122,6 +122,16 @@
     "earnPoints": "earns {{points}} points",
     "idle": "does nothing"
   },
+  "reference": {
+    "pageTitle": "Python API Reference",
+    "contents": "Contents",
+    "enumerations": "Enumerations",
+    "classes": "Classes",
+    "returns": "Returns",
+    "example": "Example",
+    "sidebarEnums": "Enums",
+    "sidebarClasses": "Classes"
+  },
   "starterCode": {
     "comment": "# Write your turn logic here"
   },

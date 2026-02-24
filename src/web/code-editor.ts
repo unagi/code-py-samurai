@@ -40,7 +40,7 @@ export function createCodeEditor(
         },
         ".cm-scroller": {
           overflow: "auto",
-          fontFamily: "\"UDEV Gothic 35\", \"SFMono-Regular\", Consolas, monospace",
+          fontFamily: "var(--code-font-family)",
         },
         ".cm-content": {
           caretColor: "var(--cm-caret)",
