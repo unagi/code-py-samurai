@@ -204,6 +204,8 @@
   --board-desc-border: rgba(var(--pal-blue-rgb), 0.12);
   --board-desc-bg: linear-gradient(180deg, rgba(var(--pal-bg-1-rgb), 0.9), rgba(var(--pal-bg-0-rgb), 0.96));
   --board-desc-text: var(--pal-fg);
+  --board-stage-fg: rgba(var(--pal-white-rgb), 0.94);
+  --board-grid-gap-bg: #171614;
   --board-log-border: rgba(var(--pal-blue-rgb), 0.14);
   --board-log-bg: linear-gradient(180deg, rgba(var(--pal-bg-0-rgb), 0.92), rgba(var(--pal-hl-low-rgb), 0.98));
   --board-status-chip-border: rgba(var(--pal-fg-rgb), 0.18);
@@ -805,6 +807,9 @@
   --pal-yellow-rgb: 215, 130, 126;
   --pal-orange-rgb: 234, 157, 52;
   --pal-red-rgb: 180, 99, 122;
+
+  /* Light-specific semantic contrast fixes */
+  --timeline-step-cleared-fg: var(--pal-bg-1);
 }
 
 * {
@@ -1303,6 +1308,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--board-stage-fg);
 }
 
 .board-description-panel {
@@ -1364,6 +1370,7 @@ body {
 .board-grid {
   display: grid;
   flex: 0 0 auto;
+  background: var(--board-grid-gap-bg);
 }
 
 .board-tile {

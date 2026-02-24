@@ -619,8 +619,8 @@ export default function App() {
                       onChange={(e) => handleLanguageChange(e.target.value)}
                       aria-label={t("nav.language")}
                     >
-                      <option value="en">EN</option>
-                      <option value="ja">JA</option>
+                      <option value="en">English</option>
+                      <option value="ja">日本語</option>
                     </select>
                   </div>
                   <div className="settings-menu-section">

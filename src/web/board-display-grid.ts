@@ -1,6 +1,6 @@
 import type { BoardGridData, BoardTile } from "./board-grid";
 
-export type BoardDisplayMode = "full" | "void-only" | "floor-only";
+export type BoardDisplayMode = "full" | "floor-only";
 
 export interface BoardDisplayTileCell {
   originalIndex: number;
@@ -13,10 +13,10 @@ export interface BoardDisplayGridData {
   tiles: BoardDisplayTileCell[];
 }
 
-const VOID_ONLY_HIDDEN_TILE_KINDS = new Set(["void"]);
+const FULL_HIDDEN_TILE_KINDS = new Set(["void"]);
 const FLOOR_ONLY_HIDDEN_TILE_KINDS = new Set(["void", "wall-h", "wall-v"]);
 
-function buildFullBoardDisplayGrid(boardGrid: BoardGridData): BoardDisplayGridData {
+function buildRawBoardDisplayGrid(boardGrid: BoardGridData): BoardDisplayGridData {
   return {
     columns: boardGrid.columns,
     rows: boardGrid.rows,
@@ -24,17 +24,11 @@ function buildFullBoardDisplayGrid(boardGrid: BoardGridData): BoardDisplayGridDa
   };
 }
 
-export function buildBoardDisplayGrid(
+function buildCompactedBoardDisplayGrid(
   boardGrid: BoardGridData,
-  mode: BoardDisplayMode,
+  hiddenTileKinds: ReadonlySet<string>,
+  fallbackToRaw: boolean,
 ): BoardDisplayGridData {
-  if (mode === "full") {
-    return buildFullBoardDisplayGrid(boardGrid);
-  }
-  const hiddenTileKinds = mode === "void-only"
-    ? VOID_ONLY_HIDDEN_TILE_KINDS
-    : FLOOR_ONLY_HIDDEN_TILE_KINDS;
-
   const compactRows: BoardDisplayTileCell[][] = [];
 
   for (let y = 0; y < boardGrid.rows; y++) {
@@ -52,13 +46,13 @@ export function buildBoardDisplayGrid(
   }
 
   if (compactRows.length === 0) {
-    return buildFullBoardDisplayGrid(boardGrid);
+    return buildRawBoardDisplayGrid(boardGrid);
   }
 
   const compactColumns = compactRows[0]?.length ?? 0;
   if (compactColumns < 1 || compactRows.some((row) => row.length !== compactColumns)) {
     // Keep the layout stable if future content introduces non-rectangular rows.
-    return buildFullBoardDisplayGrid(boardGrid);
+    return fallbackToRaw ? buildRawBoardDisplayGrid(boardGrid) : buildCompactedBoardDisplayGrid(boardGrid, FULL_HIDDEN_TILE_KINDS, true);
   }
 
   return {
@@ -66,4 +60,15 @@ export function buildBoardDisplayGrid(
     rows: compactRows.length,
     tiles: compactRows.flat(),
   };
+}
+
+export function buildBoardDisplayGrid(
+  boardGrid: BoardGridData,
+  mode: BoardDisplayMode,
+): BoardDisplayGridData {
+  if (mode === "full") {
+    return buildCompactedBoardDisplayGrid(boardGrid, FULL_HIDDEN_TILE_KINDS, true);
+  }
+
+  return buildCompactedBoardDisplayGrid(boardGrid, FLOOR_ONLY_HIDDEN_TILE_KINDS, false);
 }
