@@ -482,49 +482,49 @@ export default function App() {
                 </button>
               </nav>
             </div>
-            <div className="top-controls-side">
-              <div className="settings-menu-container">
-                <button
-                  ref={settingsTriggerRef}
-                  type="button"
-                  className="settings-trigger"
-                  aria-label={t("app.settings")}
-                  aria-haspopup="dialog"
-                  aria-expanded={isSettingsMenuOpen}
-                  onClick={() => setIsSettingsMenuOpen((prev) => !prev)}
-                >
-                  <i className="bi bi-gear-fill" aria-hidden="true" />
-                </button>
-                {isSettingsMenuOpen ? (
-                  <div className="settings-menu-panel" ref={settingsMenuRef} aria-label={t("app.settings")}>
-                    <div className="settings-menu-arrow" aria-hidden="true" />
-                    <div className="settings-menu-section">
-                      <label className="settings-menu-label" htmlFor="settings-language-select">
-                        {t("nav.language")}
-                      </label>
-                      <select
-                        id="settings-language-select"
-                        className="settings-language-select"
-                        value={i18n.language}
-                        onChange={(e) => handleLanguageChange(e.target.value)}
-                        aria-label={t("nav.language")}
-                      >
-                        <option value="en">EN</option>
-                        <option value="ja">JA</option>
-                      </select>
-                    </div>
-                    <div className="settings-menu-divider" aria-hidden="true" />
-                    <button
-                      type="button"
-                      className="settings-menu-danger"
-                      onClick={handleClearData}
-                      disabled={isPlaying}
+          </div>
+          <div className="top-controls-side">
+            <div className="settings-menu-container">
+              <button
+                ref={settingsTriggerRef}
+                type="button"
+                className="settings-trigger"
+                aria-label={t("app.settings")}
+                aria-haspopup="dialog"
+                aria-expanded={isSettingsMenuOpen}
+                onClick={() => setIsSettingsMenuOpen((prev) => !prev)}
+              >
+                <i className="bi bi-gear-fill" aria-hidden="true" />
+              </button>
+              {isSettingsMenuOpen ? (
+                <div className="settings-menu-panel" ref={settingsMenuRef} aria-label={t("app.settings")}>
+                  <div className="settings-menu-arrow" aria-hidden="true" />
+                  <div className="settings-menu-section">
+                    <label className="settings-menu-label" htmlFor="settings-language-select">
+                      {t("nav.language")}
+                    </label>
+                    <select
+                      id="settings-language-select"
+                      className="settings-language-select"
+                      value={i18n.language}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      aria-label={t("nav.language")}
                     >
-                      <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
-                    </button>
+                      <option value="en">EN</option>
+                      <option value="ja">JA</option>
+                    </select>
                   </div>
-                ) : null}
-              </div>
+                  <div className="settings-menu-divider" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="settings-menu-danger"
+                    onClick={handleClearData}
+                    disabled={isPlaying}
+                  >
+                    <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

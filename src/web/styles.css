@@ -8,6 +8,8 @@
   --top-controls-row-height: 3.2rem;
   --top-controls-row-margin-bottom: 0.8rem;
   --app-header-bottom-gap: 0.85rem;
+  --workspace-wide-gap: 1.25rem;
+  --workspace-wide-side-rail-width: clamp(260px, 18vw, 320px);
   --app-top-band-height: calc(
     var(--layout-top-margin) +
     var(--hero-row-margin-top) +
@@ -53,9 +55,14 @@ body {
 .app-header-layout {
   height: 100%;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--timeline-node-size);
   grid-template-rows: var(--hero-row-height) var(--top-controls-row-height);
+  grid-template-areas:
+    "hero hero"
+    "controls settings";
   align-content: start;
   row-gap: var(--hero-row-margin-bottom);
+  column-gap: 0.65rem;
   padding-top: calc(var(--layout-top-margin) + var(--hero-row-margin-top));
   padding-bottom: var(--top-controls-row-margin-bottom);
 }
@@ -66,15 +73,18 @@ body {
 }
 
 .hero {
+  grid-area: hero;
   display: flex;
   align-items: center;
   gap: 1rem;
   height: var(--hero-row-height);
   margin: 0;
+  min-width: 0;
 }
 
 .hero h1 {
   margin: 0;
+  min-width: 0;
   color: #ffd6a6;
   font-size: clamp(2.2rem, 5vw, 4.4rem);
   letter-spacing: 0.05em;
@@ -339,26 +349,28 @@ body {
 }
 
 .top-controls {
+  grid-area: controls;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.65rem;
+  align-items: stretch;
   height: var(--top-controls-row-height);
   min-height: 0;
   margin: 0;
+  min-width: 0;
 }
 
 .top-controls-main {
   min-width: 0;
-  flex: 1;
+  width: 100%;
 }
 
 .top-controls-side {
+  grid-area: settings;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 var(--timeline-node-size);
   width: var(--timeline-node-size);
+  justify-self: end;
 }
 
 .settings-menu-container {
@@ -1899,9 +1911,17 @@ dialog.modal-backdrop::backdrop {
     width: min(1560px, 98vw);
   }
 
+  .app-header-layout {
+    grid-template-columns: minmax(0, 1fr) var(--workspace-wide-side-rail-width);
+    grid-template-areas:
+      "hero hero"
+      "controls settings";
+    column-gap: var(--workspace-wide-gap);
+  }
+
   .workspace {
-    grid-template-columns: minmax(0, 1fr) clamp(260px, 18vw, 320px);
-    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) var(--workspace-wide-side-rail-width);
+    gap: var(--workspace-wide-gap);
     align-items: start;
   }
 
@@ -1928,7 +1948,15 @@ dialog.modal-backdrop::backdrop {
 
 @media (max-width: 1079px) {
   .top-controls {
-    align-items: center;
+    align-items: stretch;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.8rem, 4.4vw, 3.2rem);
+  }
+
+  .settings-trigger i {
+    font-size: 1.8rem;
   }
 
   .console-header {
@@ -1965,6 +1993,12 @@ dialog.modal-backdrop::backdrop {
   .layout {
     width: 100%;
     padding: 0 0.5rem;
+  }
+
+  .app-header-layout {
+    grid-template-areas:
+      "hero settings"
+      "controls controls";
   }
 
   .app-main-layout {
