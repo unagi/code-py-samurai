@@ -256,7 +256,11 @@ function BoardTileCell(props: Readonly<{
       {renderBaseTileVisual(baseVisual, overlay.src, tileAlt, displaySymbol, tileSizePx)}
       {renderOverlayVisual(overlay, tileAlt)}
       {tilePopups.map((popup) => (
-        <span key={popup.id} className="damage-popup" aria-hidden="true">
+        <span
+          key={popup.id}
+          className={`damage-popup${popup.variant === "heal" ? " damage-popup-heal" : ""}`}
+          aria-hidden="true"
+        >
           {popup.text}
         </span>
       ))}

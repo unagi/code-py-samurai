@@ -51,15 +51,14 @@ function buildStarterPlayerCode(comment: string): string {
 const BOARD_TILE_GAP_PX = 2;
 const BOARD_TILE_BASE_SIZE_PX = 80;
 const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
-const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 const API_REFERENCE_PATH = "/reference/python-api";
 const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
 const SPEED_OPTIONS = [
-  { value: 700, key: "controls.slow" },
-  { value: 450, key: "controls.normal" },
-  { value: 220, key: "controls.fast" },
+  { value: 1000, key: "controls.slow", rateLabel: "x0.5" },
+  { value: 500, key: "controls.normal", rateLabel: "x1" },
+  { value: 250, key: "controls.fast", rateLabel: "x2" },
 ] as const;
 
 const THEME_LABELS: Record<AppTheme, string> = {
@@ -163,7 +162,7 @@ export default function App() {
     [currentGlobalLevel],
   );
   const isLevelAccessible = (globalLvl: number): boolean => globalLvl <= samuraiLevel;
-  const [speedMs, setSpeedMs] = useState(450);
+  const [speedMs, setSpeedMs] = useState(500);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
@@ -173,6 +172,7 @@ export default function App() {
   const [canScrollLevelProgressLeft, setCanScrollLevelProgressLeft] = useState(false);
   const [canScrollLevelProgressRight, setCanScrollLevelProgressRight] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [isTipsOpen, setIsTipsOpen] = useState(false);
   const [theme, setTheme] = useState<AppTheme>(() => readThemeStorage());
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
@@ -181,6 +181,8 @@ export default function App() {
   const activeLevelStepRef = useRef<HTMLButtonElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const tipsPopoverRef = useRef<HTMLElement | null>(null);
+  const tipsTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -251,7 +253,41 @@ export default function App() {
   );
   const formattedLogs = useMemo(() => {
     if (logEntries.length === 0) return "";
-    return logEntries.map((entry) => formatLogEntry(entry, t)).join("\n");
+    const lines: string[] = [];
+    let currentTurnLabel: string | null = null;
+    let currentTurnEvents: string[] = [];
+
+    const flushTurnLine = (): void => {
+      if (!currentTurnLabel) return;
+      if (currentTurnEvents.length === 0) {
+        lines.push(currentTurnLabel);
+      } else {
+        lines.push(`${currentTurnLabel} ${currentTurnEvents.join(" / ")}`);
+      }
+      currentTurnLabel = null;
+      currentTurnEvents = [];
+    };
+
+    for (const entry of logEntries) {
+      if (entry.key === "engine.turn") {
+        flushTurnLine();
+        const turn = entry.params.turn;
+        currentTurnLabel = t("logs.turnCompact", {
+          turn: typeof turn === "number" || typeof turn === "string" ? String(turn) : "?",
+        });
+        continue;
+      }
+
+      const line = formatLogEntry(entry, t);
+      if (currentTurnLabel) {
+        currentTurnEvents.push(line);
+      } else {
+        lines.push(line);
+      }
+    }
+
+    flushTurnLine();
+    return lines.join("\n");
   }, [logEntries, t]);
   const allLevelSteps = useMemo(() => {
     return Array.from({ length: TOTAL_LEVELS }, (_, i) => i + 1);
@@ -444,6 +480,21 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isSettingsMenuOpen]);
+
+  useEffect(() => {
+    if (!isTipsOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      setIsTipsOpen(false);
+      tipsTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isTipsOpen]);
 
   useEffect(() => {
     const scroller = levelProgressScrollRef.current;
@@ -668,7 +719,6 @@ export default function App() {
               className="board-viewport"
               ref={boardViewportRef}
               style={{
-                "--board-desc-height": `${BOARD_DESC_PANEL_HEIGHT_PX}px`,
                 "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px`,
               } as CSSProperties}
             >
@@ -678,7 +728,8 @@ export default function App() {
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
-              <section className="board-description-panel" aria-label={t("board.heading")}>
+              <section className="board-description-panel" aria-label={t("board.stageIntro")}>
+                <p className="board-description-label">{t("board.stageIntro")}</p>
                 <p className="board-description-text">{t(levelDescKey)}</p>
               </section>
               <div className="board-stage">
@@ -702,13 +753,13 @@ export default function App() {
                 <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
                 <div className="board-controls-row">
                   <div className="console-controls">
-                    <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
+                    <button className="console-button-play" onClick={handlePlay} disabled={isPlaying || !canPlay}>
                       <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
                     </button>
-                    <button onClick={handlePause} disabled={!isPlaying}>
+                    <button className="console-button-pause" onClick={handlePause} disabled={!isPlaying}>
                       <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
                     </button>
-                    <button onClick={handleReset}>
+                    <button className="console-button-reset" onClick={handleReset}>
                       <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
                     </button>
                   </div>
@@ -725,8 +776,9 @@ export default function App() {
                             onClick={() => setSpeedMs(option.value)}
                             disabled={isPlaying}
                             aria-pressed={selected}
+                            aria-label={`${t(option.key)} (${option.rateLabel})`}
                           >
-                            <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t(option.key)}</span>
+                            {option.rateLabel}
                           </button>
                         );
                       })}
@@ -740,11 +792,18 @@ export default function App() {
           <article className="editor-panel">
             <div className="player-code-header">
               <h3>👨‍💻 {t("editor.heading")}</h3>
-              <div className="tip-anchor">
-                <button type="button" className="tip-trigger" aria-describedby="tips-popover">
+              <div className={`tip-anchor${isTipsOpen ? " open" : ""}`}>
+                <button
+                  ref={tipsTriggerRef}
+                  type="button"
+                  className="tip-trigger"
+                  aria-controls="tips-popover"
+                  aria-expanded={isTipsOpen}
+                  onClick={() => setIsTipsOpen((prev) => !prev)}
+                >
                   <span className="icon-label"><i className="bi bi-lightbulb-fill" />{t("editor.tips")}</span>
                 </button>
-                <aside id="tips-popover" className="tips-popover" role="tooltip">
+                <aside id="tips-popover" ref={tipsPopoverRef} className="tips-popover" role="dialog" aria-label={t("editor.tips")}>
                   <h4>💡 {t("editor.tip")}</h4>
                   <p>{t(levelTipKey)}</p>
                   {hasClue ? (

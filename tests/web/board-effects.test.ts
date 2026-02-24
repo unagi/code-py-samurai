@@ -29,6 +29,25 @@ describe("createDamagePopupsFromEntries", () => {
     ]);
   });
 
+  it("creates heal popups for restHeal logs", () => {
+    vi.spyOn(Date, "now").mockReturnValue(1200);
+    const entries: LogEntry[] = [
+      { key: "engine.restHeal", params: { amount: 2 }, unitId: "samurai#1" },
+    ];
+
+    const popups = createDamagePopupsFromEntries(entries, "@s", 15, new Map());
+
+    expect(popups).toEqual([
+      {
+        id: 15,
+        tileIndex: expect.any(Number),
+        text: "+2",
+        expiresAt: 1200 + DAMAGE_POPUP_MS,
+        variant: "heal",
+      },
+    ]);
+  });
+
   it("falls back to kind-based lookup and assigns nearest matching tile first", () => {
     vi.spyOn(Date, "now").mockReturnValue(2000);
     const board = "@ss";

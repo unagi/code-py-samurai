@@ -8,6 +8,7 @@ export interface DamagePopup {
   tileIndex: number;
   text: string;
   expiresAt: number;
+  variant?: "heal";
 }
 
 export const DAMAGE_POPUP_MS = 820;
@@ -98,11 +99,17 @@ export function createDamagePopupsFromEntries(
   const now = Date.now();
 
   for (const entry of entries) {
-    if (entry.key !== "engine.takeDamage" || !entry.unitId) continue;
+    if (!entry.unitId) continue;
+    if (entry.key !== "engine.takeDamage" && entry.key !== "engine.restHeal") continue;
     const unitId = entry.unitId.toLowerCase();
     const amount = entry.params.amount as number;
+    if (typeof amount !== "number" || amount <= 0) continue;
     const tileIndex = resolver.directLookup(unitId) ?? resolver.kindLookup(unitId);
     if (tileIndex === undefined) continue;
+    if (entry.key === "engine.restHeal") {
+      popups.push({ id: nextId++, tileIndex, text: `+${amount}`, expiresAt: now + DAMAGE_POPUP_MS, variant: "heal" });
+      continue;
+    }
     popups.push({ id: nextId++, tileIndex, text: `-${amount}`, expiresAt: now + DAMAGE_POPUP_MS });
   }
 

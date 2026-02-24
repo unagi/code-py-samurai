@@ -568,7 +568,6 @@ export default function ReferencePage() {
                   .filter((section) => section.items.some((item) => item.kind === "enum"))
                   .map((section) => (
                     <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
-                      <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
                       <div className="refdoc-items">
                         {section.items.map((item) => renderReferenceItem(item, locale))}
                       </div>
