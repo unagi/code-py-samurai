@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "Python侍",
+    "settings": "Settings",
     "clearData": "Clear Data",
     "clearDataConfirm": "This will erase your saved progress (Lv) and Player Code, resetting everything to the initial state. Are you sure?"
   },
@@ -29,6 +30,7 @@
     "clue": "Clue",
     "codeNote": "Code changes will take effect on the next Start/Reset.",
     "apiHeading": "Methods / Properties",
+    "apiReference": "API Reference",
     "methods": "Methods",
     "properties": "Properties",
     "none": "(none)"
@@ -73,13 +75,13 @@
     "empty": "empty floor",
     "frame": "frame wall",
     "stairs": "stairs",
-    "samurai": "samurai",
+    "samurai": "samurai cat",
     "sludge": "toad",
     "thickSludge": "serpent",
-    "archer": "archer",
-    "wizard": "wizard",
-    "captive": "captive",
-    "golem": "golem",
+    "archer": "monkey",
+    "wizard": "tanuki",
+    "captive": "crane",
+    "golem": "bear",
     "wall": "wall",
     "nothing": "nothing",
     "unknown": "unknown unit"

@@ -16,6 +16,7 @@ import {
   type SpriteOverride,
 } from "./board-effects";
 import { buildBoardGrid } from "./board-grid";
+import { buildBoardDisplayGrid, type BoardDisplayMode } from "./board-display-grid";
 import { createCodeEditor } from "./code-editor";
 import { type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
@@ -29,6 +30,7 @@ import {
   writeProgressStorage,
 } from "./progress-storage";
 import { ResultModal } from "./ResultModal";
+import { buildSamuraiApiStructureViewModel } from "./samurai-api-structure";
 import {
   SAMURAI_IDLE_FRAME_COUNT,
   SAMURAI_IDLE_FRAME_MS,
@@ -43,7 +45,17 @@ function buildStarterPlayerCode(comment: string): string {
 }
 
 const BOARD_TILE_GAP_PX = 2;
+const BOARD_TILE_BASE_SIZE_PX = 80;
+const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
+const BOARD_DESC_PANEL_HEIGHT_PX = 56;
+const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
+const API_REFERENCE_PATH = "/reference/python-api";
+const SPEED_OPTIONS = [
+  { value: 700, key: "controls.slow" },
+  { value: 450, key: "controls.normal" },
+  { value: 220, key: "controls.fast" },
+] as const;
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -65,10 +77,18 @@ export default function App() {
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
   const [tileSizePx, setTileSizePx] = useState(20);
+  const [boardViewportWidthPx, setBoardViewportWidthPx] = useState(0);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
+  const [canScrollLevelProgressLeft, setCanScrollLevelProgressLeft] = useState(false);
+  const [canScrollLevelProgressRight, setCanScrollLevelProgressRight] = useState(false);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
+  const levelProgressScrollRef = useRef<HTMLDivElement | null>(null);
+  const activeLevelStepRef = useRef<HTMLButtonElement | null>(null);
+  const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const selectedTower = useMemo(() => {
     return towers.find((item) => item.name === towerName) ?? towers[0];
@@ -116,19 +136,21 @@ export default function App() {
     setSamuraiLevel,
     onResetVisualState: () => setHoveredEnemyStats(null),
   });
-  const availableMethods = useMemo(
-    () => unlockedSamuraiAbilities.skills.map((item) => `samurai.${item}`),
-    [unlockedSamuraiAbilities.skills],
-  );
-  const availableProperties = useMemo(
-    () => unlockedSamuraiAbilities.stats.map((item) => `samurai.${item}`),
-    [unlockedSamuraiAbilities.stats],
+  const samuraiApiStructure = useMemo(
+    () => buildSamuraiApiStructureViewModel(unlockedSamuraiAbilities),
+    [unlockedSamuraiAbilities],
   );
   const statsFmt: StatsFormatter = useMemo(() => ({
     hp: (current, max) => t("board.hp", { current, max }),
     atk: (value) => t("board.atk", { value }),
   }), [t]);
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
+  const shouldCompactBoardByWidth = boardViewportWidthPx > 0 && boardViewportWidthPx < COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX;
+  const boardDisplayMode: BoardDisplayMode = shouldCompactBoardByWidth ? "floor-only" : "full";
+  const boardDisplayGrid = useMemo(
+    () => buildBoardDisplayGrid(boardGrid, boardDisplayMode),
+    [boardGrid, boardDisplayMode],
+  );
   const formattedLogs = useMemo(() => {
     if (logEntries.length === 0) return "";
     return logEntries.map((entry) => formatLogEntry(entry, t)).join("\n");
@@ -143,13 +165,11 @@ export default function App() {
     if (!viewport) return;
 
     const computeTileSize = (): void => {
-      const cols = Math.max(boardGrid.columns, 1);
-      const rows = Math.max(boardGrid.rows, 1);
+      const cols = Math.max(boardDisplayGrid.columns, 1);
       const availableWidth = Math.max(0, viewport.clientWidth);
-      const availableHeight = Math.max(0, viewport.clientHeight);
+      setBoardViewportWidthPx((prev) => (prev === availableWidth ? prev : availableWidth));
       const tileByWidth = (availableWidth - BOARD_TILE_GAP_PX * (cols - 1)) / cols;
-      const tileByHeight = (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows;
-      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight)));
+      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, BOARD_TILE_BASE_SIZE_PX)));
       setTileSizePx(computed);
     };
 
@@ -157,15 +177,15 @@ export default function App() {
     const observer = new ResizeObserver(computeTileSize);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [boardGrid.columns, boardGrid.rows]);
+  }, [boardDisplayGrid.columns, boardDisplayGrid.rows]);
 
   const boardGridStyle = useMemo(() => {
     return {
-      gridTemplateColumns: `repeat(${Math.max(boardGrid.columns, 1)}, ${tileSizePx}px)`,
-      gridTemplateRows: `repeat(${Math.max(boardGrid.rows, 1)}, ${tileSizePx}px)`,
+      gridTemplateColumns: `repeat(${Math.max(boardDisplayGrid.columns, 1)}, ${tileSizePx}px)`,
+      gridTemplateRows: `repeat(${Math.max(boardDisplayGrid.rows, 1)}, ${tileSizePx}px)`,
       gap: `${BOARD_TILE_GAP_PX}px`,
     } as CSSProperties;
-  }, [boardGrid.columns, boardGrid.rows, tileSizePx]);
+  }, [boardDisplayGrid.columns, boardDisplayGrid.rows, tileSizePx]);
   /** タイルインデックス → 最新のスプライトオーバーライド */
   const spriteOverrideByTile = useMemo(() => {
     const map = new Map<number, SpriteOverride>();
@@ -225,6 +245,7 @@ export default function App() {
   };
 
   const handleClearData = (): void => {
+    setIsSettingsMenuOpen(false);
     const ok = globalThis.confirm(t("app.clearDataConfirm"));
     if (!ok) return;
 
@@ -289,117 +310,295 @@ export default function App() {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  useEffect(() => {
+    if (!isSettingsMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (settingsMenuRef.current?.contains(target)) return;
+      if (settingsTriggerRef.current?.contains(target)) return;
+      setIsSettingsMenuOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      setIsSettingsMenuOpen(false);
+      settingsTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSettingsMenuOpen]);
+
+  useEffect(() => {
+    const scroller = levelProgressScrollRef.current;
+    if (!scroller) return;
+
+    const updateScrollState = (): void => {
+      const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      setCanScrollLevelProgressLeft(scroller.scrollLeft > 1);
+      setCanScrollLevelProgressRight(scroller.scrollLeft < maxScrollLeft - 1);
+    };
+
+    updateScrollState();
+
+    const handleScroll = (): void => updateScrollState();
+    scroller.addEventListener("scroll", handleScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(() => updateScrollState());
+    resizeObserver.observe(scroller);
+    if (scroller.firstElementChild instanceof HTMLElement) {
+      resizeObserver.observe(scroller.firstElementChild);
+    }
+
+    return () => {
+      scroller.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [allLevelSteps.length]);
+
+  useEffect(() => {
+    const scroller = levelProgressScrollRef.current;
+    const active = activeLevelStepRef.current;
+    if (!scroller || !active) return;
+    active.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [currentGlobalLevel]);
+
+  const scrollLevelProgressBy = (direction: -1 | 1): void => {
+    const scroller = levelProgressScrollRef.current;
+    if (!scroller) return;
+    const stepPx = Math.max(220, Math.floor(scroller.clientWidth * 0.68));
+    scroller.scrollBy({ left: direction * stepPx, behavior: "smooth" });
+  };
+
+  const handleLanguageChange = (lang: string): void => {
+    void i18n.changeLanguage(lang);
+    setIsSettingsMenuOpen(false);
+  };
+
   const levelDescKey = `levels.${towerName}.${localLevel}.description`;
   const levelTipKey = `levels.${towerName}.${localLevel}.tip`;
   const levelClueKey = `levels.${towerName}.${localLevel}.clue`;
   const hasClue = i18n.exists(levelClueKey);
 
   return (
-    <main className="layout">
-      <section className="hero">
-        <div className="hero-line" />
-        <h1>{t("app.title")} ⚔️🐱</h1>
-        <div className="hero-line" />
-        <select
-          className="lang-selector"
-          value={i18n.language}
-          onChange={(e) => i18n.changeLanguage(e.target.value)}
-          aria-label={t("nav.language")}
-        >
-          <option value="en">EN</option>
-          <option value="ja">JA</option>
-        </select>
-      </section>
+    <>
+      <header className="app-header-band">
+        <div className="layout app-header-layout">
+          <section className="hero">
+            <div className="hero-line" />
+            <h1>{t("app.title")} ⚔️🐱</h1>
+            <div className="hero-line" />
+          </section>
 
-      <div className="top-controls">
-        <div className="top-controls-main">
-          <nav className="level-progress" aria-label={t("nav.levelProgress")}>
-            {allLevelSteps.map((globalLvl) => {
-              const isActive = globalLvl === currentGlobalLevel;
-              const isCleared = globalLvl < samuraiLevel && !isActive;
-              const isLocked = !isLevelAccessible(globalLvl);
-
-              let className = "progress-step";
-              if (isActive) className += " active";
-              else if (isCleared) className += " cleared";
-              if (isLocked) className += " locked";
-
-              return (
+          <div className="top-controls">
+            <div className="top-controls-main">
+              <nav className="level-progress" aria-label={t("nav.levelProgress")}>
                 <button
-                  key={globalLvl}
                   type="button"
-                  className={className}
-                  disabled={isPlaying || isLocked}
-                  onClick={() => goToLevel(globalLvl)}
-                  aria-label={isLocked
-                    ? t("nav.levelLocked", { level: globalLvl })
-                    : t("board.lv", { level: globalLvl })}
+                  className="level-progress-nav level-progress-nav-left"
+                  onClick={() => scrollLevelProgressBy(-1)}
+                  disabled={!canScrollLevelProgressLeft}
+                  aria-label={`${t("nav.levelProgress")} ←`}
                 >
-                  {t("board.lv", { level: globalLvl })}
-                  {isActive ? <i className="bi bi-geo-alt-fill" /> : null}
-                  {isCleared ? <i className="bi bi-check-lg" /> : null}
+                  <i className="bi bi-chevron-left" aria-hidden="true" />
                 </button>
-              );
-            })}
-          </nav>
-        </div>
-        <div className="top-controls-side">
-          <button type="button" className="danger-button" onClick={handleClearData} disabled={isPlaying}>
-            <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
-          </button>
-        </div>
-      </div>
+                <div className="level-progress-shell">
+                  <span
+                    className={`level-progress-fade level-progress-fade-left${canScrollLevelProgressLeft ? " visible" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`level-progress-fade level-progress-fade-right${canScrollLevelProgressRight ? " visible" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <div className="level-progress-scroll" ref={levelProgressScrollRef}>
+                    <div className="level-progress-track">
+                      {allLevelSteps.map((globalLvl, index) => {
+                        const isActive = globalLvl === currentGlobalLevel;
+                        const isCleared = globalLvl < samuraiLevel && !isActive;
+                        const isLocked = !isLevelAccessible(globalLvl);
+                        const showsCompletedPath = globalLvl < samuraiLevel;
 
-      <section className="workspace">
-          <article className="console-panel">
-            <div className="console-header">
-              <h2>🗺️ {t("board.heading")}</h2>
-              <p className="description">{t(levelDescKey)}</p>
+                        let className = "progress-step";
+                        if (isActive) className += " active";
+                        else if (isCleared) className += " cleared";
+                        if (isLocked) className += " locked";
+
+                        const connectorClass = showsCompletedPath
+                          ? "progress-connector progress-connector-cleared"
+                          : "progress-connector progress-connector-locked";
+
+                        return (
+                          <div key={globalLvl} className="progress-node-group">
+                            <button
+                              ref={isActive ? activeLevelStepRef : undefined}
+                              type="button"
+                              className={className}
+                              disabled={isPlaying || isLocked}
+                              onClick={() => goToLevel(globalLvl)}
+                              aria-label={isLocked
+                                ? t("nav.levelLocked", { level: globalLvl })
+                                : t("board.lv", { level: globalLvl })}
+                              aria-current={isActive ? "step" : undefined}
+                            >
+                              <span className="progress-step-number">{String(globalLvl).padStart(2, "0")}</span>
+                              {isCleared ? (
+                                <span className="progress-step-badge" aria-hidden="true">
+                                  <i className="bi bi-check" />
+                                </span>
+                              ) : null}
+                              {isLocked ? (
+                                <span className="progress-step-lock" aria-hidden="true">
+                                  <i className="bi bi-lock-fill" />
+                                </span>
+                              ) : null}
+                            </button>
+                            {index < allLevelSteps.length - 1 ? <span className={connectorClass} aria-hidden="true" /> : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="level-progress-nav level-progress-nav-right"
+                  onClick={() => scrollLevelProgressBy(1)}
+                  disabled={!canScrollLevelProgressRight}
+                  aria-label={`${t("nav.levelProgress")} →`}
+                >
+                  <i className="bi bi-chevron-right" aria-hidden="true" />
+                </button>
+              </nav>
             </div>
-            <div id="board" className="board-viewport" ref={boardViewportRef} style={{ aspectRatio: `${boardGrid.columns} / ${boardGrid.rows}` }}>
+          </div>
+          <div className="top-controls-side">
+            <div className="settings-menu-container">
+              <button
+                ref={settingsTriggerRef}
+                type="button"
+                className="settings-trigger"
+                aria-label={t("app.settings")}
+                aria-haspopup="dialog"
+                aria-expanded={isSettingsMenuOpen}
+                onClick={() => setIsSettingsMenuOpen((prev) => !prev)}
+              >
+                <i className="bi bi-gear-fill" aria-hidden="true" />
+              </button>
+              {isSettingsMenuOpen ? (
+                <div className="settings-menu-panel" ref={settingsMenuRef} aria-label={t("app.settings")}>
+                  <div className="settings-menu-arrow" aria-hidden="true" />
+                  <div className="settings-menu-section">
+                    <label className="settings-menu-label" htmlFor="settings-language-select">
+                      {t("nav.language")}
+                    </label>
+                    <select
+                      id="settings-language-select"
+                      className="settings-language-select"
+                      value={i18n.language}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      aria-label={t("nav.language")}
+                    >
+                      <option value="en">EN</option>
+                      <option value="ja">JA</option>
+                    </select>
+                  </div>
+                  <div className="settings-menu-divider" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="settings-menu-danger"
+                    onClick={handleClearData}
+                    disabled={isPlaying}
+                  >
+                    <span className="icon-label"><i className="bi bi-trash3" />{t("app.clearData")}</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="layout app-main-layout">
+        <section className="workspace">
+          <article className="console-panel">
+            <div
+              id="board"
+              className="board-viewport"
+              ref={boardViewportRef}
+              style={{
+                "--board-desc-height": `${BOARD_DESC_PANEL_HEIGHT_PX}px`,
+                "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px`,
+              } as CSSProperties}
+            >
               <div className="board-status">
                 <span className="status-chip">
                   {t("board.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
-              <BoardGridView
-                boardGrid={boardGrid}
-                boardGridStyle={boardGridStyle}
-                t={t}
-                damagePopupsByTile={damagePopupsByTile}
-                spriteOverrideByTile={spriteOverrideByTile}
-                spriteDirByTile={spriteDirByTile}
-                samuraiFrame={samuraiFrame}
-                samuraiHealth={samuraiHealth}
-                samuraiMaxHealth={samuraiMaxHealth}
-                statsFmt={statsFmt}
-                tileSizePx={tileSizePx}
-                onHoveredEnemyStatsChange={setHoveredEnemyStats}
-              />
-            </div>
-            <div className="console-controls">
-              <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
-                <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
-              </button>
-              <button onClick={handlePause} disabled={!isPlaying}>
-                <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
-              </button>
-              <button onClick={handleReset}>
-                <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
-              </button>
-              <label className="speed-label">
-                <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t("controls.speed")}</span>
-                <select
-                  value={speedMs}
-                  disabled={isPlaying}
-                  onChange={(e) => setSpeedMs(Number(e.target.value))}
-                >
-                  <option value={700}>{t("controls.slow")}</option>
-                  <option value={450}>{t("controls.normal")}</option>
-                  <option value={220}>{t("controls.fast")}</option>
-                </select>
-              </label>
+              <section className="board-description-panel" aria-label={t("board.heading")}>
+                <p className="board-description-text">{t(levelDescKey)}</p>
+              </section>
+              <div className="board-stage">
+                <BoardGridView
+                  boardGrid={boardGrid}
+                  boardGridStyle={boardGridStyle}
+                  displayGrid={boardDisplayGrid}
+                  t={t}
+                  damagePopupsByTile={damagePopupsByTile}
+                  spriteOverrideByTile={spriteOverrideByTile}
+                  spriteDirByTile={spriteDirByTile}
+                  samuraiFrame={samuraiFrame}
+                  samuraiHealth={samuraiHealth}
+                  samuraiMaxHealth={samuraiMaxHealth}
+                  statsFmt={statsFmt}
+                  tileSizePx={tileSizePx}
+                  onHoveredEnemyStatsChange={setHoveredEnemyStats}
+                />
+              </div>
+              <section className="board-log-panel" aria-label={t("logs.heading")}>
+                <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
+                <div className="board-controls-row">
+                  <div className="console-controls">
+                    <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
+                      <span className="icon-label"><i className="bi bi-play-fill" />{t("controls.play")}</span>
+                    </button>
+                    <button onClick={handlePause} disabled={!isPlaying}>
+                      <span className="icon-label"><i className="bi bi-pause-fill" />{isPlaying ? t("controls.pause") : t("controls.paused")}</span>
+                    </button>
+                    <button onClick={handleReset}>
+                      <span className="icon-label"><i className="bi bi-arrow-repeat" />{t("controls.reset")}</span>
+                    </button>
+                  </div>
+                  <div className="speed-control" role="group" aria-label={t("controls.speed")}>
+                    <span className="speed-control-label"><i className="bi bi-lightning-charge-fill" />{t("controls.speed")}</span>
+                    <div className="speed-control-buttons">
+                      {SPEED_OPTIONS.map((option) => {
+                        const selected = speedMs === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`speed-option${selected ? " active" : ""}`}
+                            onClick={() => setSpeedMs(option.value)}
+                            disabled={isPlaying}
+                            aria-pressed={selected}
+                          >
+                            <span className="icon-label"><i className="bi bi-lightning-charge-fill" />{t(option.key)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
           </article>
         <div className="bottom-columns">
@@ -427,48 +626,109 @@ export default function App() {
                 <div ref={editorHostRef} className="editor-host" />
                 <p className="code-note">{t("editor.codeNote")}</p>
               </div>
-              <aside className="api-panel">
-                <h4>📚 {t("editor.apiHeading")}</h4>
-                <h4>{t("editor.methods")}</h4>
-                <ul className="api-list">
-                  {availableMethods.length > 0 ? (
-                    availableMethods.map((item) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>{t("editor.none")}</li>
-                  )}
-                </ul>
-                <h4>{t("editor.properties")}</h4>
-                <ul className="api-list">
-                  {availableProperties.length > 0 ? (
-                    availableProperties.map((item) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>{t("editor.none")}</li>
-                  )}
-                </ul>
-              </aside>
             </div>
           </article>
-          <article className="logs-panel">
-            <h2>🖥️ {t("logs.heading")}</h2>
-            <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
-          </article>
         </div>
+        <aside className="api-panel api-panel-standalone" aria-labelledby="api-block-heading">
+          <div className="api-panel-header">
+            <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
+            <a
+              className="api-panel-link"
+              href={API_REFERENCE_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="icon-label"><i className="bi bi-box-arrow-up-right" />{t("editor.apiReference")}</span>
+            </a>
+          </div>
+          <div className="api-structure-root" aria-label={samuraiApiStructure.className}>
+            <ul className="api-structure-tree">
+              <li className="api-structure-node api-structure-node-class">
+                <div className="api-structure-row api-structure-row-class">
+                  <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                  <span className="api-structure-label">{samuraiApiStructure.className}</span>
+                </div>
+                <ul className="api-structure-branch">
+                  <li className="api-structure-node api-structure-node-group">
+                    <div className="api-structure-row api-structure-row-group">
+                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                      <span className="api-structure-label">{t("editor.methods")}</span>
+                    </div>
+                    <ul className="api-structure-branch api-structure-branch-leaves">
+                      {samuraiApiStructure.methodSignatures.length > 0 ? (
+                        samuraiApiStructure.methodSignatures.map((item) => (
+                          <li key={item} className="api-structure-node api-structure-node-leaf">
+                            <div className="api-structure-row api-structure-row-leaf">
+                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                                •
+                              </span>
+                              <code className="api-structure-signature">{item}</code>
+                            </div>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                          <div className="api-structure-row api-structure-row-leaf">
+                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                              •
+                            </span>
+                            <span className="api-structure-empty">{t("editor.none")}</span>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </li>
+                  <li className="api-structure-node api-structure-node-group">
+                    <div className="api-structure-row api-structure-row-group">
+                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                      <span className="api-structure-label">{t("editor.properties")}</span>
+                    </div>
+                    <ul className="api-structure-branch api-structure-branch-leaves">
+                      {samuraiApiStructure.propertySignatures.length > 0 ? (
+                        samuraiApiStructure.propertySignatures.map((item) => (
+                          <li key={item} className="api-structure-node api-structure-node-leaf">
+                            <div className="api-structure-row api-structure-row-leaf">
+                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                                •
+                              </span>
+                              <code className="api-structure-signature">{item}</code>
+                            </div>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                          <div className="api-structure-row api-structure-row-leaf">
+                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                              •
+                            </span>
+                            <span className="api-structure-empty">{t("editor.none")}</span>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </aside>
       </section>
 
-      <ResultModal
-        isOpen={showResultModal}
-        result={result}
-        t={t}
-        hasClue={hasClue}
-        levelClueKey={levelClueKey}
-        hasNextLevel={hasNextLevel}
-        onRetry={() => {
-          setShowResultModal(false);
-          startLevel();
-        }}
-        onNextLevel={() => goToLevel(currentGlobalLevel + 1)}
-        onClose={() => setShowResultModal(false)}
-      />
-    </main>
+        <ResultModal
+          isOpen={showResultModal}
+          result={result}
+          t={t}
+          hasClue={hasClue}
+          levelClueKey={levelClueKey}
+          hasNextLevel={hasNextLevel}
+          onRetry={() => {
+            setShowResultModal(false);
+            startLevel();
+          }}
+          onNextLevel={() => goToLevel(currentGlobalLevel + 1)}
+          onClose={() => setShowResultModal(false)}
+        />
+      </main>
+    </>
   );
 }

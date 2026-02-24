@@ -13,6 +13,8 @@ function createTranslator() {
         return "SLUDGE";
       case "tiles.archer":
         return "ARCHER";
+      case "tiles.thickSludge":
+        return "THICK";
       case "engine.walk":
         return `walk:${String(opts?.direction ?? "")}`;
       case "engine.attackHit":
@@ -51,5 +53,25 @@ describe("formatLogEntry", () => {
     };
 
     expect(formatLogEntry(entry, createTranslator())).toBe("walk:FORWARD");
+  });
+
+  it("maps normalized unitId prefix to tile key before translation", () => {
+    const entry: LogEntry = {
+      key: "engine.walk",
+      params: { direction: "forward" },
+      unitId: "thicksludge#1",
+    };
+
+    expect(formatLogEntry(entry, createTranslator())).toBe("THICK#1 walk:FORWARD");
+  });
+
+  it("does not duplicate numeric suffix when tile translation is missing", () => {
+    const entry: LogEntry = {
+      key: "engine.walk",
+      params: { direction: "forward" },
+      unitId: "ghost#1",
+    };
+
+    expect(formatLogEntry(entry, createTranslator())).toBe("ghost#1 walk:FORWARD");
   });
 });

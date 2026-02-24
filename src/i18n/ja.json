@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "Python侍",
+    "settings": "設定",
     "clearData": "データ消去",
     "clearDataConfirm": "保存済みの進捗（Lv）と Player Code を消去して初期状態に戻します。よろしいですか？"
   },
@@ -29,6 +30,7 @@
     "clue": "手がかり",
     "codeNote": "コード変更は次回の Start/Reset 時に反映されます。",
     "apiHeading": "メソッド / プロパティ",
+    "apiReference": "API Reference",
     "methods": "メソッド",
     "properties": "プロパティ",
     "none": "（なし）"
@@ -73,13 +75,13 @@
     "empty": "空きマス",
     "frame": "壁",
     "stairs": "階段",
-    "samurai": "侍",
+    "samurai": "サムライ猫",
     "sludge": "ガマ",
     "thickSludge": "大蛇",
-    "archer": "アーチャー",
-    "wizard": "ウィザード",
-    "captive": "捕虜",
-    "golem": "ゴーレム",
+    "archer": "サル",
+    "wizard": "タヌキ",
+    "captive": "ツル",
+    "golem": "クマ",
     "wall": "壁",
     "nothing": "何もない",
     "unknown": "不明なユニット"

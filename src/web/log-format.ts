@@ -13,6 +13,20 @@ const DIRECTION_KEYS: Record<string, string> = {
 };
 
 /**
+ * unitId prefix (normalized) -> i18n tiles key
+ * unitId is lowercased/symbol-stripped (e.g. "thicksludge#1"), while i18n uses camelCase keys.
+ */
+const UNIT_ID_PREFIX_TO_TILE_KEY: Record<string, string> = {
+  samurai: "samurai",
+  golem: "golem",
+  sludge: "sludge",
+  thicksludge: "thickSludge",
+  archer: "archer",
+  wizard: "wizard",
+  captive: "captive",
+};
+
+/**
  * Format a structured LogEntry into a translated display string.
  */
 export function formatLogEntry(entry: LogEntry, t: TranslateFn): string {
@@ -34,6 +48,8 @@ export function formatLogEntry(entry: LogEntry, t: TranslateFn): string {
     ? entry.unitId.split("#")[0]
     : stripTrailingDigits(entry.unitId);
   const suffix = entry.unitId.slice(base.length);
-  const name = t(`tiles.${normalizeIdPrefix(base)}`, { defaultValue: entry.unitId });
+  const normalizedBase = normalizeIdPrefix(base);
+  const tileKey = UNIT_ID_PREFIX_TO_TILE_KEY[normalizedBase] ?? normalizedBase;
+  const name = t(`tiles.${tileKey}`, { defaultValue: base });
   return `${name}${suffix} ${msg}`;
 }

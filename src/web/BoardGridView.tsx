@@ -2,6 +2,7 @@ import type { CSSProperties, ReactElement } from "react";
 
 import type { DamagePopup, SpriteOverride } from "./board-effects";
 import type { BoardGridData, BoardTile } from "./board-grid";
+import { buildBoardDisplayGrid, type BoardDisplayGridData } from "./board-display-grid";
 import { buildTileStatsText, type StatsFormatter } from "./board-stats";
 import type { TranslateFn } from "./log-format";
 import {
@@ -24,6 +25,7 @@ const IDLE_SPRITE_CYCLE_JITTER_RATIO = 0.15;
 interface BoardGridViewProps {
   boardGrid: BoardGridData;
   boardGridStyle: CSSProperties;
+  displayGrid?: BoardDisplayGridData;
   t: TranslateFn;
   damagePopupsByTile: ReadonlyMap<number, DamagePopup[]>;
   spriteOverrideByTile: ReadonlyMap<number, SpriteOverride>;
@@ -266,6 +268,7 @@ export function BoardGridView(props: Readonly<BoardGridViewProps>): ReactElement
   const {
     boardGrid,
     boardGridStyle,
+    displayGrid,
     t,
     damagePopupsByTile,
     spriteOverrideByTile,
@@ -277,19 +280,20 @@ export function BoardGridView(props: Readonly<BoardGridViewProps>): ReactElement
     tileSizePx,
     onHoveredEnemyStatsChange,
   } = props;
+  const visibleGrid = displayGrid ?? buildBoardDisplayGrid(boardGrid, "full");
 
   return (
     <div
       className="board-grid"
       role="img"
-      aria-label={t("board.ariaLabel", { rows: boardGrid.rows, columns: boardGrid.columns })}
+      aria-label={t("board.ariaLabel", { rows: visibleGrid.rows, columns: visibleGrid.columns })}
       style={boardGridStyle}
     >
-      {boardGrid.tiles.map((tile, index) => (
+      {visibleGrid.tiles.map(({ tile, originalIndex }) => (
         <BoardTileCell
-          key={`${index}-${tile.kind}-${tile.symbol}`}
+          key={`${originalIndex}-${tile.kind}-${tile.symbol}`}
           tile={tile}
-          index={index}
+          index={originalIndex}
           damagePopupsByTile={damagePopupsByTile}
           spriteOverrideByTile={spriteOverrideByTile}
           spriteDirByTile={spriteDirByTile}
