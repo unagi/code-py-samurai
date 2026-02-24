@@ -49,4 +49,18 @@ describe("buildBoardDisplayGrid", () => {
     expect(displayGrid.rows).toBe(boardGrid.rows);
     expect(displayGrid.tiles).toHaveLength(boardGrid.tiles.length);
   });
+
+  it("compacts away only void tiles in void-only mode while keeping walls", () => {
+    const boardGrid = buildBoardGrid("----\n|@>|\n----");
+
+    const displayGrid = buildBoardDisplayGrid(boardGrid, "void-only");
+
+    expect(displayGrid.columns).toBe(4);
+    expect(displayGrid.rows).toBe(3);
+    expect(displayGrid.tiles.map((cell) => cell.tile.kind)).toEqual([
+      "wall-h", "wall-h", "wall-h", "wall-h",
+      "wall-v", "samurai", "stairs", "wall-v",
+      "wall-h", "wall-h", "wall-h", "wall-h",
+    ]);
+  });
 });

@@ -1,6 +1,6 @@
 import type { BoardGridData, BoardTile } from "./board-grid";
 
-export type BoardDisplayMode = "full" | "floor-only";
+export type BoardDisplayMode = "full" | "void-only" | "floor-only";
 
 export interface BoardDisplayTileCell {
   originalIndex: number;
@@ -13,6 +13,7 @@ export interface BoardDisplayGridData {
   tiles: BoardDisplayTileCell[];
 }
 
+const VOID_ONLY_HIDDEN_TILE_KINDS = new Set(["void"]);
 const FLOOR_ONLY_HIDDEN_TILE_KINDS = new Set(["void", "wall-h", "wall-v"]);
 
 function buildFullBoardDisplayGrid(boardGrid: BoardGridData): BoardDisplayGridData {
@@ -30,6 +31,9 @@ export function buildBoardDisplayGrid(
   if (mode === "full") {
     return buildFullBoardDisplayGrid(boardGrid);
   }
+  const hiddenTileKinds = mode === "void-only"
+    ? VOID_ONLY_HIDDEN_TILE_KINDS
+    : FLOOR_ONLY_HIDDEN_TILE_KINDS;
 
   const compactRows: BoardDisplayTileCell[][] = [];
 
@@ -39,7 +43,7 @@ export function buildBoardDisplayGrid(
       const originalIndex = y * boardGrid.columns + x;
       const tile = boardGrid.tiles[originalIndex];
       if (!tile) continue;
-      if (FLOOR_ONLY_HIDDEN_TILE_KINDS.has(tile.kind)) continue;
+      if (hiddenTileKinds.has(tile.kind)) continue;
       row.push({ tile, originalIndex });
     }
     if (row.length > 0) {

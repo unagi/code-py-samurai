@@ -46,6 +46,7 @@ function buildStarterPlayerCode(comment: string): string {
 const BOARD_TILE_GAP_PX = 2;
 const BOARD_TILE_BASE_SIZE_PX = 80;
 const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
+const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 
@@ -141,9 +142,8 @@ export default function App() {
     atk: (value) => t("board.atk", { value }),
   }), [t]);
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
-  const boardDisplayMode: BoardDisplayMode = boardViewportWidthPx > 0 && boardViewportWidthPx < COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX
-    ? "floor-only"
-    : "full";
+  const shouldCompactBoardByWidth = boardViewportWidthPx > 0 && boardViewportWidthPx < COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX;
+  const boardDisplayMode: BoardDisplayMode = shouldCompactBoardByWidth ? "floor-only" : "full";
   const boardDisplayGrid = useMemo(
     () => buildBoardDisplayGrid(boardGrid, boardDisplayMode),
     [boardGrid, boardDisplayMode],
@@ -163,18 +163,10 @@ export default function App() {
 
     const computeTileSize = (): void => {
       const cols = Math.max(boardDisplayGrid.columns, 1);
-      const rows = Math.max(boardDisplayGrid.rows, 1);
       const availableWidth = Math.max(0, viewport.clientWidth);
-      const isHeightClamped = viewport.scrollHeight > viewport.clientHeight + 1;
-      const availableHeight = isHeightClamped
-        ? Math.max(0, viewport.clientHeight - BOARD_LOG_PANEL_HEIGHT_PX)
-        : Number.POSITIVE_INFINITY;
       setBoardViewportWidthPx((prev) => (prev === availableWidth ? prev : availableWidth));
       const tileByWidth = (availableWidth - BOARD_TILE_GAP_PX * (cols - 1)) / cols;
-      const tileByHeight = Number.isFinite(availableHeight)
-        ? (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows
-        : Number.POSITIVE_INFINITY;
-      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight, BOARD_TILE_BASE_SIZE_PX)));
+      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, BOARD_TILE_BASE_SIZE_PX)));
       setTileSizePx(computed);
     };
 
@@ -533,15 +525,14 @@ export default function App() {
       <main className="layout app-main-layout">
         <section className="workspace">
           <article className="console-panel">
-            <div className="console-header">
-              <h2>🗺️ {t("board.heading")}</h2>
-              <p className="description">{t(levelDescKey)}</p>
-            </div>
             <div
               id="board"
               className="board-viewport"
               ref={boardViewportRef}
-              style={{ "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px` } as CSSProperties}
+              style={{
+                "--board-desc-height": `${BOARD_DESC_PANEL_HEIGHT_PX}px`,
+                "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px`,
+              } as CSSProperties}
             >
               <div className="board-status">
                 <span className="status-chip">
@@ -549,6 +540,9 @@ export default function App() {
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
+              <section className="board-description-panel" aria-label={t("board.heading")}>
+                <p className="board-description-text">{t(levelDescKey)}</p>
+              </section>
               <div className="board-stage">
                 <BoardGridView
                   boardGrid={boardGrid}

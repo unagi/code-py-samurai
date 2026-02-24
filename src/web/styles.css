@@ -517,37 +517,11 @@ body {
   display: grid;
 }
 
-.console-header {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 0.7rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid rgba(126, 79, 46, 0.24);
-}
-
-.console-header h2 {
-  margin: 0;
-  flex-shrink: 0;
-}
-
 .console-panel h2,
 .logs-panel h2,
 .editor-panel h3 {
   margin: 0;
   color: #6f4628;
-}
-
-.description {
-  margin: 0 0 0.4rem;
-  color: #6d5442;
-  font-size: 0.88rem;
-}
-
-.console-header .description {
-  margin: 0;
-  font-size: 0.85rem;
 }
 
 [id="board"] {
@@ -558,7 +532,6 @@ body {
   border: 1px solid #8b603d;
   background: radial-gradient(circle at 50% 10%, #111822 0%, #0c1117 60%, #07090d 100%);
   width: 100%;
-  max-height: 80vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -574,6 +547,25 @@ body {
   justify-content: center;
 }
 
+.board-description-panel {
+  flex: 0 0 var(--board-desc-height, 56px);
+  min-height: 0;
+  border-bottom: 1px solid rgba(125, 163, 196, 0.16);
+  background: linear-gradient(180deg, rgba(9, 14, 20, 0.88), rgba(7, 11, 16, 0.96));
+  padding: 0.35rem 0.55rem 0.4rem;
+  display: flex;
+  align-items: center;
+}
+
+.board-description-text {
+  margin: 0;
+  color: #c9dced;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  overflow-y: auto;
+  width: 100%;
+}
+
 .board-log-panel {
   flex: 0 0 var(--board-log-height, 160px);
   min-height: 0;
@@ -584,7 +576,7 @@ body {
 
 .board-status {
   position: absolute;
-  top: 0.55rem;
+  top: calc(var(--board-desc-height, 0px) + 0.55rem);
   left: 0.55rem;
   right: 0.55rem;
   z-index: 2;
@@ -1959,12 +1951,6 @@ dialog.modal-backdrop::backdrop {
     font-size: 1.8rem;
   }
 
-  .console-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.35rem;
-  }
-
   .bottom-columns {
     grid-template-columns: 1fr;
   }
@@ -2026,7 +2012,7 @@ dialog.modal-backdrop::backdrop {
   }
 
   .board-status {
-    top: 0.45rem;
+    top: calc(var(--board-desc-height, 0px) + 0.45rem);
     left: 0.45rem;
     right: 0.45rem;
     gap: 0.3rem;
