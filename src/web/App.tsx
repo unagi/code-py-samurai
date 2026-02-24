@@ -16,6 +16,7 @@ import {
   type SpriteOverride,
 } from "./board-effects";
 import { buildBoardGrid } from "./board-grid";
+import { buildBoardDisplayGrid, type BoardDisplayMode } from "./board-display-grid";
 import { createCodeEditor } from "./code-editor";
 import { type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
@@ -43,6 +44,9 @@ function buildStarterPlayerCode(comment: string): string {
 }
 
 const BOARD_TILE_GAP_PX = 2;
+const BOARD_TILE_BASE_SIZE_PX = 80;
+const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
+const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 
 export default function App() {
@@ -65,6 +69,7 @@ export default function App() {
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
   const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
   const [tileSizePx, setTileSizePx] = useState(20);
+  const [boardViewportWidthPx, setBoardViewportWidthPx] = useState(0);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
@@ -129,6 +134,13 @@ export default function App() {
     atk: (value) => t("board.atk", { value }),
   }), [t]);
   const boardGrid = useMemo(() => buildBoardGrid(board), [board]);
+  const boardDisplayMode: BoardDisplayMode = boardViewportWidthPx > 0 && boardViewportWidthPx < COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX
+    ? "floor-only"
+    : "full";
+  const boardDisplayGrid = useMemo(
+    () => buildBoardDisplayGrid(boardGrid, boardDisplayMode),
+    [boardGrid, boardDisplayMode],
+  );
   const formattedLogs = useMemo(() => {
     if (logEntries.length === 0) return "";
     return logEntries.map((entry) => formatLogEntry(entry, t)).join("\n");
@@ -143,13 +155,19 @@ export default function App() {
     if (!viewport) return;
 
     const computeTileSize = (): void => {
-      const cols = Math.max(boardGrid.columns, 1);
-      const rows = Math.max(boardGrid.rows, 1);
+      const cols = Math.max(boardDisplayGrid.columns, 1);
+      const rows = Math.max(boardDisplayGrid.rows, 1);
       const availableWidth = Math.max(0, viewport.clientWidth);
-      const availableHeight = Math.max(0, viewport.clientHeight);
+      const isHeightClamped = viewport.scrollHeight > viewport.clientHeight + 1;
+      const availableHeight = isHeightClamped
+        ? Math.max(0, viewport.clientHeight - BOARD_LOG_PANEL_HEIGHT_PX)
+        : Number.POSITIVE_INFINITY;
+      setBoardViewportWidthPx((prev) => (prev === availableWidth ? prev : availableWidth));
       const tileByWidth = (availableWidth - BOARD_TILE_GAP_PX * (cols - 1)) / cols;
-      const tileByHeight = (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows;
-      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight)));
+      const tileByHeight = Number.isFinite(availableHeight)
+        ? (availableHeight - BOARD_TILE_GAP_PX * (rows - 1)) / rows
+        : Number.POSITIVE_INFINITY;
+      const computed = Math.max(1, Math.floor(Math.min(tileByWidth, tileByHeight, BOARD_TILE_BASE_SIZE_PX)));
       setTileSizePx(computed);
     };
 
@@ -157,15 +175,15 @@ export default function App() {
     const observer = new ResizeObserver(computeTileSize);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [boardGrid.columns, boardGrid.rows]);
+  }, [boardDisplayGrid.columns, boardDisplayGrid.rows]);
 
   const boardGridStyle = useMemo(() => {
     return {
-      gridTemplateColumns: `repeat(${Math.max(boardGrid.columns, 1)}, ${tileSizePx}px)`,
-      gridTemplateRows: `repeat(${Math.max(boardGrid.rows, 1)}, ${tileSizePx}px)`,
+      gridTemplateColumns: `repeat(${Math.max(boardDisplayGrid.columns, 1)}, ${tileSizePx}px)`,
+      gridTemplateRows: `repeat(${Math.max(boardDisplayGrid.rows, 1)}, ${tileSizePx}px)`,
       gap: `${BOARD_TILE_GAP_PX}px`,
     } as CSSProperties;
-  }, [boardGrid.columns, boardGrid.rows, tileSizePx]);
+  }, [boardDisplayGrid.columns, boardDisplayGrid.rows, tileSizePx]);
   /** タイルインデックス → 最新のスプライトオーバーライド */
   const spriteOverrideByTile = useMemo(() => {
     const map = new Map<number, SpriteOverride>();
@@ -356,27 +374,38 @@ export default function App() {
               <h2>🗺️ {t("board.heading")}</h2>
               <p className="description">{t(levelDescKey)}</p>
             </div>
-            <div id="board" className="board-viewport" ref={boardViewportRef} style={{ aspectRatio: `${boardGrid.columns} / ${boardGrid.rows}` }}>
+            <div
+              id="board"
+              className="board-viewport"
+              ref={boardViewportRef}
+              style={{ "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px` } as CSSProperties}
+            >
               <div className="board-status">
                 <span className="status-chip">
                   {t("board.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
-              <BoardGridView
-                boardGrid={boardGrid}
-                boardGridStyle={boardGridStyle}
-                t={t}
-                damagePopupsByTile={damagePopupsByTile}
-                spriteOverrideByTile={spriteOverrideByTile}
-                spriteDirByTile={spriteDirByTile}
-                samuraiFrame={samuraiFrame}
-                samuraiHealth={samuraiHealth}
-                samuraiMaxHealth={samuraiMaxHealth}
-                statsFmt={statsFmt}
-                tileSizePx={tileSizePx}
-                onHoveredEnemyStatsChange={setHoveredEnemyStats}
-              />
+              <div className="board-stage">
+                <BoardGridView
+                  boardGrid={boardGrid}
+                  boardGridStyle={boardGridStyle}
+                  displayGrid={boardDisplayGrid}
+                  t={t}
+                  damagePopupsByTile={damagePopupsByTile}
+                  spriteOverrideByTile={spriteOverrideByTile}
+                  spriteDirByTile={spriteDirByTile}
+                  samuraiFrame={samuraiFrame}
+                  samuraiHealth={samuraiHealth}
+                  samuraiMaxHealth={samuraiMaxHealth}
+                  statsFmt={statsFmt}
+                  tileSizePx={tileSizePx}
+                  onHoveredEnemyStatsChange={setHoveredEnemyStats}
+                />
+              </div>
+              <section className="board-log-panel" aria-label={t("logs.heading")}>
+                <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
+              </section>
             </div>
             <div className="console-controls">
               <button onClick={handlePlay} disabled={isPlaying || !canPlay}>
@@ -427,32 +456,28 @@ export default function App() {
                 <div ref={editorHostRef} className="editor-host" />
                 <p className="code-note">{t("editor.codeNote")}</p>
               </div>
-              <aside className="api-panel">
-                <h4>📚 {t("editor.apiHeading")}</h4>
-                <h4>{t("editor.methods")}</h4>
-                <ul className="api-list">
-                  {availableMethods.length > 0 ? (
-                    availableMethods.map((item) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>{t("editor.none")}</li>
-                  )}
-                </ul>
-                <h4>{t("editor.properties")}</h4>
-                <ul className="api-list">
-                  {availableProperties.length > 0 ? (
-                    availableProperties.map((item) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>{t("editor.none")}</li>
-                  )}
-                </ul>
-              </aside>
             </div>
           </article>
-          <article className="logs-panel">
-            <h2>🖥️ {t("logs.heading")}</h2>
-            <pre id="logs">{formattedLogs || t("logs.empty")}</pre>
-          </article>
         </div>
+        <aside className="api-panel api-panel-standalone" aria-labelledby="api-block-heading">
+          <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
+          <h4>{t("editor.methods")}</h4>
+          <ul className="api-list">
+            {availableMethods.length > 0 ? (
+              availableMethods.map((item) => <li key={item}>{item}</li>)
+            ) : (
+              <li>{t("editor.none")}</li>
+            )}
+          </ul>
+          <h4>{t("editor.properties")}</h4>
+          <ul className="api-list">
+            {availableProperties.length > 0 ? (
+              availableProperties.map((item) => <li key={item}>{item}</li>)
+            ) : (
+              <li>{t("editor.none")}</li>
+            )}
+          </ul>
+        </aside>
       </section>
 
       <ResultModal

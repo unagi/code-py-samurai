@@ -142,28 +142,28 @@ body {
 .workspace {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
 .console-panel,
 .logs-panel,
 .editor-panel {
-  border: 1px solid #5e3e27;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(67, 42, 27, 0.95), rgba(35, 23, 16, 0.96));
-  color: #f5ead8;
-  box-shadow: inset 0 0 0 2px rgba(180, 131, 82, 0.15);
+  color: #2d1c12;
+  min-width: 0;
 }
 
 .console-panel {
-  padding: 0.9rem;
+  display: grid;
 }
 
 .console-header {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(126, 79, 46, 0.24);
 }
 
 .console-header h2 {
@@ -174,13 +174,13 @@ body {
 .console-panel h2,
 .logs-panel h2,
 .editor-panel h3 {
-  margin: 0 0 0.65rem;
-  color: #ffcf95;
+  margin: 0;
+  color: #6f4628;
 }
 
 .description {
   margin: 0 0 0.4rem;
-  color: #c8b8a1;
+  color: #6d5442;
   font-size: 0.88rem;
 }
 
@@ -200,8 +200,25 @@ body {
   max-height: 80vh;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.board-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.board-log-panel {
+  flex: 0 0 var(--board-log-height, 160px);
+  min-height: 0;
+  border-top: 1px solid rgba(125, 163, 196, 0.2);
+  background: linear-gradient(180deg, rgba(7, 12, 18, 0.9), rgba(5, 9, 14, 0.98));
+  padding: 0.45rem 0.55rem 0.5rem;
 }
 
 .board-status {
@@ -380,7 +397,7 @@ button:disabled {
   display: inline-flex;
   flex-direction: column;
   gap: 0.18rem;
-  color: #e9d9c3;
+  color: #6d5442;
   font-size: 0.84rem;
 }
 
@@ -394,13 +411,8 @@ button:disabled {
 
 .bottom-columns {
   display: grid;
-  grid-template-columns: minmax(520px, 7fr) minmax(260px, 3fr);
+  grid-template-columns: 1fr;
   gap: 1rem;
-}
-
-.logs-panel {
-  padding: 0.75rem 0.85rem;
-  min-height: 100%;
 }
 
 .danger-button {
@@ -411,23 +423,26 @@ button:disabled {
 
 [id="logs"] {
   margin: 0;
-  min-height: 18rem;
-  max-height: 60vh;
+  width: 100%;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   white-space: pre-wrap;
-  word-break: break-all;
-  padding: 0.75rem;
-  border-radius: 10px;
-  border: 1px solid #4f6e41;
-  background: linear-gradient(180deg, #181f1a, #121813);
-  color: #8ce88f;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid rgba(91, 138, 100, 0.45);
+  background: linear-gradient(180deg, rgba(17, 24, 18, 0.95), rgba(13, 19, 14, 0.98));
+  color: #94ee97;
   font-family: "UDEV Gothic 35", "SFMono-Regular", Consolas, monospace;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  scrollbar-gutter: stable;
 }
 
 .editor-panel {
-  padding: 0.75rem 0.85rem;
+  min-width: 0;
 }
 
 .player-code-header {
@@ -435,7 +450,9 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(126, 79, 46, 0.24);
 }
 
 .player-code-header h3 {
@@ -444,8 +461,7 @@ button:disabled {
 
 .editor-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
-  gap: 0.7rem;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .editor-host {
@@ -461,10 +477,26 @@ button:disabled {
   border-radius: 10px;
   padding: 0.7rem;
   color: #2d1c12;
+  min-width: 0;
+}
+
+.api-panel h3 {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.4rem;
+  color: #6f4628;
+  border-bottom: 1px solid rgba(126, 79, 46, 0.24);
 }
 
 .api-panel h4 {
   margin: 0 0 0.4rem;
+}
+
+.api-panel h4:not(:first-of-type) {
+  margin-top: 0.75rem;
+}
+
+.api-panel-standalone {
+  align-self: start;
 }
 
 .api-list {
@@ -535,7 +567,7 @@ button:disabled {
 
 .code-note {
   margin: 0.48rem 0 0;
-  color: #ceb89d;
+  color: #6d5442;
   font-size: 0.82rem;
 }
 
@@ -1505,7 +1537,43 @@ dialog.modal-backdrop::backdrop {
   color: #e9dbc6;
 }
 
-@media (max-width: 980px) {
+/* Game layout breakpoints (content-based):
+   - <900px: non-guaranteed / 100% width base
+   - 900-1079px: emergency layout band
+   - >=1080px: full 13-column board target */
+@media (min-width: 1536px) {
+  .layout {
+    width: min(1560px, 98vw);
+  }
+
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) clamp(260px, 18vw, 320px);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .console-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .bottom-columns {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .api-panel-standalone {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: 0.75rem;
+    max-height: calc(100vh - 1.5rem);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
+@media (max-width: 1079px) {
   .top-controls {
     flex-direction: column;
     align-items: stretch;
@@ -1515,13 +1583,72 @@ dialog.modal-backdrop::backdrop {
     justify-content: flex-end;
   }
 
+  .console-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
   .bottom-columns {
     grid-template-columns: 1fr;
   }
 
-  .editor-layout {
-    grid-template-columns: 1fr;
+  .board-status {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
+
+  .status-chip-sub {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  .layout {
+    width: 100%;
+    margin: 0.6rem 0 1.2rem;
+    padding: 0 0.5rem;
+  }
+
+  .hero {
+    gap: 0.6rem;
+  }
+
+  .hero-line {
+    display: none;
+  }
+
+  .top-controls {
+    gap: 0.65rem;
+  }
+
+  .top-controls-side {
+    justify-content: stretch;
+  }
+
+  .top-controls-side > button {
+    width: 100%;
+  }
+
+  .api-panel {
+    padding: 0.6rem;
+  }
+
+  .board-status {
+    top: 0.45rem;
+    left: 0.45rem;
+    right: 0.45rem;
+    gap: 0.3rem;
+  }
+
+  .status-chip {
+    min-height: 1.3rem;
+    padding: 0.08rem 0.42rem;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 980px) {
 
   .refdoc-shell {
     grid-template-columns: 1fr;
