@@ -58,7 +58,8 @@
   "nav": {
     "levelProgress": "レベル進捗",
     "levelLocked": "Lv.{{level}}（未解放）",
-    "language": "言語"
+    "language": "言語",
+    "theme": "テーマ"
   },
   "ranks": {
     "novice": "かけだし",

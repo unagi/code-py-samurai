@@ -58,7 +58,8 @@
   "nav": {
     "levelProgress": "Level Progress",
     "levelLocked": "Lv.{{level}} (Locked)",
-    "language": "Language"
+    "language": "Language",
+    "theme": "Theme"
   },
   "ranks": {
     "novice": "Novice",

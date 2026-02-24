@@ -2,6 +2,18 @@ import { getGlobalLevelFromTowerLevel, getMaxSamuraiLevel } from "@engine/samura
 
 export const STORAGE_KEY_PROGRESS = "py-samurai:progress";
 export const STORAGE_KEY_PLAYER_CODE = "py-samurai:player-code";
+export const STORAGE_KEY_THEME = "py-samurai:theme";
+
+export const APP_THEMES = [
+  "everforest-dark",
+  "everforest-light",
+  "rose-pine-dark",
+  "rose-pine-light",
+] as const;
+
+export type AppTheme = (typeof APP_THEMES)[number];
+
+export const DEFAULT_APP_THEME: AppTheme = "everforest-dark";
 
 export interface ProgressStorageData {
   // new format
@@ -11,6 +23,10 @@ export interface ProgressStorageData {
   levelNumber?: number;
   samuraiLevel?: number;
   samuraiLevelByTower?: Record<string, number>;
+}
+
+function isAppTheme(value: string): value is AppTheme {
+  return (APP_THEMES as readonly string[]).includes(value);
 }
 
 function clampGlobalLevel(value: number, totalLevels: number): number {
@@ -66,6 +82,18 @@ export function readPlayerCodeStorage(fallbackCode: string): string {
   return fallbackCode;
 }
 
+export function readThemeStorage(): AppTheme {
+  try {
+    const saved = globalThis.localStorage.getItem(STORAGE_KEY_THEME);
+    if (typeof saved === "string" && isAppTheme(saved)) {
+      return saved;
+    }
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
+  return DEFAULT_APP_THEME;
+}
+
 export function writeProgressStorage(globalLevel: number, samuraiLevel: number): void {
   try {
     globalThis.localStorage.setItem(
@@ -80,6 +108,14 @@ export function writeProgressStorage(globalLevel: number, samuraiLevel: number):
 export function writePlayerCodeStorage(playerCode: string): void {
   try {
     globalThis.localStorage.setItem(STORAGE_KEY_PLAYER_CODE, playerCode);
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
+}
+
+export function writeThemeStorage(theme: AppTheme): void {
+  try {
+    globalThis.localStorage.setItem(STORAGE_KEY_THEME, theme);
   } catch {
     // ignore storage errors (private mode, quota, etc.)
   }

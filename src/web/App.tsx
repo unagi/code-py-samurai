@@ -21,13 +21,17 @@ import { createCodeEditor } from "./code-editor";
 import { type StatsFormatter } from "./board-stats";
 import { formatLogEntry } from "./log-format";
 import {
+  type AppTheme,
+  APP_THEMES,
   buildSamuraiLevel,
   clearStoredAppData,
   migrateToGlobalLevel,
   readPlayerCodeStorage,
   readProgressStorage,
+  readThemeStorage,
   writePlayerCodeStorage,
   writeProgressStorage,
+  writeThemeStorage,
 } from "./progress-storage";
 import { ResultModal } from "./ResultModal";
 import { buildSamuraiApiStructureViewModel } from "./samurai-api-structure";
@@ -57,6 +61,92 @@ const SPEED_OPTIONS = [
   { value: 220, key: "controls.fast" },
 ] as const;
 
+const THEME_LABELS: Record<AppTheme, string> = {
+  "everforest-dark": "Everforest Dark",
+  "everforest-light": "Everforest Light",
+  "rose-pine-dark": "Ros\u00e9 Pine Dark",
+  "rose-pine-light": "Ros\u00e9 Pine Light",
+};
+
+type ApiStructureEntryKind = "method" | "property";
+
+interface ApiStructureEntryView {
+  kind: ApiStructureEntryKind;
+  signature: string;
+}
+
+function splitApiSignatureParams(raw: string): string[] {
+  const text = raw.trim();
+  if (text.length === 0) return [];
+  return text.split(",").map((part) => part.trim()).filter((part) => part.length > 0);
+}
+
+function renderApiSignatureParam(param: string): JSX.Element {
+  const text = param.trim();
+  if (text.length === 0) return <span className="api-structure-sig-text" />;
+  if (text === "self") {
+    return <span className="api-structure-sig-self">self</span>;
+  }
+
+  const colonIndex = text.indexOf(":");
+  if (colonIndex > 0) {
+    const name = text.slice(0, colonIndex).trim();
+    const typeName = text.slice(colonIndex + 1).trim();
+    return (
+      <span className="api-structure-sig-param">
+        <span className="api-structure-sig-text">{name}</span>
+        <span className="api-structure-sig-punct">: </span>
+        <span className="api-structure-sig-type">{typeName}</span>
+      </span>
+    );
+  }
+
+  return <span className="api-structure-sig-type">{text}</span>;
+}
+
+function renderApiStructureSignature(kind: ApiStructureEntryKind, signature: string): JSX.Element {
+  const text = signature.trim();
+
+  if (kind === "property") {
+    const colonIndex = text.indexOf(":");
+    if (colonIndex <= 0) {
+      return <span className="api-structure-sig-text">{text}</span>;
+    }
+    const name = text.slice(0, colonIndex).trim();
+    const typeName = text.slice(colonIndex + 1).trim();
+    return (
+      <span className="api-structure-sig-inline">
+        <span className="api-structure-sig-name-property">{name}</span>
+        <span className="api-structure-sig-punct">: </span>
+        <span className="api-structure-sig-type">{typeName}</span>
+      </span>
+    );
+  }
+
+  const openParen = text.indexOf("(");
+  const closeParen = text.lastIndexOf(")");
+  if (openParen <= 0 || closeParen !== text.length - 1 || closeParen < openParen) {
+    return <span className="api-structure-sig-text">{text}</span>;
+  }
+  const methodName = text.slice(0, openParen).trim();
+  const rawParams = text.slice(openParen + 1, closeParen);
+
+  const params = splitApiSignatureParams(rawParams);
+  return (
+    <span className="api-structure-sig-inline">
+      <span className="api-structure-sig-name-method">{methodName}</span>
+      <span className="api-structure-sig-punct">(</span>
+      {params.map((param, index) => (
+        <span key={`${methodName}-param-${index}`}>
+          {index > 0 ? <span className="api-structure-sig-punct">, </span> : null}
+          {renderApiSignatureParam(param)}
+        </span>
+      ))}
+      <span className="api-structure-sig-punct">)</span>
+    </span>
+  );
+}
+
 export default function App() {
   const { t, i18n } = useTranslation();
   const initialProgress = readProgressStorage();
@@ -82,6 +172,7 @@ export default function App() {
   const [canScrollLevelProgressLeft, setCanScrollLevelProgressLeft] = useState(false);
   const [canScrollLevelProgressRight, setCanScrollLevelProgressRight] = useState(false);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<AppTheme>(() => readThemeStorage());
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const boardViewportRef = useRef<HTMLDivElement | null>(null);
@@ -140,6 +231,12 @@ export default function App() {
     () => buildSamuraiApiStructureViewModel(unlockedSamuraiAbilities),
     [unlockedSamuraiAbilities],
   );
+  const apiStructureEntries = useMemo<ApiStructureEntryView[]>(() => {
+    return [
+      ...samuraiApiStructure.propertySignatures.map((signature) => ({ kind: "property" as const, signature })),
+      ...samuraiApiStructure.methodSignatures.map((signature) => ({ kind: "method" as const, signature })),
+    ];
+  }, [samuraiApiStructure]);
   const statsFmt: StatsFormatter = useMemo(() => ({
     hp: (current, max) => t("board.hp", { current, max }),
     atk: (value) => t("board.atk", { value }),
@@ -307,8 +404,20 @@ export default function App() {
   }, [playerCode]);
 
   useEffect(() => {
+    writeThemeStorage(theme);
+  }, [theme]);
+
+  useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
+
+  useLayoutEffect(() => {
+    if (theme === "everforest-dark") {
+      document.documentElement.removeAttribute("data-theme");
+      return;
+    }
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     if (!isSettingsMenuOpen) return;
@@ -379,6 +488,11 @@ export default function App() {
   const handleLanguageChange = (lang: string): void => {
     void i18n.changeLanguage(lang);
     setIsSettingsMenuOpen(false);
+  };
+
+  const handleThemeChange = (nextTheme: string): void => {
+    if (!APP_THEMES.includes(nextTheme as AppTheme)) return;
+    setTheme(nextTheme as AppTheme);
   };
 
   const levelDescKey = `levels.${towerName}.${localLevel}.description`;
@@ -509,6 +623,24 @@ export default function App() {
                       <option value="ja">JA</option>
                     </select>
                   </div>
+                  <div className="settings-menu-section">
+                    <label className="settings-menu-label" htmlFor="settings-theme-select">
+                      {t("nav.theme")}
+                    </label>
+                    <select
+                      id="settings-theme-select"
+                      className="settings-language-select"
+                      value={theme}
+                      onChange={(e) => handleThemeChange(e.target.value)}
+                      aria-label={t("nav.theme")}
+                    >
+                      {APP_THEMES.map((themeId) => (
+                        <option key={themeId} value={themeId}>
+                          {THEME_LABELS[themeId]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="settings-menu-divider" aria-hidden="true" />
                   <button
                     type="button"
@@ -631,7 +763,7 @@ export default function App() {
         </div>
         <aside className="api-panel api-panel-standalone" aria-labelledby="api-block-heading">
           <div className="api-panel-header">
-            <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
+            <h3 id="api-block-heading">API Outline</h3>
             <a
               className="api-panel-link"
               href={API_REFERENCE_PATH}
@@ -646,67 +778,36 @@ export default function App() {
               <li className="api-structure-node api-structure-node-class">
                 <div className="api-structure-row api-structure-row-class">
                   <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                  <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-person-fill" /></span>
                   <span className="api-structure-label">{samuraiApiStructure.className}</span>
                 </div>
-                <ul className="api-structure-branch">
-                  <li className="api-structure-node api-structure-node-group">
-                    <div className="api-structure-row api-structure-row-group">
-                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
-                      <span className="api-structure-label">{t("editor.methods")}</span>
-                    </div>
-                    <ul className="api-structure-branch api-structure-branch-leaves">
-                      {samuraiApiStructure.methodSignatures.length > 0 ? (
-                        samuraiApiStructure.methodSignatures.map((item) => (
-                          <li key={item} className="api-structure-node api-structure-node-leaf">
-                            <div className="api-structure-row api-structure-row-leaf">
-                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                                •
-                              </span>
-                              <code className="api-structure-signature">{item}</code>
-                            </div>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
-                          <div className="api-structure-row api-structure-row-leaf">
-                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                              •
-                            </span>
-                            <span className="api-structure-empty">{t("editor.none")}</span>
-                          </div>
-                        </li>
-                      )}
-                    </ul>
-                  </li>
-                  <li className="api-structure-node api-structure-node-group">
-                    <div className="api-structure-row api-structure-row-group">
-                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
-                      <span className="api-structure-label">{t("editor.properties")}</span>
-                    </div>
-                    <ul className="api-structure-branch api-structure-branch-leaves">
-                      {samuraiApiStructure.propertySignatures.length > 0 ? (
-                        samuraiApiStructure.propertySignatures.map((item) => (
-                          <li key={item} className="api-structure-node api-structure-node-leaf">
-                            <div className="api-structure-row api-structure-row-leaf">
-                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                                •
-                              </span>
-                              <code className="api-structure-signature">{item}</code>
-                            </div>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
-                          <div className="api-structure-row api-structure-row-leaf">
-                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
-                              •
-                            </span>
-                            <span className="api-structure-empty">{t("editor.none")}</span>
-                          </div>
-                        </li>
-                      )}
-                    </ul>
-                  </li>
+                <ul className="api-structure-branch api-structure-branch-leaves">
+                  {apiStructureEntries.length > 0 ? (
+                    apiStructureEntries.map((entry) => (
+                      <li
+                        key={`${entry.kind}:${entry.signature}`}
+                        className={`api-structure-node api-structure-node-leaf api-structure-node-leaf-${entry.kind}`}
+                      >
+                        <div className={`api-structure-row api-structure-row-leaf api-structure-row-leaf-${entry.kind}`}>
+                          <span className={`api-structure-item-icon api-structure-item-icon-${entry.kind}`} aria-hidden="true">
+                            <i className={entry.kind === "method" ? "bi bi-gear-fill" : "bi bi-key-fill"} />
+                          </span>
+                          <code className="api-structure-signature">
+                            {renderApiStructureSignature(entry.kind, entry.signature)}
+                          </code>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                      <div className="api-structure-row api-structure-row-leaf">
+                        <span className="api-structure-item-icon api-structure-item-icon-empty" aria-hidden="true">
+                          <i className="bi bi-dot" />
+                        </span>
+                        <span className="api-structure-empty">{t("editor.none")}</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </li>
             </ul>
