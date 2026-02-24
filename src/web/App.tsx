@@ -55,6 +55,7 @@ const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 const API_REFERENCE_PATH = "/reference/python-api";
+const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
 const SPEED_OPTIONS = [
   { value: 700, key: "controls.slow" },
   { value: 450, key: "controls.normal" },
@@ -506,7 +507,9 @@ export default function App() {
         <div className="layout app-header-layout">
           <section className="hero">
             <div className="hero-line" />
-            <h1>{t("app.title")} ⚔️🐱</h1>
+            <h1 className="hero-brand">
+              <img className="hero-logo" src={APP_HEADER_LOGO_SRC} alt={t("app.title")} />
+            </h1>
             <div className="hero-line" />
           </section>
 
