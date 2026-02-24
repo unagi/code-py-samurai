@@ -146,16 +146,11 @@ function toDebugUnitAnimationJson(value: unknown): DebugUnitAnimationJson {
 
   const mode = asEnum(root.mode, "mode", ["sprite-config", "static"] as const);
   const previewSlots = previewSlotsRaw.map((slot, index) => toDebugPreviewSlotJson(slot, `previewSlots[${index}]`));
-  const entries = mode === "sprite-config"
-    ? entriesRaw.map((entry, index) => toDebugAnimationEntryJson(entry, `entries[${index}]`))
-    : entriesRaw.map((entry, index) => toStaticDebugAnimationEntryJson(entry, `entries[${index}]`));
 
-  const parsed: DebugUnitAnimationJson = {
-    kind: asNonEmptyString(root.kind, "kind"),
-    mode,
-    previewSlots,
-    entries,
-  };
+  const kind = asNonEmptyString(root.kind, "kind");
+  const parsed: DebugUnitAnimationJson = mode === "sprite-config"
+    ? { kind, mode, previewSlots, entries: entriesRaw.map((entry, index) => toDebugAnimationEntryJson(entry, `entries[${index}]`)) }
+    : { kind, mode, previewSlots, entries: entriesRaw.map((entry, index) => toStaticDebugAnimationEntryJson(entry, `entries[${index}]`)) };
 
   if (parsed.previewSlots.length === 0) {
     throw new Error("previewSlots must not be empty");

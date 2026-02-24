@@ -236,7 +236,9 @@ export default function SpriteDebugPage() {
     const sortOrder: Readonly<Record<SpriteDebugCardSpec["dir"], number>> = {
       left: 0,
       right: 1,
-      none: 2,
+      north: 2,
+      south: 3,
+      none: 4,
     };
 
     const spriteGroups = Array.from(groups.entries()).map(([kind, cards]) => ({
@@ -262,7 +264,9 @@ export default function SpriteDebugPage() {
     const sortOrder: Readonly<Record<SpriteDebugCardSpec["dir"], number>> = {
       left: 0,
       right: 1,
-      none: 2,
+      north: 2,
+      south: 3,
+      none: 4,
     };
     return visibleOtherUnitCards
       .filter((card) => card.kind === "samurai")
@@ -415,7 +419,7 @@ export default function SpriteDebugPage() {
         id: `${params.panelKey}-slot-${index + 1}`,
         label: slotDef.label,
         isActiveSlot: true,
-        boardGrid: !params.hideBoard && card && params.boardGrid ? params.boardGrid : null,
+        boardGrid: !params.hideBoard && slotDef.spriteDir && params.boardGrid ? params.boardGrid : null,
         spriteDir: card?.spriteDir ?? slotDef.spriteDir,
         spriteOverride,
         boardGridStyle: params.boardGridStyle,
@@ -614,7 +618,7 @@ export default function SpriteDebugPage() {
                 .map((card) => cardOverrides[card.id])
                 .find((override) => Boolean(override));
               const currentState: DebugSpriteButtonState = currentOverride ? currentOverride.state : "idle";
-              const animationSpecs = unitAnimationTypeSpecs({ kind: "samurai" });
+              const animationSpecs = unitAnimationTypeSpecs({ kind: "samurai", renderMode: "sprite", cards: visibleSamuraiCards });
               const samuraiBoardGrid = boardGridByKind.get("samurai") ?? null;
               const samuraiPreviewSlots = buildUnitPreviewPanelSlots({
                 panelKey: "samurai",

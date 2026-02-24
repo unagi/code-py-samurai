@@ -39,7 +39,9 @@ type PreviewKind = (typeof PREVIEW_KIND_ORDER)[number];
 const DEBUG_DIR_SORT_ORDER: Readonly<Record<DebugSpritePreviewDir, number>> = {
   left: 0,
   right: 1,
-  none: 2,
+  north: 2,
+  south: 3,
+  none: 4,
 };
 
 function getSamuraiReferenceMethodItems(): ReferenceItem[] {
@@ -125,7 +127,12 @@ function collectRequiredDirsByKind(
           addDirToMap(requiredDirsByKind, kind, "none");
           continue;
         }
-        addDirToMap(requiredDirsByKind, kind, absoluteDirToSpriteDir(unit.direction));
+        let dir = absoluteDirToSpriteDir(unit.direction);
+        // 4方向スプライト非対応のユニットは north/south を left/right にフォールバック
+        if ((dir === "north" || dir === "south") && !previewDirs.has(dir)) {
+          dir = dir === "north" ? "right" : "left";
+        }
+        addDirToMap(requiredDirsByKind, kind, dir);
       }
     }
   }

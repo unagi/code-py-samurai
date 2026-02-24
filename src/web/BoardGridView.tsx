@@ -69,13 +69,9 @@ function resolveBaseTileVisual(
   tile: BoardTile,
   override: SpriteOverride | undefined,
   spriteDir: SpriteDir,
-  samuraiFrame: number,
+  _samuraiFrame: number,
   tileAnimationSeed: number,
 ): SpriteVisual {
-  if (tile.kind === "samurai") {
-    return { src: getSamuraiIdleFramePath(samuraiFrame), frames: 1, currentFrame: 0 };
-  }
-
   const ownSpriteConfig = CHAR_SPRITES[tile.kind];
   if (!ownSpriteConfig) {
     return { src: tile.assetPath, frames: 1, currentFrame: 0 };
@@ -112,7 +108,7 @@ function resolveOverlayVisual(
     return { src: undefined, frames: 1, currentFrame: 0 };
   }
 
-  const stateConfig = overrideSpriteConfig[override.state];
+  const stateConfig = overrideSpriteConfig[override.state] ?? overrideSpriteConfig.idle;
   const src = resolveSpriteStateSrc(stateConfig, spriteDir);
   const frames = stateConfig.frames;
 

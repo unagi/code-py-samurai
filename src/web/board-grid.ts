@@ -31,7 +31,7 @@ const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
   [samuraiGameplay.symbol]: {
     kind: samuraiGameplay.kind,
     altKey: SAMURAI_ALT_KEY,
-    assetPath: "/assets/sprites/samurai-cat/idle-east-frames/frame_01.png",
+    assetPath: "/assets/sprites/samurai-cat/idle-east.png",
   },
   [sludgeGameplay.symbol]: { kind: sludgeGameplay.kind, altKey: SLUDGE_ALT_KEY },
   [thickSludgeGameplay.symbol]: { kind: thickSludgeGameplay.kind, altKey: THICK_SLUDGE_ALT_KEY, emoji: "\u{1F47E}" }, // 👾

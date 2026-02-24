@@ -1,6 +1,6 @@
 import type { SpriteState } from "./board-effects";
 import type { SpriteDebugCardSpec } from "./sprite-debug-data";
-import { CHAR_SPRITES, resolveSpriteStateSrc } from "./sprite-config";
+import { CHAR_SPRITES, resolveSpriteStateSrc, type SpriteStateConfig } from "./sprite-config";
 import type { SpriteDir } from "./sprite-utils";
 
 import captiveDefJson from "./debug/unit-animation/captive.debug.json";
@@ -50,6 +50,8 @@ interface SpriteConfigUnitAnimationEntryJson {
   trigger: string;
   expectedFrames: number;
   overlay: boolean;
+  /** スロットラベル→プレビュー画像パスのオーバーライド（北/南など SpriteDir 外の方向用） */
+  previewSrcBySlot?: Readonly<Record<string, string>>;
 }
 
 interface SpriteConfigUnitAnimationDefinitionJson {
@@ -61,14 +63,9 @@ interface SpriteConfigUnitAnimationDefinitionJson {
 
 type UnitAnimationDefinitionJson = StaticUnitAnimationDefinitionJson | SpriteConfigUnitAnimationDefinitionJson;
 
-const SPRITE_DIR_LABEL_BY_DIR: Readonly<Record<SpriteDir, string>> = {
-  left: "WEST",
-  right: "EAST",
-};
-
 const EMOJI_FALLBACK_DEF = emojiFallbackDefJson as StaticUnitAnimationDefinitionJson;
 const UNIT_ANIMATION_DEFS_BY_KIND = new Map<string, UnitAnimationDefinitionJson>([
-  ["samurai", samuraiDefJson as StaticUnitAnimationDefinitionJson],
+  ["samurai", samuraiDefJson as unknown as SpriteConfigUnitAnimationDefinitionJson],
   ["captive", captiveDefJson as StaticUnitAnimationDefinitionJson],
   ["sludge", sludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
   ["thick-sludge", thickSludgeDefJson as SpriteConfigUnitAnimationDefinitionJson],
@@ -106,33 +103,67 @@ function buildSpriteConfigImplementationText(
   return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で不一致。`;
 }
 
+function artLayoutForSlotCount(slotCount: number): UnitAnimationArtLayout {
+  if (slotCount >= 4) return "quad-grid";
+  if (slotCount >= 2) return "pair-grid";
+  return "single";
+}
+
+function resolvePreviewForSlot(
+  slot: UnitPreviewSlotSpec,
+  stateConfig: SpriteStateConfig,
+  previewSrcBySlot: Readonly<Record<string, string>> | undefined,
+): string {
+  const override = previewSrcBySlot?.[slot.label];
+  if (override) return override;
+  if (!slot.spriteDir) return "";
+  return resolveSpriteStateSrc(stateConfig, slot.spriteDir);
+}
+
 function materializeSpriteConfigUnitAnimationTypeSpecs(
   def: SpriteConfigUnitAnimationDefinitionJson,
-  cards: readonly SpriteDebugCardSpec[],
+  _cards: readonly SpriteDebugCardSpec[],
 ): UnitAnimationTypeSpec[] {
-  // sprite-config mode definitions are internal and must correspond to CHAR_SPRITES.
   const config = CHAR_SPRITES[def.kind]!;
-
-  const spriteDirs = cards.map((card) => card.spriteDir);
-  const uniqueSpriteDirs = Array.from(new Set(spriteDirs));
-  const spriteDirLabelText = uniqueSpriteDirs.map((dir) => SPRITE_DIR_LABEL_BY_DIR[dir]).join(" / ");
+  const slots = def.previewSlots;
+  const artLayout = artLayoutForSlotCount(slots.length);
+  const slotLabelText = slots.map((s) => s.label).join(" / ");
 
   return def.entries.map((entry) => {
     const stateConfig = config[entry.spriteState];
+
+    // state が未実装の場合
+    if (!stateConfig) {
+      return {
+        animationType: entry.animationType,
+        trigger: entry.trigger,
+        spriteFiles: ["-"],
+        frameCountText: "未実装",
+        motionSpec: "未実装",
+        implementation: `${entry.spriteState} のスプライトアセットが未制作。`,
+        status: "ng" as const,
+        previewImageSrcs: [],
+        artLayout,
+      };
+    }
+
     const actualFrames = stateConfig.frames;
     const expectedFrames = entry.expectedFrames;
     const animatedRequirement = hasAnimatedMotionRequirement(expectedFrames);
-    const spriteFiles = uniqueSpriteDirs.map((dir) => stripSpriteAssetPrefix(resolveSpriteStateSrc(stateConfig, dir)));
-    const previewImageSrcs = uniqueSpriteDirs.map((dir) => resolveSpriteStateSrc(stateConfig, dir));
+
+    const previewImageSrcs = slots.map((slot) => resolvePreviewForSlot(slot, stateConfig, entry.previewSrcBySlot));
+    const spriteFiles = previewImageSrcs
+      .filter((src) => src.length > 0)
+      .map(stripSpriteAssetPrefix);
 
     let motionSpec: string;
     if (entry.overlay) {
       motionSpec = animatedRequirement
-        ? `等間隔フレーム遷移（overlay / ${spriteDirLabelText}）`
+        ? `等間隔フレーム遷移（overlay / ${slotLabelText}）`
         : "単フレームoverlay表示";
     } else {
       motionSpec = animatedRequirement
-        ? `等間隔フレーム遷移（${spriteDirLabelText}）`
+        ? `等間隔フレーム遷移（${slotLabelText}）`
         : "単フレーム表示";
     }
 
@@ -147,7 +178,7 @@ function materializeSpriteConfigUnitAnimationTypeSpecs(
       implementation: buildSpriteConfigImplementationText(entry.spriteState, actualFrames, expectedFrames, entry.overlay),
       status,
       previewImageSrcs,
-      artLayout: "pair-grid",
+      artLayout,
     };
   });
 }

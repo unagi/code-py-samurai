@@ -24,10 +24,10 @@ describe("sprite config", () => {
     expect(SPRITE_CAPABLE_KINDS.has("captive")).toBe(true);
     expect(SPRITE_CAPABLE_KINDS.has("archer")).toBe(false);
     expect(CHAR_SPRITES.sludge.idle.frames).toBe(4);
-    expect(CHAR_SPRITES.sludge.attack.frames).toBe(2);
-    expect(CHAR_SPRITES.sludge.death.frames).toBe(3);
-    expect(CHAR_SPRITES["thick-sludge"].death.frames).toBe(2);
-    expect(CHAR_SPRITES.wizard.attack.frames).toBe(4);
+    expect(CHAR_SPRITES.sludge.attack!.frames).toBe(2);
+    expect(CHAR_SPRITES.sludge.death!.frames).toBe(3);
+    expect(CHAR_SPRITES["thick-sludge"].death!.frames).toBe(2);
+    expect(CHAR_SPRITES.wizard.attack!.frames).toBe(4);
   });
 
   it("resolves sludge sprite paths to east/west assets while keeping left/right inputs", () => {
@@ -35,32 +35,32 @@ describe("sprite config", () => {
       .toBe("/assets/sprites/sludge/idle-west.png");
     expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.idle, "right"))
       .toBe("/assets/sprites/sludge/idle-east.png");
-    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "left"))
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack!, "left"))
       .toBe("/assets/sprites/sludge/attack-west.png");
-    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack, "right"))
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.sludge.attack!, "right"))
       .toBe("/assets/sprites/sludge/attack-east.png");
   });
 
   it("resolves thick-sludge sprite paths from generated manifest", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES["thick-sludge"].idle, "left"))
       .toBe("/assets/sprites/thick-sludge/idle-west.png");
-    expect(resolveSpriteStateSrc(CHAR_SPRITES["thick-sludge"].attack, "right"))
+    expect(resolveSpriteStateSrc(CHAR_SPRITES["thick-sludge"].attack!, "right"))
       .toBe("/assets/sprites/thick-sludge/attack-east.png");
   });
 
   it("resolves captive sprite paths from generated manifest", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.idle, "left"))
       .toBe("/assets/sprites/captive/bound.png");
-    expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.death, "right"))
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.captive.death!, "right"))
       .toBe("/assets/sprites/captive/rescued.png");
     expect(CHAR_SPRITES.captive.idle.frames).toBe(4);
-    expect(CHAR_SPRITES.captive.death.frames).toBe(4);
+    expect(CHAR_SPRITES.captive.death!.frames).toBe(4);
   });
 
   it("resolves wizard sprite paths from generated manifest", () => {
     expect(resolveSpriteStateSrc(CHAR_SPRITES.wizard.idle, "left"))
       .toBe("/assets/sprites/wizard/idle-west.png");
-    expect(resolveSpriteStateSrc(CHAR_SPRITES.wizard.attack, "right"))
+    expect(resolveSpriteStateSrc(CHAR_SPRITES.wizard.attack!, "right"))
       .toBe("/assets/sprites/wizard/attack-east.png");
   });
 

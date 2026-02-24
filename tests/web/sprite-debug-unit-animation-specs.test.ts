@@ -15,7 +15,7 @@ function buildEnemyCard(kind: string, dir: "left" | "right"): SpriteDebugCardSpe
 }
 
 describe("sprite debug unit animation specs", () => {
-  it("returns static JSON specs for samurai", () => {
+  it("returns sprite-config specs for samurai with 4-direction idle and ng for unimplemented states", () => {
     const specs = unitAnimationTypeSpecs({ kind: "samurai" });
 
     expect(specs.map((spec) => spec.animationType)).toEqual([
@@ -24,11 +24,26 @@ describe("sprite debug unit animation specs", () => {
       "Offence",
       "Damaged",
     ]);
-    expect(specs[0]).toMatchObject({
+
+    // Idle: 4方向プレビュー、quad-grid レイアウト
+    const idle = specs[0];
+    expect(idle).toMatchObject({
       animationType: "Idle",
       artLayout: "quad-grid",
-      status: "ng",
+      status: "ok",
     });
+    expect(idle.previewImageSrcs).toHaveLength(4);
+    expect(idle.spriteFiles).toHaveLength(4);
+    expect(idle.previewImageSrcs[2]).toContain("idle-north");
+    expect(idle.previewImageSrcs[3]).toContain("idle-south");
+
+    // Disappear/Offence/Damaged: 未実装 → ng
+    for (const spec of specs.slice(1)) {
+      expect(spec.status).toBe("ng");
+      expect(spec.spriteFiles).toEqual(["-"]);
+      expect(spec.previewImageSrcs).toEqual([]);
+      expect(spec.implementation).toContain("未制作");
+    }
   });
 
   it("returns emoji fallback specs when renderMode is emoji", () => {
@@ -65,7 +80,7 @@ describe("sprite debug unit animation specs", () => {
     expect(disappear?.spriteFiles).toEqual(["captive/rescued.png"]);
   });
 
-  it("materializes sprite-config-based specs from unit cards", () => {
+  it("materializes sprite-config-based specs from previewSlots", () => {
     const specs = unitAnimationTypeSpecs({
       kind: "sludge",
       renderMode: "sprite",
@@ -123,12 +138,13 @@ describe("sprite debug unit animation specs", () => {
       .toEqual(["wizard/idle-west.png", "wizard/idle-east.png"]);
   });
 
-  it("returns empty for unknown unit kind and supports sprite cards omission fallback", () => {
+  it("returns empty for unknown unit kind and resolves from previewSlots without cards", () => {
     expect(unitAnimationTypeSpecs({ kind: "unknown-unit" })).toEqual([]);
 
+    // cards 省略時も previewSlots からプレビュー画像を解決する
     const specs = unitAnimationTypeSpecs({ kind: "sludge", renderMode: "sprite" });
     expect(specs).toHaveLength(4);
-    expect(specs[0].spriteFiles).toEqual([]);
-    expect(specs[0].previewImageSrcs).toEqual([]);
+    expect(specs[0].spriteFiles).toEqual(["sludge/idle-west.png", "sludge/idle-east.png"]);
+    expect(specs[0].previewImageSrcs).toHaveLength(2);
   });
 });
