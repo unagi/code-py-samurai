@@ -30,6 +30,7 @@ import {
   writeProgressStorage,
 } from "./progress-storage";
 import { ResultModal } from "./ResultModal";
+import { buildSamuraiApiStructureViewModel } from "./samurai-api-structure";
 import {
   SAMURAI_IDLE_FRAME_COUNT,
   SAMURAI_IDLE_FRAME_MS,
@@ -49,6 +50,7 @@ const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
 const BOARD_DESC_PANEL_HEIGHT_PX = 56;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
+const API_REFERENCE_PATH = "/reference/python-api";
 const SPEED_OPTIONS = [
   { value: 700, key: "controls.slow" },
   { value: 450, key: "controls.normal" },
@@ -134,13 +136,9 @@ export default function App() {
     setSamuraiLevel,
     onResetVisualState: () => setHoveredEnemyStats(null),
   });
-  const availableMethods = useMemo(
-    () => unlockedSamuraiAbilities.skills.map((item) => `samurai.${item}`),
-    [unlockedSamuraiAbilities.skills],
-  );
-  const availableProperties = useMemo(
-    () => unlockedSamuraiAbilities.stats.map((item) => `samurai.${item}`),
-    [unlockedSamuraiAbilities.stats],
+  const samuraiApiStructure = useMemo(
+    () => buildSamuraiApiStructureViewModel(unlockedSamuraiAbilities),
+    [unlockedSamuraiAbilities],
   );
   const statsFmt: StatsFormatter = useMemo(() => ({
     hp: (current, max) => t("board.hp", { current, max }),
@@ -632,23 +630,87 @@ export default function App() {
           </article>
         </div>
         <aside className="api-panel api-panel-standalone" aria-labelledby="api-block-heading">
-          <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
-          <h4>{t("editor.methods")}</h4>
-          <ul className="api-list">
-            {availableMethods.length > 0 ? (
-              availableMethods.map((item) => <li key={item}>{item}</li>)
-            ) : (
-              <li>{t("editor.none")}</li>
-            )}
-          </ul>
-          <h4>{t("editor.properties")}</h4>
-          <ul className="api-list">
-            {availableProperties.length > 0 ? (
-              availableProperties.map((item) => <li key={item}>{item}</li>)
-            ) : (
-              <li>{t("editor.none")}</li>
-            )}
-          </ul>
+          <div className="api-panel-header">
+            <h3 id="api-block-heading">📚 {t("editor.apiHeading")}</h3>
+            <a
+              className="api-panel-link"
+              href={API_REFERENCE_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="icon-label"><i className="bi bi-box-arrow-up-right" />{t("editor.apiReference")}</span>
+            </a>
+          </div>
+          <div className="api-structure-root" aria-label={samuraiApiStructure.className}>
+            <ul className="api-structure-tree">
+              <li className="api-structure-node api-structure-node-class">
+                <div className="api-structure-row api-structure-row-class">
+                  <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                  <span className="api-structure-label">{samuraiApiStructure.className}</span>
+                </div>
+                <ul className="api-structure-branch">
+                  <li className="api-structure-node api-structure-node-group">
+                    <div className="api-structure-row api-structure-row-group">
+                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                      <span className="api-structure-label">{t("editor.methods")}</span>
+                    </div>
+                    <ul className="api-structure-branch api-structure-branch-leaves">
+                      {samuraiApiStructure.methodSignatures.length > 0 ? (
+                        samuraiApiStructure.methodSignatures.map((item) => (
+                          <li key={item} className="api-structure-node api-structure-node-leaf">
+                            <div className="api-structure-row api-structure-row-leaf">
+                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                                •
+                              </span>
+                              <code className="api-structure-signature">{item}</code>
+                            </div>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                          <div className="api-structure-row api-structure-row-leaf">
+                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                              •
+                            </span>
+                            <span className="api-structure-empty">{t("editor.none")}</span>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </li>
+                  <li className="api-structure-node api-structure-node-group">
+                    <div className="api-structure-row api-structure-row-group">
+                      <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                      <span className="api-structure-label">{t("editor.properties")}</span>
+                    </div>
+                    <ul className="api-structure-branch api-structure-branch-leaves">
+                      {samuraiApiStructure.propertySignatures.length > 0 ? (
+                        samuraiApiStructure.propertySignatures.map((item) => (
+                          <li key={item} className="api-structure-node api-structure-node-leaf">
+                            <div className="api-structure-row api-structure-row-leaf">
+                              <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                                •
+                              </span>
+                              <code className="api-structure-signature">{item}</code>
+                            </div>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="api-structure-node api-structure-node-leaf api-structure-node-empty">
+                          <div className="api-structure-row api-structure-row-leaf">
+                            <span className="api-structure-twistie api-structure-twistie-placeholder" aria-hidden="true">
+                              •
+                            </span>
+                            <span className="api-structure-empty">{t("editor.none")}</span>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
         </aside>
       </section>
 

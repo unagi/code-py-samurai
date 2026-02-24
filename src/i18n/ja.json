@@ -30,6 +30,7 @@
     "clue": "手がかり",
     "codeNote": "コード変更は次回の Start/Reset 時に反映されます。",
     "apiHeading": "メソッド / プロパティ",
+    "apiReference": "API Reference",
     "methods": "メソッド",
     "properties": "プロパティ",
     "none": "（なし）"
