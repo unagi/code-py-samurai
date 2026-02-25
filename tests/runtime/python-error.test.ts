@@ -52,6 +52,22 @@ describe("python error handling", () => {
     }
   });
 
+  it("reports correct user-relative line number for syntax errors (preamble offset)", () => {
+    // "self._done = False" at class body level (line 2) is a NameError at compile time.
+    // The preamble injected by injectGetattr must be subtracted so the reported line
+    // matches the user's source, not the internal combined source.
+    const source = "class Player:\n    self._done = False\n    def play_turn(self, samurai):\n        pass";
+    try {
+      compilePythonPlayer(source);
+      expect.unreachable("should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(PythonSyntaxError);
+      const synErr = error as PythonSyntaxError;
+      // The error is on user's line 2 — must NOT report a preamble-inflated line number
+      expect(synErr.line).toBe(2);
+    }
+  });
+
   it("includes line number in formatted syntax error when available", () => {
     const error = new PythonSyntaxError("invalid syntax", 3, 5);
     expect(error.line).toBe(3);

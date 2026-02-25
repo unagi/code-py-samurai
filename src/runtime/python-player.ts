@@ -77,7 +77,8 @@ function injectGetattr(source: string): InjectResult {
     /^(class\s+Player)\s*:/m,
     "$1(_PlayerBase):",
   );
-  return { source: base + modified, preambleLines: preamble.length };
+  // join("\n") of N elements produces N-1 newlines; user code starts on line N.
+  return { source: base + modified, preambleLines: preamble.length - 1 };
 }
 
 /* ---------- JS ↔ Skulpt conversions ---------- */
