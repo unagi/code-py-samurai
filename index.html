@@ -11,7 +11,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Python侍 - Py SAMURAI" />
     <meta property="og:description" content="Learn Python by guiding a samurai cat through dungeon towers. A browser-based programming learning game." />
-    <meta property="og:image" content="/assets/brand/og-image.png" />
+    <meta property="og:image" content="https://unagi.github.io/code-py-samurai/assets/brand/og-image.png" />
     <meta property="og:locale" content="en" />
     <meta property="og:locale:alternate" content="ja" />
 
@@ -19,11 +19,39 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Python侍 - Py SAMURAI" />
     <meta name="twitter:description" content="Learn Python by guiding a samurai cat through dungeon towers." />
-    <meta name="twitter:image" content="/assets/brand/og-image.png" />
+    <meta name="twitter:image" content="https://unagi.github.io/code-py-samurai/assets/brand/og-image.png" />
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F433K7QM9W"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-F433K7QM9W");
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- SPA redirect handler for GitHub Pages (receives redirect from 404.html) -->
+    <script>
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
   </head>
   <body>
     <div id="app"></div>
