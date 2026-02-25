@@ -139,7 +139,8 @@
     "source": "Source"
   },
   "notices": {
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "spriteQuality": "Character sprite quality is a known issue — improvements are in progress 🙏"
   },
   "errorBoundary": {
     "title": "Something went wrong",

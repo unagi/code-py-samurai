@@ -28,12 +28,9 @@ export interface Notice {
  * Remove or let them expire when they are no longer relevant.
  */
 export const activeNotices: Notice[] = [
-  // Example:
-  // {
-  //   id: "known-bug-example-2026-02",
-  //   severity: "warning",
-  //   messageKey: "notices.exampleBug",
-  //   link: "https://github.com/unagi/code-py-samurai/issues/1",
-  //   linkLabelKey: "notices.seeIssue",
-  // },
+  {
+    id: "sprite-quality-2026-02",
+    severity: "info",
+    messageKey: "notices.spriteQuality",
+  },
 ];

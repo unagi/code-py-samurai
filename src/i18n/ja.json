@@ -139,7 +139,8 @@
     "source": "ソースコード"
   },
   "notices": {
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "spriteQuality": "キャラクター画像の品質に問題があります。改善中です 🙏"
   },
   "errorBoundary": {
     "title": "エラーが発生しました",
