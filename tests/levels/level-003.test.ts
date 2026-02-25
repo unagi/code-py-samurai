@@ -13,7 +13,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEnemy()) {
+        const u = space.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
           t.doAction("attack!", "forward");
         } else if ((t.doSense("health") as number) < 20) {
           t.doAction("rest!");
@@ -37,7 +38,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEnemy()) {
+        const u = space.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
           t.doAction("attack!", "forward");
         } else if ((t.doSense("health") as number) < 20) {
           t.doAction("rest!");
@@ -60,7 +62,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEmpty()) {
+        const u = space.unit;
+        if (!u && space.terrain === "floor") {
           t.doAction("walk!", "forward");
         } else {
           t.doAction("attack!", "forward");

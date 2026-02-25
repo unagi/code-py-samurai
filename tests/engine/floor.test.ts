@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Floor } from "@engine/floor";
-import type { IUnit } from "@engine/types";
+import { Terrain, type IUnit } from "@engine/types";
 
 function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
   return {
@@ -153,14 +153,14 @@ describe("Floor", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
       const space = floor.space(3, 0);
-      expect(space.isEmpty()).toBe(true);
+      expect(!space.unit && space.terrain === Terrain.Floor).toBe(true);
       expect(space.location).toEqual([3, 0]);
     });
 
     it("space at stairs location isStairs", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
-      expect(floor.space(7, 0).isStairs()).toBe(true);
+      expect(floor.space(7, 0).terrain).toBe(Terrain.Stairs);
     });
   });
 
@@ -169,7 +169,7 @@ describe("Floor", () => {
       const floor = new Floor(8, 1);
       floor.placeStairs(7, 0);
       const space = floor.stairsSpace;
-      expect(space.isStairs()).toBe(true);
+      expect(space.terrain).toBe(Terrain.Stairs);
       expect(space.location).toEqual([7, 0]);
     });
   });

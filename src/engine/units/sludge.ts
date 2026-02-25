@@ -27,7 +27,8 @@ export class Sludge extends BaseUnit {
   playTurn(turn: Turn): void {
     for (const direction of SEARCH_DIRECTIONS) {
       const space = turn.doSense("feel", direction) as Space;
-      if (space.isPlayer()) {
+      const u = space.unit;
+      if (u && (u.isSamurai() || u.isGolem())) {
         turn.doAction("attack!", direction);
         return;
       }

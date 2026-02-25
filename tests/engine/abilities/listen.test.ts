@@ -45,7 +45,7 @@ describe("Listen", () => {
     floor.add(new Captive(), 3, 0, "west");
     const spaces = ability.perform();
     expect(spaces).toHaveLength(2);
-    expect(spaces.some((s) => s.isEnemy())).toBe(true);
-    expect(spaces.some((s) => s.isCaptive())).toBe(true);
+    expect(spaces.some((s) => s.unit && !s.unit.isSamurai() && !s.unit.isGolem() && !s.unit.isBound())).toBe(true);
+    expect(spaces.some((s) => s.unit?.isBound())).toBe(true);
   });
 });

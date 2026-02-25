@@ -24,11 +24,12 @@ export abstract class RangedEnemy extends BaseUnit {
     for (const direction of SEARCH_DIRECTIONS) {
       const spaces = turn.doSense("look", direction) as Space[];
       for (const space of spaces) {
-        if (space.isPlayer()) {
+        const u = space.unit;
+        if (u && (u.isSamurai() || u.isGolem())) {
           turn.doAction("shoot!", direction);
           return;
         }
-        if (!space.isEmpty()) {
+        if (u || space.terrain !== "floor") {
           break;
         }
       }

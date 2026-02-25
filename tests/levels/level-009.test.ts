@@ -29,17 +29,18 @@ describe("Beginner Level 9", () => {
         // Look forward (west) and shoot enemies
         const spaces = t.doSense("look", "forward") as Space[];
         for (const space of spaces) {
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("shoot!", "forward");
             return;
           }
-          if (!space.isEmpty()) break;
+          if (u || space.terrain === "wall") break;
         }
 
         // Rescue captives, walk forward
-        if (fwd.isCaptive()) {
+        if (fwd.unit?.isBound()) {
           t.doAction("rescue!", "forward");
-        } else if (fwd.isEnemy()) {
+        } else if (fwd.unit && !fwd.unit.isSamurai() && !fwd.unit.isGolem()) {
           t.doAction("attack!", "forward");
         } else {
           t.doAction("walk!", "forward");

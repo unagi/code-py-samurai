@@ -45,7 +45,7 @@ describe("Captive", () => {
     const captive = new Captive();
     floor.add(captive, 3, 0, "east");
     const space = floor.space(3, 0);
-    expect(space.isCaptive()).toBe(true);
-    expect(space.isEnemy()).toBe(false);
+    expect(space.unit?.isBound()).toBe(true);
+    expect(!space.unit?.isSamurai() && !space.unit?.isGolem() && !space.unit?.isBound()).toBe(false);
   });
 });

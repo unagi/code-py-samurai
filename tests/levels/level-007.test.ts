@@ -18,14 +18,14 @@ describe("Beginner Level 7", () => {
         const t = turn as Turn;
         const health = t.doSense("health") as number;
         const fwd = t.doSense("feel", "forward") as Space;
-        if (fwd.isWall() && !pivoted) {
+        if (fwd.terrain === "wall" && !pivoted) {
           t.doAction("pivot!");
           pivoted = true;
-        } else if (fwd.isEnemy()) {
+        } else if (fwd.unit && !fwd.unit.isSamurai() && !fwd.unit.isGolem()) {
           t.doAction("attack!", "forward");
         } else if (health < 20 && health >= lastHealth) {
           t.doAction("rest!");
-        } else if (health <= 10 && health < lastHealth && fwd.isEmpty()) {
+        } else if (health <= 10 && health < lastHealth && !fwd.unit && fwd.terrain !== "wall") {
           // Retreat from ranged damage to rest safely
           t.doAction("walk!", "backward");
         } else {
@@ -45,7 +45,7 @@ describe("Beginner Level 7", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const fwd = t.doSense("feel", "forward") as Space;
-        if (fwd.isEmpty()) {
+        if (!fwd.unit && fwd.terrain !== "wall") {
           t.doAction("walk!", "forward");
         }
       },

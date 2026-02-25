@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Space } from "@engine/space";
-import type { IFloor, IUnit } from "@engine/types";
+import { Terrain, type IFloor, type IUnit } from "@engine/types";
 
 function createMockFloor(opts: {
   width?: number;
@@ -61,179 +61,23 @@ function createMockUnit(overrides: Partial<IUnit> = {}): IUnit {
 }
 
 describe("Space", () => {
-  describe("isEmpty", () => {
-    it("returns true for empty in-bounds cell", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, 3, 0);
-      expect(space.isEmpty()).toBe(true);
-    });
-
-    it("returns false when a unit is present", () => {
-      const unit = createMockUnit();
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isEmpty()).toBe(false);
-    });
-
-    it("returns false for wall (out of bounds)", () => {
+  describe("terrain", () => {
+    it("returns Terrain.Wall for out of bounds", () => {
       const floor = createMockFloor();
       const space = new Space(floor, -1, 0);
-      expect(space.isEmpty()).toBe(false);
-    });
-  });
-
-  describe("isWall", () => {
-    it("returns true for out of bounds", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, -1, 0);
-      expect(space.isWall()).toBe(true);
+      expect(space.terrain).toBe(Terrain.Wall);
     });
 
-    it("returns true for beyond width", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, 8, 0);
-      expect(space.isWall()).toBe(true);
-    });
-
-    it("returns false for in-bounds", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, 3, 0);
-      expect(space.isWall()).toBe(false);
-    });
-  });
-
-  describe("isStairs", () => {
-    it("returns true at stairs location", () => {
+    it("returns Terrain.Stairs at stairs location", () => {
       const floor = createMockFloor({ stairsX: 7, stairsY: 0 });
       const space = new Space(floor, 7, 0);
-      expect(space.isStairs()).toBe(true);
+      expect(space.terrain).toBe(Terrain.Stairs);
     });
 
-    it("returns false at non-stairs location", () => {
-      const floor = createMockFloor({ stairsX: 7, stairsY: 0 });
-      const space = new Space(floor, 3, 0);
-      expect(space.isStairs()).toBe(false);
-    });
-  });
-
-  describe("isEnemy", () => {
-    it("returns true for non-player non-captive unit", () => {
-      const unit = createMockUnit({ character: "s" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isEnemy()).toBe(true);
-    });
-
-    it("returns false for samurai", () => {
-      const unit = createMockUnit({ isSamurai: () => true, character: "@" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isEnemy()).toBe(false);
-    });
-
-    it("returns false for golem", () => {
-      const unit = createMockUnit({ isGolem: () => true, character: "G" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isEnemy()).toBe(false);
-    });
-
-    it("returns false for captive (bound unit)", () => {
-      const unit = createMockUnit({ isBound: () => true, character: "C" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isEnemy()).toBe(false);
-    });
-
-    it("returns false for empty space", () => {
+    it("returns Terrain.Floor for in-bounds non-stairs", () => {
       const floor = createMockFloor();
       const space = new Space(floor, 3, 0);
-      expect(space.isEnemy()).toBe(false);
-    });
-  });
-
-  describe("isCaptive", () => {
-    it("returns true for bound unit", () => {
-      const unit = createMockUnit({ isBound: () => true, character: "C" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isCaptive()).toBe(true);
-    });
-
-    it("returns false for unbound unit", () => {
-      const unit = createMockUnit({ character: "s" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isCaptive()).toBe(false);
-    });
-
-    it("returns false for empty space", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, 3, 0);
-      expect(space.isCaptive()).toBe(false);
-    });
-  });
-
-  describe("isPlayer", () => {
-    it("returns true for samurai", () => {
-      const unit = createMockUnit({ isSamurai: () => true });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isPlayer()).toBe(true);
-    });
-
-    it("returns true for golem", () => {
-      const unit = createMockUnit({ isGolem: () => true });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isPlayer()).toBe(true);
-    });
-
-    it("returns false for enemy", () => {
-      const unit = createMockUnit();
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isPlayer()).toBe(false);
-    });
-  });
-
-  describe("isTicking", () => {
-    it("returns true when unit has explode ability", () => {
-      const unit = createMockUnit({
-        hasAbility: (name: string) => name === "explode!",
-      });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isTicking()).toBe(true);
-    });
-
-    it("returns false when unit has no explode ability", () => {
-      const unit = createMockUnit();
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isTicking()).toBe(false);
-    });
-
-    it("returns false for empty space", () => {
-      const floor = createMockFloor();
-      const space = new Space(floor, 3, 0);
-      expect(space.isTicking()).toBe(false);
-    });
-  });
-
-  describe("isGolem", () => {
-    it("returns true for golem unit", () => {
-      const unit = createMockUnit({ isGolem: () => true, character: "G" });
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isGolem()).toBe(true);
-    });
-
-    it("returns false for non-golem unit", () => {
-      const unit = createMockUnit();
-      const floor = createMockFloor({ unitAt: { x: 3, y: 0, unit } });
-      const space = new Space(floor, 3, 0);
-      expect(space.isGolem()).toBe(false);
+      expect(space.terrain).toBe(Terrain.Floor);
     });
   });
 

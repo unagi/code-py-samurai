@@ -15,18 +15,19 @@ describe("Beginner Level 8", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const fwd = t.doSense("feel", "forward") as Space;
-        if (fwd.isCaptive()) {
+        if (fwd.unit?.isBound()) {
           t.doAction("rescue!", "forward");
           return;
         }
         // Look forward for enemies to shoot
         const spaces = t.doSense("look", "forward") as Space[];
         for (const space of spaces) {
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("shoot!", "forward");
             return;
           }
-          if (!space.isEmpty()) break;
+          if (u || space.terrain === "wall") break;
         }
         // Walk forward if nothing to do
         t.doAction("walk!", "forward");

@@ -16,7 +16,8 @@ describe("Beginner Level 4", () => {
         const t = turn as Turn;
         const health = t.doSense("health") as number;
         const space = t.doSense("feel", "forward") as Space;
-        if (!space.isEmpty() && space.isEnemy()) {
+        const u = space.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
           t.doAction("attack!", "forward");
         } else if (health < 20 && health >= lastHealth) {
           t.doAction("rest!");

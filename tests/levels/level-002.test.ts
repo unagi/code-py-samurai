@@ -11,7 +11,7 @@ describe("Beginner Level 2", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEmpty()) {
+        if (!space.unit && space.terrain !== "wall") {
           t.doAction("walk!", "forward");
         } else {
           t.doAction("attack!", "forward");
@@ -32,7 +32,7 @@ describe("Beginner Level 2", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEmpty()) {
+        if (!space.unit && space.terrain !== "wall") {
           t.doAction("walk!", "forward");
         } else {
           t.doAction("attack!", "forward");
@@ -52,7 +52,7 @@ describe("Beginner Level 2", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEmpty()) {
+        if (!space.unit && space.terrain !== "wall") {
           t.doAction("walk!", "forward");
         } else {
           t.doAction("attack!", "forward");

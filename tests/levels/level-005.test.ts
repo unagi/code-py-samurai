@@ -15,9 +15,10 @@ describe("Beginner Level 5", () => {
         const t = turn as Turn;
         const health = t.doSense("health") as number;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isCaptive()) {
+        const u = space.unit;
+        if (u && u.isBound()) {
           t.doAction("rescue!", "forward");
-        } else if (space.isEnemy()) {
+        } else if (u && !u.isSamurai() && !u.isGolem()) {
           t.doAction("attack!", "forward");
         } else if (health < 20 && health >= lastHealth) {
           t.doAction("rest!");
