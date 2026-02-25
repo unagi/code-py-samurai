@@ -20,7 +20,10 @@ describe("buildSamuraiApiStructureViewModel", () => {
       "listen()",
     ]);
     expect(viewModel.propertySignatures).toEqual(["hp: int"]);
-    expect(viewModel.enums).toContain("enum Direction { FORWARD, RIGHT, BACKWARD, LEFT }");
+    expect(viewModel.enums).toContainEqual({
+      name: "Direction",
+      members: ["FORWARD", "RIGHT", "BACKWARD", "LEFT"],
+    });
     expect(viewModel.otherClasses.find(c => c.name === "Space")).toBeDefined();
     expect(viewModel.otherClasses.find(c => c.name === "Occupant")).toBeDefined();
   });

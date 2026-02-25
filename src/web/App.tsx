@@ -106,23 +106,10 @@ function renderApiSignatureParam(param: string): JSX.Element {
   return <span className="api-structure-sig-type">{text}</span>;
 }
 
-function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum", signature: string): JSX.Element {
+function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum-member", signature: string): JSX.Element {
   const text = signature.trim();
 
-  if (kind === "enum") {
-    // e.g., "enum Direction { FORWARD, RIGHT, BACKWARD, LEFT }"
-    const match = /^enum\s+(\w+)\s*{(.*)}\s*$/.exec(text);
-    if (match) {
-      const name = match[1];
-      const values = match[2].split(",").map(v => v.trim());
-      return (
-        <span className="api-structure-sig-inline">
-          <span className="api-structure-sig-name-class">{name}</span>
-          <span className="api-structure-sig-punct">.</span>
-          <span className="api-structure-sig-text">{values[0]}...</span>
-        </span>
-      );
-    }
+  if (kind === "enum-member") {
     return <span className="api-structure-sig-text">{text}</span>;
   }
 
@@ -859,16 +846,27 @@ export default function App() {
           <div className="api-structure-root" aria-label={samuraiApiStructure.className}>
             <ul className="api-structure-tree">
               {/* Enums Section */}
-              {samuraiApiStructure.enums.map((enumSig) => (
-                <li key={enumSig} className="api-structure-node api-structure-node-leaf api-structure-node-leaf-enum">
-                  <div className="api-structure-row api-structure-row-leaf api-structure-row-leaf-enum">
-                    <span className="api-structure-item-icon api-structure-item-icon-enum" aria-hidden="true">
-                      <i className="bi bi-list-columns-reverse" />
-                    </span>
-                    <code className="api-structure-signature">
-                      {renderApiStructureSignature("enum", enumSig)}
-                    </code>
+              {samuraiApiStructure.enums.map((en) => (
+                <li key={en.name} className="api-structure-node api-structure-node-class">
+                  <div className="api-structure-row api-structure-row-class">
+                    <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                    <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-list-columns-reverse" /></span>
+                    <span className="api-structure-label">{en.name}</span>
                   </div>
+                  <ul className="api-structure-branch api-structure-branch-leaves">
+                    {en.members.map((member) => (
+                      <li key={member} className="api-structure-node api-structure-node-leaf api-structure-node-leaf-enum">
+                        <div className="api-structure-row api-structure-row-leaf api-structure-row-leaf-enum">
+                          <span className="api-structure-item-icon api-structure-item-icon-enum" aria-hidden="true">
+                            <i className="bi bi-record-fill" />
+                          </span>
+                          <code className="api-structure-signature">
+                            {renderApiStructureSignature("enum-member", member)}
+                          </code>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               ))}
 

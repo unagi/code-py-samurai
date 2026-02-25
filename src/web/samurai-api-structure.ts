@@ -5,7 +5,7 @@ export interface SamuraiApiStructureViewModel {
   className: "Samurai";
   methodSignatures: string[];
   propertySignatures: string[];
-  enums: string[];
+  enums: { name: string; members: string[] }[];
   otherClasses: { name: string; properties: string[] }[];
 }
 
@@ -128,8 +128,20 @@ export function buildSamuraiApiStructureViewModel(
   const propertyLookup = buildPropertySignatureLookup("Samurai");
 
   const enums = findItemsByKind("enum")
-    .map(item => item.signature || item.name)
-    .filter(Boolean);
+    .map(item => {
+      const signature = item.signature || "";
+      const match = /^enum\s+(\w+)\s*{(.*)}\s*$/.exec(signature);
+      if (match) {
+        return {
+          name: match[1],
+          members: match[2].split(",").map(v => v.trim()).filter(Boolean),
+        };
+      }
+      return {
+        name: item.name,
+        members: [],
+      };
+    });
 
   const otherClasses = findItemsByKind("class")
     .filter(item => item.name !== "Samurai")
