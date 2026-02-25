@@ -32,6 +32,7 @@ export class LevelSession {
   private _runtimeError: string | null = null;
   private _fallbackBoard = "";
   private _lastValidPlayer: IPlayer | null = null;
+  private _lastAbilities: string[] = [];
   private readonly _fallbackMessageKey = "logs.systemFallback";
 
   private buildFallbackBoard(levelDef: LevelDefinition): string {
@@ -47,6 +48,7 @@ export class LevelSession {
     this._logger.clear();
     this._setupError = null;
     this._runtimeError = null;
+    this._lastAbilities = existingAbilities;
     this._fallbackBoard = this.buildFallbackBoard(levelDef);
     try {
       const { player } = runPythonPlayerSource(playerCode);
@@ -59,7 +61,7 @@ export class LevelSession {
       if (this._lastValidPlayer) {
         this._logger.log({ key: this._fallbackMessageKey, params: {} });
         this._level = new Level(levelDef, this._logger);
-        this._level.setup(this._lastValidPlayer, []);
+        this._level.setup(this._lastValidPlayer, existingAbilities);
       } else {
         this._level = null;
       }
@@ -73,7 +75,7 @@ export class LevelSession {
     this._runtimeError = null;
     this._fallbackBoard = this.buildFallbackBoard(levelDef);
     this._level = new Level(levelDef, this._logger);
-    this._level.setup(this._lastValidPlayer, []);
+    this._level.setup(this._lastValidPlayer, this._lastAbilities);
     return true;
   }
 

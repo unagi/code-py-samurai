@@ -192,14 +192,21 @@ export function useGameController(params: UseGameControllerParams): UseGameContr
     stopTimer();
     setShowResultModal(false);
     onResetVisualState?.();
+    logLineCountRef.current = 0;
+    unitTileIndexMapRef.current = new Map<string, number>();
+    unitDirectionMapRef.current = new Map<string, string>();
+    setDamagePopups([]);
+    setSpriteOverrides([]);
     const session = sessionRef.current;
-    if (session.hasSetupError && session.hasLastValidPlayer) {
+    if (!isCodeDirty && session.hasLastValidPlayer) {
+      // Code unchanged – restart with last valid player, skip re-compile.
       session.resetWithLastValid(level);
-      refreshGameState();
+    } else {
+      // Code changed or no valid player yet – re-compile.
+      session.setup(level, playerCode, unlockedEngineAbilities);
       setIsCodeDirty(false);
-      return;
     }
-    startLevel();
+    refreshGameState();
   };
 
   const expireDamagePopups = (): void => {

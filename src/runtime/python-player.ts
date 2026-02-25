@@ -32,18 +32,23 @@ function getSk(): SkNamespace {
 /* ---------- Source preprocessing ---------- */
 
 /**
- * Inject a base class with `__getattr__` returning None, so that
- * uninitialized `self.xxx` returns None instead of raising AttributeError.
- * This matches Ruby Warrior's nil-default behaviour for instance variables.
+ * Prepend constant definitions (Direction, Terrain, UnitKind) to the user's
+ * Python source so they can be referenced without imports.
  *
- * Uses inheritance instead of source injection to avoid indentation issues
- * (user code may use 2-space, 4-space, or tab indentation).
+ * Player class uses standard Python semantics — accessing an uninitialized
+ * attribute raises AttributeError, just like pure Python.
  */
-function injectGetattr(source: string): string {
+interface InjectResult {
+  source: string;
+  /** Number of lines added as preamble (to adjust error line numbers). */
+  preambleLines: number;
+}
+
+function injectPreamble(source: string): InjectResult {
   if (!/^class\s+Player\s*:/m.test(source)) {
     throw new PythonSyntaxError("class Player not found.");
   }
-  const base = [
+  const preamble = [
     "class Direction:",
     "    FORWARD = 'forward'",
     "    RIGHT = 'right'",
@@ -60,17 +65,11 @@ function injectGetattr(source: string): string {
     "    CAPTIVE = 'c'",
     "    ALLY = 'a'",
     "",
-    "class _PlayerBase:",
-    "    def __getattr__(self, name):",
-    "        return None",
     "",
-    "",
-  ].join("\n");
-  const modified = source.replace(
-    /^(class\s+Player)\s*:/m,
-    "$1(_PlayerBase):",
-  );
-  return base + modified;
+  ];
+  const base = preamble.join("\n");
+  // join("\n") of N elements produces N-1 newlines; user code starts on line N.
+  return { source: base + source, preambleLines: preamble.length - 1 };
 }
 
 /* ---------- JS ↔ Skulpt conversions ---------- */
@@ -296,11 +295,25 @@ function buildSamuraiInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
 
 /* ---------- Error helpers ---------- */
 
-function extractSkErrorMessage(error: unknown): string {
-  const skErr = error as { args?: { v?: Array<{ v?: string }> } };
-  if (skErr?.args?.v?.[0]?.v) return skErr.args.v[0].v;
-  if (error instanceof Error) return error.message;
-  return String(error);
+interface SkErrorInfo {
+  message: string;
+  line: number | undefined;
+  column: number | undefined;
+}
+
+function extractSkErrorInfo(error: unknown): SkErrorInfo {
+  const skErr = error as {
+    args?: { v?: Array<{ v?: string }> };
+    traceback?: Array<{ lineno?: number; colno?: number }>;
+  };
+  const message = skErr?.args?.v?.[0]?.v
+    ?? (error instanceof Error ? error.message : String(error));
+  const tb = skErr?.traceback?.[0];
+  return {
+    message,
+    line: tb?.lineno,
+    column: tb?.colno,
+  };
 }
 
 /* ---------- Public API ---------- */
@@ -311,26 +324,29 @@ export function compilePythonPlayer(source: string): IPlayer {
   }
 
   const sk = getSk();
-  const processed = injectGetattr(source);
+  const inject = injectPreamble(source);
 
   // Compile and instantiate the Player class
   let playTurnMethod: unknown;
   try {
     const moduleName = `<player_${++moduleCounter}>`;
-    const mod = sk.importMainWithBody(moduleName, false, processed);
+    const mod = sk.importMainWithBody(moduleName, false, inject.source);
     const PlayerClass = mod.tp$getattr(new sk.builtin.str("Player"));
     if (!PlayerClass) {
       throw new PythonSyntaxError("class Player not found.");
     }
     const playerInstance = sk.misceval.callsimArray(PlayerClass, []) as SkInstance;
     playTurnMethod = playerInstance.tp$getattr(new sk.builtin.str("play_turn"));
-    // __getattr__ returns Sk.builtin.none.none$ for missing attrs, so check for that too
-    if (!playTurnMethod || playTurnMethod === sk.builtin.none.none$) {
+    if (!playTurnMethod) {
       throw new PythonSyntaxError("def play_turn(self, samurai) not found.");
     }
   } catch (error) {
     if (error instanceof PythonSyntaxError) throw error;
-    throw new PythonSyntaxError(extractSkErrorMessage(error));
+    const info = extractSkErrorInfo(error);
+    const adjustedLine = info.line !== undefined
+      ? Math.max(1, info.line - inject.preambleLines)
+      : undefined;
+    throw new PythonSyntaxError(info.message, adjustedLine, info.column);
   }
 
   return {
@@ -344,7 +360,7 @@ export function compilePythonPlayer(source: string): IPlayer {
         if (error instanceof PythonSyntaxError || error instanceof PythonRuntimeError) {
           throw error;
         }
-        throw new PythonRuntimeError(extractSkErrorMessage(error));
+        throw new PythonRuntimeError(extractSkErrorInfo(error).message);
       }
     },
   };

@@ -42,6 +42,12 @@ interface SkConfigureOptions {
 export interface SkNamespace {
   configure(options: SkConfigureOptions): void;
 
+  /** Parse Python source without executing. Throws on syntax errors. */
+  parse(filename: string, source: string): { cst: unknown; flags: unknown };
+
+  /** Convert a concrete syntax tree to an AST. */
+  astFromParse(cst: unknown, filename: string, flags: unknown): unknown;
+
   importMainWithBody(
     name: string,
     dumpJS: boolean,

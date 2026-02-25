@@ -219,6 +219,7 @@ describe("compilePythonPlayer", () => {
   it("supports self.xxx instance variables persisted across turns", () => {
     const source = [
       "class Player:",
+      "    prev_hp = None",
       "    def play_turn(self, samurai):",
       "        if self.prev_hp is not None:",
       "            if samurai.hp < self.prev_hp:",
@@ -260,9 +261,10 @@ describe("compilePythonPlayer", () => {
     expect(turn5.action).toEqual(["rest!"]);
   });
 
-  it("self.xxx returns undefined (not error) when not yet assigned", () => {
+  it("self.xxx class variable defaults are accessible before assignment", () => {
     const source = [
       "class Player:",
+      "    flag = None",
       "    def play_turn(self, samurai):",
       "        if self.flag is None:",
       "            samurai.walk()",
@@ -287,6 +289,7 @@ describe("compilePythonPlayer", () => {
   it("supports and/or boolean operators", () => {
     const source = [
       "class Player:",
+      "    prev_hp = 0",
       "    def play_turn(self, samurai):",
       "        space = samurai.feel()",
       "        if space.unit is not None and space.unit.kind == UnitKind.ENEMY:",
