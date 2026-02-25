@@ -106,19 +106,13 @@ function renderApiSignatureParam(param: string): JSX.Element {
   return <span className="api-structure-sig-type">{text}</span>;
 }
 
-function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum-member", signature: string, owner?: string): JSX.Element {
+function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum-member", signature: string): JSX.Element {
   const text = signature.trim();
 
   if (kind === "enum-member") {
     return (
       <span className="api-structure-sig-inline">
         <span className="api-structure-sig-name-property">{text}</span>
-        {owner ? (
-          <>
-            <span className="api-structure-sig-punct">: </span>
-            <span className="api-structure-sig-type">{owner}</span>
-          </>
-        ) : null}
       </span>
     );
   }
@@ -868,10 +862,10 @@ export default function App() {
                       <li key={member} className="api-structure-node api-structure-node-leaf api-structure-node-leaf-enum">
                         <div className="api-structure-row api-structure-row-leaf api-structure-row-leaf-enum">
                           <span className="api-structure-item-icon api-structure-item-icon-enum" aria-hidden="true">
-                            <i className="bi bi-record-fill" />
+                            <i className="bi bi-key-fill" />
                           </span>
                           <code className="api-structure-signature">
-                            {renderApiStructureSignature("enum-member", member, en.name)}
+                            {renderApiStructureSignature("enum-member", member)}
                           </code>
                         </div>
                       </li>

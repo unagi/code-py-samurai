@@ -1873,8 +1873,7 @@ button:disabled {
   position: relative;
 }
 
-.api-structure-node-class:where(:not(:first-child)),
-.api-structure-node-leaf-enum:where(:not(:first-child)) {
+.api-structure-node-class:where(:not(:first-child)) {
   margin-top: 0.75rem;
 }
 
@@ -1954,6 +1953,10 @@ button:disabled {
   border-left: 2px solid var(--api-tree-property-rail);
 }
 
+.api-structure-row-leaf-enum {
+  border-left: 2px solid var(--api-tree-property-rail);
+}
+
 .api-structure-label {
   min-width: 0;
 }
@@ -2004,7 +2007,8 @@ button:disabled {
   color: var(--syntax-function);
 }
 
-.api-structure-item-icon-property {
+.api-structure-item-icon-property,
+.api-structure-item-icon-enum {
   color: var(--syntax-keyword);
 }
 
