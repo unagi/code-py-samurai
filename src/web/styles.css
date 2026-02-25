@@ -21,7 +21,7 @@
   );
   color-scheme: dark;
   font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
-  --code-font-family: var(--code-font-family);
+  --code-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", "SF Mono", monospace;
   color: var(--ui-text);
 
   /* Palette layer (Everforest dark-ish) */

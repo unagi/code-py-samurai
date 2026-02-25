@@ -6,6 +6,8 @@ import { HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/lang
 import { keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
+import { pythonLintExtension } from "./python-lint-extension";
+
 export function createCodeEditor(
   parent: HTMLElement,
   initialCode: string,
@@ -30,6 +32,7 @@ export function createCodeEditor(
       EditorState.tabSize.of(4),
       indentUnit.of("    "),
       python(),
+      pythonLintExtension(500),
       syntaxHighlighting(readableHighlight),
       EditorView.theme({
         "&": {

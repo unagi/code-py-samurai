@@ -1,7 +1,12 @@
 export class PythonSyntaxError extends Error {
-  constructor(message: string) {
+  readonly line: number | undefined;
+  readonly column: number | undefined;
+
+  constructor(message: string, line?: number, column?: number) {
     super(message);
     this.name = "PythonSyntaxError";
+    this.line = line;
+    this.column = column;
   }
 }
 
@@ -14,6 +19,9 @@ export class PythonRuntimeError extends Error {
 
 export function formatPythonError(error: unknown): string {
   if (error instanceof PythonSyntaxError) {
+    if (error.line !== undefined) {
+      return `Python syntax error (line ${error.line}): ${error.message}`;
+    }
     return `Python syntax error: ${error.message}`;
   }
   if (error instanceof PythonRuntimeError) {

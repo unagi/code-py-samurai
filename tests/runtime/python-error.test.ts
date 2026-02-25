@@ -52,6 +52,19 @@ describe("python error handling", () => {
     }
   });
 
+  it("includes line number in formatted syntax error when available", () => {
+    const error = new PythonSyntaxError("invalid syntax", 3, 5);
+    expect(error.line).toBe(3);
+    expect(error.column).toBe(5);
+    expect(formatPythonError(error)).toBe("Python syntax error (line 3): invalid syntax");
+  });
+
+  it("omits line number when not provided", () => {
+    const error = new PythonSyntaxError("unexpected EOF");
+    expect(error.line).toBeUndefined();
+    expect(formatPythonError(error)).toBe("Python syntax error: unexpected EOF");
+  });
+
   it("formats generic Error and non-Error values", () => {
     expect(formatPythonError(new Error("oops"))).toBe("Python error: oops");
     expect(formatPythonError("oops")).toBe("Python error: oops");
