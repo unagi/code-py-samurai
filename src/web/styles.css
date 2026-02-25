@@ -272,6 +272,26 @@
   --clue-box-border: rgba(var(--pal-blue-rgb), 0.28);
   --clue-box-bg: rgba(var(--pal-bg-2-rgb), 0.82);
 
+  --result-card-bg: var(--pal-bg-1);
+  --result-card-border: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-heading-fg: var(--pal-green);
+  --result-failed-fg: var(--pal-red);
+  --result-stat-bg: rgba(var(--pal-bg-2-rgb), 0.6);
+  --result-stat-border: rgba(var(--pal-hl-high-rgb), 0.3);
+  --result-stat-label-fg: var(--pal-muted);
+  --result-stat-value-fg: var(--pal-fg);
+  --result-grade-high-border: rgba(var(--pal-yellow-rgb), 0.6);
+  --result-grade-high-bg: rgba(var(--pal-yellow-rgb), 0.08);
+  --result-grade-high-fg: var(--pal-yellow);
+  --result-btn-bg: rgba(var(--pal-hl-low-rgb), 0.8);
+  --result-btn-border: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-btn-fg: var(--pal-fg);
+  --result-btn-hover-bg: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-btn-primary-bg: linear-gradient(180deg, rgba(var(--pal-blue-rgb), 0.7), rgba(var(--pal-aqua-rgb), 0.5));
+  --result-btn-primary-border: rgba(var(--pal-blue-rgb), 0.6);
+  --result-btn-primary-fg: var(--pal-bg-0);
+  --result-btn-primary-hover-bg: linear-gradient(180deg, rgba(var(--pal-blue-rgb), 0.85), rgba(var(--pal-aqua-rgb), 0.65));
+
   --refdoc-page-bg:
     radial-gradient(1200px 480px at 12% -8%, rgba(var(--pal-blue-rgb), 0.14), transparent 62%),
     radial-gradient(900px 420px at 100% 0%, rgba(167, 192, 128, 0.1), transparent 60%),
@@ -677,6 +697,26 @@
 
   --clue-box-border: rgba(var(--pal-blue-rgb), 0.26);
   --clue-box-bg: rgba(var(--pal-bg-2-rgb), 0.82);
+
+  --result-card-bg: var(--pal-bg-1);
+  --result-card-border: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-heading-fg: var(--pal-purple);
+  --result-failed-fg: var(--pal-red);
+  --result-stat-bg: rgba(var(--pal-bg-2-rgb), 0.6);
+  --result-stat-border: rgba(var(--pal-hl-high-rgb), 0.3);
+  --result-stat-label-fg: var(--pal-muted);
+  --result-stat-value-fg: var(--pal-fg);
+  --result-grade-high-border: rgba(var(--pal-orange-rgb), 0.6);
+  --result-grade-high-bg: rgba(var(--pal-orange-rgb), 0.08);
+  --result-grade-high-fg: var(--pal-orange);
+  --result-btn-bg: rgba(var(--pal-hl-low-rgb), 0.8);
+  --result-btn-border: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-btn-fg: var(--pal-fg);
+  --result-btn-hover-bg: rgba(var(--pal-hl-high-rgb), 0.4);
+  --result-btn-primary-bg: linear-gradient(180deg, rgba(var(--pal-purple-rgb), 0.7), rgba(var(--pal-blue-rgb), 0.5));
+  --result-btn-primary-border: rgba(var(--pal-purple-rgb), 0.6);
+  --result-btn-primary-fg: var(--pal-bg-0);
+  --result-btn-primary-hover-bg: linear-gradient(180deg, rgba(var(--pal-purple-rgb), 0.85), rgba(var(--pal-blue-rgb), 0.65));
 
   --refdoc-page-bg:
     radial-gradient(1200px 480px at 12% -8%, rgba(var(--pal-purple-rgb), 0.14), transparent 62%),
@@ -2151,17 +2191,156 @@ dialog.modal-backdrop::backdrop {
   color: var(--ui-text);
 }
 
-.result-status {
-  font-size: 1.2rem;
-  font-weight: 700;
+/* ---------- Result Modal ---------- */
+
+.result-card {
+  width: min(480px, 92vw);
+  border: 1px solid var(--result-card-border);
+  border-radius: 16px;
+  padding: 1.8rem 1.5rem 1.4rem;
+  background: var(--result-card-bg);
+  color: var(--ui-text);
+  text-align: center;
+  animation: result-card-enter 0.35s ease-out both;
+}
+
+@keyframes result-card-enter {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Star decoration */
+.result-star {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 0.2rem;
+}
+.result-star-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+.result-star-sparkle {
+  position: absolute;
+  font-size: 0.9rem;
+  animation: sparkle-float 1.6s ease-in-out infinite;
+}
+.result-star-sparkle--1 {
+  top: -4px;
+  right: -14px;
+  animation-delay: 0s;
+}
+.result-star-sparkle--2 {
+  top: -2px;
+  left: -14px;
+  animation-delay: 0.8s;
+}
+@keyframes sparkle-float {
+  0%, 100% { opacity: 0.5; transform: translateY(0) scale(0.8); }
+  50%      { opacity: 1;   transform: translateY(-4px) scale(1); }
+}
+
+/* Heading */
+.result-heading {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0.2rem 0 1rem;
+}
+.result-card--clear .result-heading { color: var(--result-heading-fg); }
+.result-card--failed .result-heading { color: var(--result-failed-fg); }
+
+/* Stat cards */
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+.result-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.4rem;
+  border: 1px solid var(--result-stat-border);
+  border-radius: 10px;
+  background: var(--result-stat-bg);
+}
+.result-stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--result-stat-label-fg);
+}
+.result-stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--result-stat-value-fg);
+}
+
+/* Grade highlight */
+.result-stat-card--high-grade {
+  border-color: var(--result-grade-high-border);
+  background: var(--result-grade-high-bg);
+}
+.result-stat-card--high-grade .result-grade-value {
+  color: var(--result-grade-high-fg);
+}
+.result-grade-laurel {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  font-size: 0.85rem;
+}
+
+/* Action buttons */
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+.result-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 1.3rem;
+  border: 1px solid var(--result-btn-border);
+  border-radius: 999px;
+  background: var(--result-btn-bg);
+  color: var(--result-btn-fg);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.result-btn:hover {
+  background: var(--result-btn-hover-bg);
+}
+.result-btn--primary {
+  background: var(--result-btn-primary-bg);
+  border-color: var(--result-btn-primary-border);
+  color: var(--result-btn-primary-fg);
+}
+.result-btn--primary:hover {
+  background: var(--result-btn-primary-hover-bg);
+}
+
+/* Responsive: stack stat cards on narrow screens */
+@media (max-width: 420px) {
+  .result-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .clue-box {
-  margin: 0.8rem 0;
+  margin: 0 0 1rem;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--clue-box-border);
   border-radius: 8px;
   background: var(--clue-box-bg);
+  text-align: left;
 }
 
 .controls {
