@@ -140,7 +140,7 @@ function collectRequiredDirsByKind(
 }
 
 function supportedStatesForKind(kind: PreviewKind): DebugSpriteButtonState[] {
-  if (kind === "samurai") return ["idle"];
+  if (kind === "samurai") return ["idle", "attack", "damaged"];
   // PREVIEW_KIND_ORDER contains only samurai and sprite-capable units.
   return [...DEBUG_SPRITE_BUTTON_STATES];
 }

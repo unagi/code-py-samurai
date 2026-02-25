@@ -652,7 +652,7 @@ export default function SpriteDebugPage() {
                         id: `samurai-anim-${spec.animationType}`,
                         label: spec.animationType,
                         active: currentState === state,
-                        disabled: spec.animationType !== "Idle",
+                        disabled: spec.status !== "ok",
                         onClick: () => handleTriggerStateForCards(visibleSamuraiCards, state),
                       };
                     }),

@@ -30,15 +30,23 @@
       "animationType": "Offence",
       "spriteState": "attack",
       "trigger": "攻撃行動時（attack/shoot相当）",
-      "expectedFrames": 4,
-      "overlay": true
+      "expectedFrames": 2,
+      "overlay": true,
+      "previewSrcBySlot": {
+        "NORTH": "/assets/sprites/samurai-cat/attack-north.png",
+        "SOUTH": "/assets/sprites/samurai-cat/attack-south.png"
+      }
     },
     {
       "animationType": "Damaged",
       "spriteState": "damaged",
       "trigger": "ダメージを受ける",
-      "expectedFrames": 4,
-      "overlay": true
+      "expectedFrames": 3,
+      "overlay": true,
+      "previewSrcBySlot": {
+        "NORTH": "/assets/sprites/samurai-cat/damaged-north.png",
+        "SOUTH": "/assets/sprites/samurai-cat/damaged-south.png"
+      }
     }
   ]
 }

@@ -15,7 +15,7 @@ function buildEnemyCard(kind: string, dir: "left" | "right"): SpriteDebugCardSpe
 }
 
 describe("sprite debug unit animation specs", () => {
-  it("returns sprite-config specs for samurai with 4-direction idle and ng for unimplemented states", () => {
+  it("returns sprite-config specs for samurai with 4-direction sprites", () => {
     const specs = unitAnimationTypeSpecs({ kind: "samurai" });
 
     expect(specs.map((spec) => spec.animationType)).toEqual([
@@ -37,13 +37,23 @@ describe("sprite debug unit animation specs", () => {
     expect(idle.previewImageSrcs[2]).toContain("idle-north");
     expect(idle.previewImageSrcs[3]).toContain("idle-south");
 
-    // Disappear/Offence/Damaged: 未実装 → ng
-    for (const spec of specs.slice(1)) {
-      expect(spec.status).toBe("ng");
-      expect(spec.spriteFiles).toEqual(["-"]);
-      expect(spec.previewImageSrcs).toEqual([]);
-      expect(spec.implementation).toContain("未制作");
-    }
+    // Offence/Damaged: 4方向スプライト実装済み → ok
+    const offence = specs.find((spec) => spec.animationType === "Offence")!;
+    expect(offence.status).toBe("ok");
+    expect(offence.spriteFiles).toHaveLength(4);
+    expect(offence.previewImageSrcs).toHaveLength(4);
+
+    const damaged = specs.find((spec) => spec.animationType === "Damaged")!;
+    expect(damaged.status).toBe("ok");
+    expect(damaged.spriteFiles).toHaveLength(4);
+    expect(damaged.previewImageSrcs).toHaveLength(4);
+
+    // Disappear: 未実装 → ng
+    const disappear = specs.find((spec) => spec.animationType === "Disappear")!;
+    expect(disappear.status).toBe("ng");
+    expect(disappear.spriteFiles).toEqual(["-"]);
+    expect(disappear.previewImageSrcs).toEqual([]);
+    expect(disappear.implementation).toContain("未制作");
   });
 
   it("returns emoji fallback specs when renderMode is emoji", () => {

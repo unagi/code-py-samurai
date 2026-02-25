@@ -29,8 +29,8 @@ describe("sprite debug data", () => {
     const samuraiLeft = cards.find((card) => card.id === "samurai-left");
 
     expect(samuraiLeft).toBeDefined();
-    expect(samuraiLeft?.supportedStates).toEqual(["idle"]);
-    expect(samuraiLeft?.unsupportedStates).toEqual(["attack", "damaged", "death"]);
+    expect(samuraiLeft?.supportedStates).toEqual(["idle", "attack", "damaged"]);
+    expect(samuraiLeft?.unsupportedStates).toEqual(["death"]);
     expect(samuraiLeft?.note).toContain("idle");
     expect(DEBUG_SPRITE_TRIGGER_STATES).toEqual(["attack", "damaged", "death"]);
   });

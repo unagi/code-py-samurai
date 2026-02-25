@@ -116,20 +116,29 @@ function buildCaptiveSpriteConfigFromManifest(): CharSpriteConfig {
   };
 }
 
-function buildSamuraiSpriteConfigFromManifest(): CharSpriteConfig {
-  const idleLeftRight = buildDirectionalSpriteStateConfigFromManifest("samurai-cat", "idle");
-  const idleNorth = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", "idle-north");
-  const idleSouth = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", "idle-south");
-  // attack/damaged/death は未制作
+function buildSamurai4DirStateConfig(
+  state: CharSpriteState,
+  northState: string,
+  southState: string,
+): SpriteStateConfig {
+  const leftRight = buildDirectionalSpriteStateConfigFromManifest("samurai-cat", state);
+  const north = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", northState);
+  const south = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", southState);
   return {
-    idle: {
-      pathByDir: {
-        ...idleLeftRight.pathByDir,
-        north: idleNorth.pathTemplate!,
-        south: idleSouth.pathTemplate!,
-      },
-      frames: idleLeftRight.frames,
+    pathByDir: {
+      ...leftRight.pathByDir,
+      north: north.pathTemplate!,
+      south: south.pathTemplate!,
     },
+    frames: leftRight.frames,
+  };
+}
+
+function buildSamuraiSpriteConfigFromManifest(): CharSpriteConfig {
+  return {
+    idle: buildSamurai4DirStateConfig("idle", "idle-north", "idle-south"),
+    attack: buildSamurai4DirStateConfig("attack", "attack-north", "attack-south"),
+    damaged: buildSamurai4DirStateConfig("damaged", "damaged-north", "damaged-south"),
   };
 }
 
