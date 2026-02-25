@@ -132,6 +132,23 @@
     "sidebarEnums": "Enums",
     "sidebarClasses": "Classes"
   },
+  "footer": {
+    "license": "MIT License",
+    "basedOn": "{{author}} の <projectLink>{{project}}</projectLink> をベースに開発",
+    "reportBug": "バグ報告",
+    "source": "ソースコード"
+  },
+  "notices": {
+    "dismiss": "閉じる",
+    "spriteQuality": "キャラクター画像の品質に問題があります。改善中です 🙏"
+  },
+  "errorBoundary": {
+    "title": "エラーが発生しました",
+    "description": "予期しないエラーが発生しました。",
+    "reload": "リロード",
+    "reportBug": "問題を報告",
+    "details": "詳細"
+  },
   "starterCode": {
     "comment": "# ここに1ターン分の処理を書く"
   },

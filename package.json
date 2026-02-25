@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Python programming learning game - Python侍 (Py SAMURAI)",
   "type": "module",
+  "homepage": "https://github.com/unagi/code-py-samurai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unagi/code-py-samurai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unagi/code-py-samurai/issues"
+  },
+  "author": "unagi",
   "scripts": {
     "generate:sprite-manifest": "node scripts/generate-sprite-asset-manifest.mjs",
     "predev": "npm run generate:sprite-manifest",

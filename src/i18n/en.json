@@ -132,6 +132,23 @@
     "sidebarEnums": "Enums",
     "sidebarClasses": "Classes"
   },
+  "footer": {
+    "license": "MIT License",
+    "basedOn": "Based on <projectLink>{{project}}</projectLink> by {{author}}",
+    "reportBug": "Report a Bug",
+    "source": "Source"
+  },
+  "notices": {
+    "dismiss": "Dismiss",
+    "spriteQuality": "Character sprite quality is a known issue — improvements are in progress 🙏"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred.",
+    "reload": "Reload",
+    "reportBug": "Report this issue",
+    "details": "Details"
+  },
   "starterCode": {
     "comment": "# Write your turn logic here"
   },

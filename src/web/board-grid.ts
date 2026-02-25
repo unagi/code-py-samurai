@@ -48,6 +48,8 @@ export interface BoardTile {
   altKey: string;
   assetPath?: string;
   emoji?: string;
+  /** Display suffix such as "#1", "#2" for unit tiles. Absent for non-units. */
+  displaySuffix?: string;
 }
 
 export interface BoardGridData {
@@ -128,6 +130,25 @@ export function buildBoardGrid(board: string): BoardGridData {
     pushBoardRow(sourceLines[i], i === 0);
   }
   for (let y = 0; y < bottomPad; y++) pushVoidRow();
+
+  // Assign display suffixes (#1, #2, ...) to non-samurai unit tiles
+  // to match the engine's unitId format (e.g. "sludge#1", "archer#2").
+  const SUFFIXED_UNIT_KINDS = new Set([
+    sludgeGameplay.kind,
+    thickSludgeGameplay.kind,
+    archerGameplay.kind,
+    wizardGameplay.kind,
+    captiveGameplay.kind,
+    golemGameplay.kind,
+  ]);
+  const kindCounters = new Map<string, number>();
+  for (const tile of tiles) {
+    if (SUFFIXED_UNIT_KINDS.has(tile.kind)) {
+      const count = (kindCounters.get(tile.kind) ?? 0) + 1;
+      kindCounters.set(tile.kind, count);
+      tile.displaySuffix = `#${count}`;
+    }
+  }
 
   return {
     columns,

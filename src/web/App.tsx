@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { type JSX, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { type EditorView } from "codemirror";
 
@@ -33,6 +33,8 @@ import {
   writeProgressStorage,
   writeThemeStorage,
 } from "./progress-storage";
+import AppFooter from "./AppFooter";
+import NoticeLine from "./NoticeLine";
 import { ResultModal } from "./ResultModal";
 import { buildSamuraiApiStructureViewModel } from "./samurai-api-structure";
 import {
@@ -711,6 +713,8 @@ export default function App() {
         </div>
       </header>
 
+      <NoticeLine />
+
       <main className="layout app-main-layout">
         <section className="workspace">
           <article className="console-panel">
@@ -724,7 +728,7 @@ export default function App() {
             >
               <div className="board-status">
                 <span className="status-chip">
-                  {t("board.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
+                  {t("tiles.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
                 </span>
                 {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
               </div>
@@ -892,6 +896,7 @@ export default function App() {
           onClose={() => setShowResultModal(false)}
         />
       </main>
+      <AppFooter />
     </>
   );
 }
