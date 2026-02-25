@@ -106,8 +106,25 @@ function renderApiSignatureParam(param: string): JSX.Element {
   return <span className="api-structure-sig-type">{text}</span>;
 }
 
-function renderApiStructureSignature(kind: ApiStructureEntryKind, signature: string): JSX.Element {
+function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum", signature: string): JSX.Element {
   const text = signature.trim();
+
+  if (kind === "enum") {
+    // e.g., "enum Direction { FORWARD, RIGHT, BACKWARD, LEFT }"
+    const match = /^enum\s+(\w+)\s*{(.*)}\s*$/.exec(text);
+    if (match) {
+      const name = match[1];
+      const values = match[2].split(",").map(v => v.trim());
+      return (
+        <span className="api-structure-sig-inline">
+          <span className="api-structure-sig-name-class">{name}</span>
+          <span className="api-structure-sig-punct">.</span>
+          <span className="api-structure-sig-text">{values[0]}...</span>
+        </span>
+      );
+    }
+    return <span className="api-structure-sig-text">{text}</span>;
+  }
 
   if (kind === "property") {
     const colonIndex = text.indexOf(":");
@@ -127,7 +144,7 @@ function renderApiStructureSignature(kind: ApiStructureEntryKind, signature: str
 
   const openParen = text.indexOf("(");
   const closeParen = text.lastIndexOf(")");
-  if (openParen <= 0 || closeParen !== text.length - 1 || closeParen < openParen) {
+  if (openParen <= 0 || closeParen < openParen) {
     return <span className="api-structure-sig-text">{text}</span>;
   }
   const methodName = text.slice(0, openParen).trim();
@@ -841,6 +858,21 @@ export default function App() {
           </div>
           <div className="api-structure-root" aria-label={samuraiApiStructure.className}>
             <ul className="api-structure-tree">
+              {/* Enums Section */}
+              {samuraiApiStructure.enums.map((enumSig) => (
+                <li key={enumSig} className="api-structure-node api-structure-node-leaf api-structure-node-leaf-enum">
+                  <div className="api-structure-row api-structure-row-leaf api-structure-row-leaf-enum">
+                    <span className="api-structure-item-icon api-structure-item-icon-enum" aria-hidden="true">
+                      <i className="bi bi-list-columns-reverse" />
+                    </span>
+                    <code className="api-structure-signature">
+                      {renderApiStructureSignature("enum", enumSig)}
+                    </code>
+                  </div>
+                </li>
+              ))}
+
+              {/* Samurai Class Section */}
               <li className="api-structure-node api-structure-node-class">
                 <div className="api-structure-row api-structure-row-class">
                   <span className="api-structure-twistie" aria-hidden="true">▾</span>
@@ -876,6 +908,31 @@ export default function App() {
                   )}
                 </ul>
               </li>
+
+              {/* Other Classes Section (Space, Occupant) */}
+              {samuraiApiStructure.otherClasses.map((cls) => (
+                <li key={cls.name} className="api-structure-node api-structure-node-class">
+                  <div className="api-structure-row api-structure-row-class">
+                    <span className="api-structure-twistie" aria-hidden="true">▾</span>
+                    <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-box-fill" /></span>
+                    <span className="api-structure-label">{cls.name}</span>
+                  </div>
+                  <ul className="api-structure-branch api-structure-branch-leaves">
+                    {cls.properties.map((propSig) => (
+                      <li key={propSig} className="api-structure-node api-structure-node-leaf api-structure-node-leaf-property">
+                        <div className="api-structure-row api-structure-row-leaf api-structure-row-leaf-property">
+                          <span className="api-structure-item-icon api-structure-item-icon-property" aria-hidden="true">
+                            <i className="bi bi-key-fill" />
+                          </span>
+                          <code className="api-structure-signature">
+                            {renderApiStructureSignature("property", propSig)}
+                          </code>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
             </ul>
           </div>
         </aside>
