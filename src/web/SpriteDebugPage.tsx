@@ -34,7 +34,6 @@ import {
   buildSpriteDebugUnsupportedUnitSpecs,
 } from "./sprite-debug-data";
 import { type SpriteDir } from "./sprite-utils";
-import "./sprite-debug.css";
 
 type DebugFilter = "all" | "preview-only" | "unsupported-only";
 const EMPTY_DAMAGE_POPUPS: ReadonlyMap<number, DamagePopup[]> = new Map();
