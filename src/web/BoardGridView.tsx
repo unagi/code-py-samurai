@@ -220,7 +220,7 @@ function BoardTileCell(props: Readonly<{
   const displaySymbol = getDisplaySymbol(tile);
   const tilePopups = damagePopupsByTile.get(index) ?? [];
   const tileStats = buildTileStatsText(tile.kind, samuraiHealth, samuraiMaxHealth, statsFmt);
-  const tileAlt = t(tile.altKey);
+  const tileAlt = t(tile.altKey) + (tile.displaySuffix ?? "");
   const hoverText = buildHoverText(tile, tileAlt, tileStats);
 
   const override = spriteOverrideByTile.get(index);
