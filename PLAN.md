@@ -164,13 +164,13 @@ py-samurai/
    - 絶対方向 (north/east/south/west) と相対方向 (forward/backward/left/right)
    - 方向の回転・変換ロジック
 3. `Position`: 座標 (x, y) + 向き + 移動・回転
-4. `Space`: セル情報 (empty/wall/stairs/unit判定メソッド群)
-5. `Floor`: 2Dグリッド管理、ユニット配置・取得・ASCII表示
+5. `Space`: セル情報 (terrain/unitプロパティ等)
+6. `Floor`: 2Dグリッド管理、ユニット配置・取得・ASCII表示
 
 **完了条件** (`npm test` 全Pass):
 - [x] `direction.test.ts`: 絶対→相対変換、回転 (east向きでforward=east, left=north等)
 - [x] `position.test.ts`: 移動 (translate)、回転 (rotate)、方向変換
-- [x] `space.test.ts`: isEmpty/isWall/isStairs/isEnemy/isCaptive が正しい値を返す
+- [x] `space.test.ts`: terrain/unit プロパティが正しい値を返す
 - [x] `floor.test.ts`: グリッド生成、ユニット配置、座標でのSpace取得、ASCII表示 (character())
 
 ---
@@ -266,12 +266,12 @@ class Player:
    - `samurai` オブジェクトのPythonバインディング
    - アクション: `samurai.walk(direction)`, `samurai.attack(direction)`, etc.
    - センス: `samurai.feel(direction)`, `samurai.hp`, etc.
-   - `Space` オブジェクトのバインディング: `space.is_enemy()`, `space.is_captive()`, etc.
+   - `Space` オブジェクトのバインディング: `space.terrain`, `space.unit`, etc.
    - 方向定数: Pythonでは文字列 `"forward"`, `"backward"`, `"left"`, `"right"`
 
 4. Python命名規約への変換:
    - Ruby: `samurai.walk!`, `feel.empty?`, `direction_of_stairs`
-   - Python: `samurai.walk()`, `space is None`, `samurai.direction_of_stairs()`
+   - Python: `samurai.walk()`, `space.unit is None`, `samurai.direction_of_stairs()`
 
 5. 既定値注入の廃止（最優先）:
    - UI内の固定コード/擬似AI依存を撤去
@@ -291,7 +291,7 @@ class Player:
 **完了条件** (`npm test` 全Pass):
 - [x] `tests/runtime/python-runner.test.ts`: Python文字列 → Skulpt実行 → 戻り値取得
 - [x] `tests/runtime/bridge.test.ts`: samurai.walk/attack/feel等のPython呼び出しがTurnに反映
-- [x] `tests/runtime/py-builtins.test.ts`: Space→Python値変換（空マスの`None`化と述語バインディング）が正しい値
+- [x] `tests/runtime/py-builtins.test.ts`: Space→Python値変換（新APIプロパティ）が正しい値
 - [x] `tests/runtime/no-default-injection.test.ts`: 既定値コードが自動注入されない
 - [x] `tests/runtime/python-level.test.ts`: Python解答コードでBeginner Level 1-3がクリア
 - [x] `tests/runtime/python-error.test.ts`: 構文エラー/実行時エラーでユーザー向けメッセージが返る
@@ -448,21 +448,23 @@ samurai.bind()              # 前方の敵を拘束
 samurai.detonate()          # 前方で爆破
 
 # === Senses (何度でも使用可能) ===
-samurai.feel()              # → Space | None (前方1マス)
-samurai.feel("left")        # → Space | None (左1マス)
+samurai.feel()              # → Space (前方1マス)
+samurai.feel("left")        # → Space (左1マス)
 samurai.hp                  # → int (現在HP)
-samurai.look()              # → list[Space | None] (前方3マス)
-samurai.look("backward")    # → list[Space | None] (後方3マス)
+samurai.look()              # → list[Space] (前方3マス)
+samurai.look("backward")    # → list[Space] (後方3マス)
 samurai.listen()            # → list[Space] (ユニットがいるマスのみ)
 samurai.direction_of_stairs()  # → str ("forward"等)
 samurai.direction_of(space)    # → str (spaceへの相対方向)
 samurai.distance_of(space)     # → int (spaceへのマンハッタン距離)
 
-# === Space メソッド ===
-space.is_stairs()           # bool
-space.is_enemy()            # bool
-space.is_captive()          # bool
-space.is_wall()             # bool
+# === Space プロパティ ===
+space.terrain               # Terrain.FLOOR, Terrain.WALL, Terrain.STAIRS
+space.unit                  # Occupant オブジェクト or None
+
+# === Occupant プロパティ ===
+space.unit.kind             # UnitKind.ENEMY, UnitKind.CAPTIVE, UnitKind.ALLY
+space.unit.ticking          # bool (時限爆弾を持っているか)
 ```
 
 ## Key Design Decisions

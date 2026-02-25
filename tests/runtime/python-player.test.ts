@@ -9,6 +9,7 @@ class FakeSpace {
     private readonly captive: boolean,
     private readonly empty: boolean,
     private readonly ticking: boolean = false,
+    public readonly terrain: string = "f",
   ) {}
 
   isEnemy(): boolean {
@@ -24,11 +25,11 @@ class FakeSpace {
   }
 
   isStairs(): boolean {
-    return false;
+    return this.terrain === "s";
   }
 
   isWall(): boolean {
-    return false;
+    return this.terrain === "w";
   }
 
   isTicking(): boolean {
@@ -96,7 +97,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("executes if/elif/else by sensed space and hp property", () => {
-    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            if samurai.hp < 8:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.is_enemy():\n            samurai.attack()\n        elif samurai.hp < 8:\n            samurai.rest()\n        else:\n            samurai.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space is None:\n            if samurai.hp < 8:\n                samurai.rest()\n            else:\n                samurai.walk()\n        elif space.unit is not None and space.unit.kind == UnitKind.ENEMY:\n            samurai.attack()\n        elif samurai.hp < 8:\n            samurai.rest()\n        else:\n            samurai.walk()`;
 
     const player = compilePythonPlayer(source);
 
@@ -215,17 +216,6 @@ describe("compilePythonPlayer", () => {
     expect(turn.action).toBeNull();
   });
 
-  it("throws TypeError when predicate is not a function", () => {
-    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.is_enemy():\n            samurai.walk()`;
-    const player = compilePythonPlayer(source);
-
-    const turn = new FakeTurn({
-      feel: () => ({ is_enemy: "not a function" }),
-    });
-
-    expect(() => player.playTurn(turn as never)).toThrow(/not available/i);
-  });
-
   it("supports self.xxx instance variables persisted across turns", () => {
     const source = [
       "class Player:",
@@ -299,7 +289,7 @@ describe("compilePythonPlayer", () => {
       "class Player:",
       "    def play_turn(self, samurai):",
       "        space = samurai.feel()",
-      "        if space.is_enemy():",
+      "        if space.unit is not None and space.unit.kind == UnitKind.ENEMY:",
       "            samurai.attack()",
       "        elif samurai.hp < 20 and samurai.hp >= self.prev_hp:",
       "            samurai.rest()",
@@ -340,7 +330,7 @@ describe("compilePythonPlayer", () => {
       "class Player:",
       "    def play_turn(self, samurai):",
       "        space = samurai.feel()",
-      "        if space.is_enemy() or space.is_captive():",
+      "        if space.unit is not None and (space.unit.kind == UnitKind.ENEMY or space.unit.kind == UnitKind.CAPTIVE):",
       "            samurai.attack()",
       "        else:",
       "            samurai.walk()",
@@ -371,7 +361,7 @@ describe("compilePythonPlayer", () => {
   });
 
   it("wraps non-Error throws as PythonRuntimeError", () => {
-    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.is_enemy():\n            samurai.walk()`;
+    const source = `class Player:\n    def play_turn(self, samurai):\n        space = samurai.feel()\n        if space.unit is not None and space.unit.kind == UnitKind.ENEMY:\n            samurai.walk()`;
     const player = compilePythonPlayer(source);
 
     const turn = new FakeTurn({
@@ -386,12 +376,12 @@ describe("compilePythonPlayer", () => {
     expect(() => player.playTurn(turn as never)).toThrow(/boom/);
   });
 
-  it("supports space.is_ticking() predicate", () => {
+  it("supports space.unit.ticking property", () => {
     const source = [
       "class Player:",
       "    def play_turn(self, samurai):",
       "        space = samurai.feel()",
-      "        if space is not None and space.is_ticking():",
+      "        if space.unit is not None and space.unit.ticking:",
       "            samurai.rescue()",
       "        else:",
       "            samurai.walk()",
@@ -433,12 +423,8 @@ describe("compilePythonPlayer", () => {
       feel: (direction?: unknown) => {
         if (direction === "left") {
           return {
-            isEmpty: () => false,
-            isEnemy: () => false,
-            isCaptive: () => false,
+            terrain: "w",
             isWall: () => true,
-            isStairs: () => false,
-            isTicking: () => false,
           };
         }
         return new FakeSpace(true, false, false);
@@ -491,6 +477,7 @@ describe("compilePythonPlayer", () => {
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({
       feel: () => ({
+        terrain: "s",
         isWall: () => false,
         isStairs: () => true,
       }),
@@ -514,6 +501,7 @@ describe("compilePythonPlayer", () => {
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({
       feel: () => ({
+        terrain: "f",
         isWall: () => false,
         isStairs: () => false,
       }),
@@ -538,6 +526,7 @@ describe("compilePythonPlayer", () => {
     const turn = new FakeTurn({
       feel: () => ({
         unit: { id: "ally#1" },
+        terrain: "f",
         isEnemy: () => false,
         isCaptive: () => false,
         isTicking: () => false,

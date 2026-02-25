@@ -5,7 +5,7 @@ import { getSamuraiAbilitiesAtGlobalLevel } from "../../src/engine/samurai-abili
 import { buildSamuraiApiStructureViewModel } from "../../src/web/samurai-api-structure";
 
 describe("buildSamuraiApiStructureViewModel", () => {
-  it("renders compact Samurai method signatures without return types", () => {
+  it("renders compact Samurai method signatures without self and with type hints", () => {
     const abilities: SamuraiAbilitySet = {
       skills: ["walk()", "walk('backward')", "direction_of(space)", "listen()"],
       stats: ["hp"],
@@ -15,11 +15,17 @@ describe("buildSamuraiApiStructureViewModel", () => {
 
     expect(viewModel.className).toBe("Samurai");
     expect(viewModel.methodSignatures).toEqual([
-      "walk(self, Direction)",
-      "direction_of(self, Space)",
-      "listen(self)",
+      "walk(direction: Direction)",
+      "direction_of(space: Space)",
+      "listen()",
     ]);
     expect(viewModel.propertySignatures).toEqual(["hp: int"]);
+    expect(viewModel.enums).toContainEqual({
+      name: "Direction",
+      members: ["FORWARD", "RIGHT", "BACKWARD", "LEFT"],
+    });
+    expect(viewModel.otherClasses.find(c => c.name === "Space")).toBeDefined();
+    expect(viewModel.otherClasses.find(c => c.name === "Occupant")).toBeDefined();
   });
 
   it("preserves unlocked ability order (level unlock order input)", () => {
@@ -28,10 +34,10 @@ describe("buildSamuraiApiStructureViewModel", () => {
     const viewModel = buildSamuraiApiStructureViewModel(abilities);
 
     expect(viewModel.methodSignatures).toEqual([
-      "walk(self, Direction)",
-      "feel(self, Direction)",
-      "attack(self, Direction)",
-      "rest(self)",
+      "walk(direction: Direction)",
+      "feel(direction: Direction)",
+      "attack(direction: Direction)",
+      "rest()",
     ]);
     expect(viewModel.propertySignatures).toEqual(["hp: int"]);
   });
@@ -44,7 +50,7 @@ describe("buildSamuraiApiStructureViewModel", () => {
 
     const viewModel = buildSamuraiApiStructureViewModel(abilities);
 
-    expect(viewModel.methodSignatures).toEqual(["walk(self, Direction)"]);
+    expect(viewModel.methodSignatures).toEqual(["walk(direction: Direction)"]);
     expect(viewModel.propertySignatures).toEqual(["hp: int"]);
   });
 });

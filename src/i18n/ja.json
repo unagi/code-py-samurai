@@ -160,32 +160,32 @@
       },
       "2": {
         "description": "暗くて何も見えませんが、近くにガマの匂いがします。",
-        "tip": "samurai.feel() で前方を確認しましょう。None なら歩き、そうでなければ攻撃します。1ターンに1つのアクションしかできません。",
-        "clue": "`space = samurai.feel()` と `if space is None:` で samurai.attack() か samurai.walk() を判定する if/else 条件を追加しましょう。"
+        "tip": "samurai.feel() で前方を確認しましょう。unit プロパティが None かどうかをチェックします。1ターンに1つのアクションしかできません。",
+        "clue": "`space = samurai.feel()` と `if space.unit is None:` で samurai.attack() か samurai.walk() を判定する if/else 条件を追加しましょう。"
       },
       "3": {
         "description": "空気が以前より重く感じます。ガマの群れがいるに違いありません。",
         "tip": "死なないように注意！samurai.hp で体力を確認し、samurai.rest() で最大HPの10%を回復できます。",
-        "clue": "前方に敵がいないときは、体力が満タンになるまで samurai.rest() を呼んでから前進しましょう。"
+        "clue": "前方にユニットがいない（space.unit is None）ときは、体力が満タンになるまで samurai.rest() を呼んでから前進しましょう。"
       },
       "4": {
         "description": "前方から風を切る音。サルが柿を投げてきます。",
-        "tip": "今回は新しいアビリティはありませんが、ダメージを受けている間は回復しないように注意。前回のHPを変数（例: prev_hp）に保存して毎ターン比較しましょう。",
-        "clue": "毎ターン終了時に prev_hp = samurai.hp を設定します。前ターンより samurai.hp が下がっていたらダメージを受けているので回復しないようにしましょう。"
+        "tip": "今回は新しいアビリティはありませんが、ダメージを受けている間は回復しないように注意。前回のHPを変数（例: self.prev_hp）に保存して毎ターン比較しましょう。",
+        "clue": "毎ターン終了時に self.prev_hp = samurai.hp を設定します。前ターンより samurai.hp が下がっていたらダメージを受けているので回復しないようにしましょう。"
       },
       "5": {
         "description": "助けを求める声が聞こえます。ツルを助けなければ。",
-        "tip": "space = samurai.feel() で space が None でなく space.is_captive() が True なら samurai.rescue() を呼びましょう。捕虜を攻撃しないように。",
+        "tip": "space = samurai.feel() で space.unit が None でなく space.unit.kind == UnitKind.CAPTIVE なら samurai.rescue() を呼びましょう。捕虜を攻撃しないように。",
         "clue": "常にダメージを受けているかチェックすることを忘れずに。ダメージを受けていなければ体力が満タンになるまで回復しましょう。"
       },
       "6": {
         "description": "この部屋は奥行きがあります。さらにツルの助けを求める声が聞こえます。",
         "tip": "walk() に 'backward' を渡すと後ろに歩けます。feel()、rescue()、attack() も同様です。アーチャーの射程には限りがあります。",
-        "clue": "遠距離からダメージを受けていて攻撃できるほど体力がないなら後退しましょう。samurai.feel('backward').is_wall() になるまで後退することも検討してください。"
+        "clue": "遠距離からダメージを受けていて攻撃できるほど体力がないなら後退しましょう。samurai.feel('backward').terrain == Terrain.WALL になるまで後退することも検討してください。"
       },
       "7": {
         "description": "目の前に壁があり、背後に通路が開いています。",
-        "tip": "後方への攻撃は効果が低いです。samurai.feel().is_wall() と samurai.pivot() で向きを変えましょう。"
+        "tip": "後方への攻撃は効果が低いです。samurai.feel().terrain == Terrain.WALL と samurai.pivot() で向きを変えましょう。"
       },
       "8": {
         "description": "タヌキのつぶやきが響きます。あの呪術は危険です。",
@@ -206,7 +206,7 @@
       "2": {
         "description": "また広い部屋ですが、階段への道を数体の敵が塞いでいます。",
         "tip": "歩くのと同様に、攻撃や感知も複数の方向（forward, left, right, backward）で行えます。",
-        "clue": "各方向で samurai.feel(direction).is_enemy() を呼んで隣に敵がいないか確認しましょう（いたら攻撃）。周囲に敵がいなければ samurai.rest() で回復しましょう。"
+        "clue": "各方向で samurai.feel(direction).unit.kind == UnitKind.ENEMY を呼んで隣に敵がいないか確認しましょう（いたら攻撃）。周囲に敵がいなければ samurai.rest() で回復しましょう。"
       },
       "3": {
         "description": "四方からヌルヌルした感触が...囲まれています！",

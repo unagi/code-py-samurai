@@ -112,7 +112,8 @@ export class Level {
   }
 
   passed(): boolean {
-    return this.floor.stairsSpace.isPlayer();
+    const unit = this.floor.stairsSpace.unit;
+    return Boolean(unit && (unit.isSamurai() || unit.isGolem()));
   }
 
   failed(): boolean {

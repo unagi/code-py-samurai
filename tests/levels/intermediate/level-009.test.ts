@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
 import { level009 } from "../../../src/levels/intermediate";
@@ -29,11 +30,12 @@ function scanAdjacent(t: Turn): AdjacentScan {
   };
   for (const dir of ALL_DIRS) {
     const space = t.doSense("feel", dir) as Space;
-    if (space.isEnemy()) {
+    const u = space.unit;
+    if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
       scan.enemies.push(dir);
-    } else if (space.isCaptive() && space.isTicking()) {
+    } else if (u?.isBound() && u.hasAbility("explode!")) {
       scan.tickingCaptive = dir;
-    } else if (space.isCaptive()) {
+    } else if (u?.isBound()) {
       scan.nonTickingCaptive = dir;
       scan.bound.push(dir);
     }
@@ -68,13 +70,13 @@ function rushTowardTicking(
   }
   const dir = t.doSense("direction_of", target) as RelativeDirection;
   const space = t.doSense("feel", dir) as Space;
-  if (space.isEmpty() || space.isStairs()) {
+  if (!space.unit && (space.terrain === Terrain.Floor || space.terrain === Terrain.Stairs)) {
     t.doAction("walk!", dir);
     return;
   }
   for (const d of ALL_DIRS) {
     const s = t.doSense("feel", d) as Space;
-    if (s.isEmpty()) {
+    if (!s.unit && s.terrain !== Terrain.Wall) {
       t.doAction("walk!", d);
       return;
     }
@@ -134,7 +136,7 @@ describe("Intermediate Level 9", () => {
 
         // Priority 4: rush toward ticking captive even at low health
         const ticking = units.find(
-          (u) => u.isCaptive() && u.isTicking(),
+          (s) => s.unit?.isBound() && s.unit.hasAbility("explode!"),
         );
         if (ticking) {
           rushTowardTicking(t, ticking, health);
@@ -153,14 +155,17 @@ describe("Intermediate Level 9", () => {
           return;
         }
 
-        const captive = units.find((u) => u.isCaptive());
+        const captive = units.find((s) => s.unit?.isBound());
         if (captive) {
           walkToward(t, captive);
           return;
         }
 
         // Priority 7: walk toward enemies
-        const enemy = units.find((u) => u.isEnemy());
+        const enemy = units.find((s) => {
+          const u = s.unit;
+          return !!(u && !u.isSamurai() && !u.isGolem() && !u.isBound());
+        });
         if (enemy) {
           walkToward(t, enemy);
           return;

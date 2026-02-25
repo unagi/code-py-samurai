@@ -39,9 +39,10 @@ describe("Intermediate Level 4", () => {
         let adjacentCaptive: RelativeDirection | null = null;
         for (const dir of directions) {
           const space = t.doSense("feel", dir) as Space;
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             adjacentEnemies.push(dir);
-          } else if (space.isCaptive()) {
+          } else if (u?.isBound()) {
             adjacentCaptive = dir;
           }
         }

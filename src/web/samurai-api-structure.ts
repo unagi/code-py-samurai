@@ -5,6 +5,8 @@ export interface SamuraiApiStructureViewModel {
   className: "Samurai";
   methodSignatures: string[];
   propertySignatures: string[];
+  enums: { name: string; members: string[] }[];
+  otherClasses: { name: string; properties: string[] }[];
 }
 
 interface ParsedMethodSignature {
@@ -15,7 +17,23 @@ interface ParsedMethodSignature {
 function splitArgsList(raw: string): string[] {
   const text = raw.trim();
   if (text.length === 0) return [];
-  return text.split(",").map((part) => part.trim()).filter((part) => part.length > 0);
+  // Handle commas inside type hints like list[Space]
+  const parts: string[] = [];
+  let bracketLevel = 0;
+  let current = "";
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === "[" || char === "(") bracketLevel++;
+    if (char === "]" || char === ")") bracketLevel--;
+    if (char === "," && bracketLevel === 0) {
+      parts.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  parts.push(current.trim());
+  return parts.filter((part) => part.length > 0);
 }
 
 function parseUnlockedSkillCall(skill: string): { name: string; argCount: number } {
@@ -28,44 +46,39 @@ function parseUnlockedSkillCall(skill: string): { name: string; argCount: number
   };
 }
 
-function parseParamDisplayType(param: string): string {
+function parseParamDisplay(param: string): string {
   const text = param.trim();
-  if (text === "self") return "self";
-  const colonIndex = text.indexOf(":");
-  if (colonIndex < 0) {
-    const eqIndex = text.indexOf("=");
-    return (eqIndex >= 0 ? text.slice(0, eqIndex) : text).trim();
-  }
-  const rhs = text.slice(colonIndex + 1);
-  const eqIndex = rhs.indexOf("=");
-  return (eqIndex >= 0 ? rhs.slice(0, eqIndex) : rhs).trim();
+  // Keep type hint if present, e.g., "direction: Direction = Direction.FORWARD" -> "direction: Direction"
+  const eqIndex = text.indexOf("=");
+  const base = eqIndex >= 0 ? text.slice(0, eqIndex).trim() : text;
+  return base;
 }
 
 function parseReferenceMethodSignature(signature: string): ParsedMethodSignature | null {
   const text = signature.trim();
   const openParen = text.indexOf("(");
   const closeParen = text.lastIndexOf(")");
-  const arrowIndex = text.indexOf("->", closeParen);
-  if (openParen <= 0 || closeParen < openParen || arrowIndex < 0) return null;
+  // Arrow might be missing for some simplified methods
+  if (openParen <= 0 || closeParen < openParen) return null;
   const name = text.slice(0, openParen).trim();
   if (!/^[A-Za-z_]\w*$/.test(name)) return null;
   const rawParams = text.slice(openParen + 1, closeParen);
   return {
     name,
-    params: splitArgsList(rawParams).map(parseParamDisplayType),
+    params: splitArgsList(rawParams).map(parseParamDisplay),
   };
 }
 
-function findSamuraiItems(kind: ReferenceItem["kind"]): ReferenceItem[] {
+function findItemsByKind(kind: ReferenceItem["kind"]): ReferenceItem[] {
   return apiReferenceDocument.sections
     .flatMap((section) => section.items)
-    .filter((item) => item.owner === "Samurai" && item.kind === kind);
+    .filter((item) => item.kind === kind);
 }
 
 function buildMethodSignatureLookup(): Map<string, ParsedMethodSignature> {
   const lookup = new Map<string, ParsedMethodSignature>();
-  for (const item of findSamuraiItems("method")) {
-    if (!item.signature) continue;
+  for (const item of findItemsByKind("method")) {
+    if (!item.signature || item.owner !== "Samurai") continue;
     const parsed = parseReferenceMethodSignature(item.signature);
     if (!parsed) continue;
     lookup.set(item.name, parsed);
@@ -73,9 +86,10 @@ function buildMethodSignatureLookup(): Map<string, ParsedMethodSignature> {
   return lookup;
 }
 
-function buildPropertySignatureLookup(): Map<string, string> {
+function buildPropertySignatureLookup(owner: string): Map<string, string> {
   const lookup = new Map<string, string>();
-  for (const item of findSamuraiItems("property")) {
+  for (const item of findItemsByKind("property")) {
+    if (item.owner !== owner) continue;
     lookup.set(item.name, item.signature?.trim() || item.name);
   }
   return lookup;
@@ -97,10 +111,10 @@ function renderSamuraiMethodSignature(skill: string, methodLookup: Map<string, P
   const parsed = methodLookup.get(name);
   if (!parsed) return skill.trim();
 
-  const [, ...otherParams] = parsed.params;
-  const displayParams = ["self", ...otherParams];
+  // Omit 'self' from display
+  const otherParams = parsed.params.filter(p => p !== "self");
 
-  return `${parsed.name}(${displayParams.join(", ")})`;
+  return `${parsed.name}(${otherParams.join(", ")})`;
 }
 
 function renderSamuraiPropertySignature(stat: string, propertyLookup: Map<string, string>): string {
@@ -111,7 +125,35 @@ export function buildSamuraiApiStructureViewModel(
   abilities: SamuraiAbilitySet,
 ): SamuraiApiStructureViewModel {
   const methodLookup = buildMethodSignatureLookup();
-  const propertyLookup = buildPropertySignatureLookup();
+  const propertyLookup = buildPropertySignatureLookup("Samurai");
+
+  const enums = findItemsByKind("enum")
+    .map(item => {
+      const signature = item.signature || "";
+      const match = /^enum\s+(\w+)\s*{(.*)}\s*$/.exec(signature);
+      if (match) {
+        return {
+          name: match[1],
+          members: match[2].split(",").map(v => v.trim()).filter(Boolean),
+        };
+      }
+      return {
+        name: item.name,
+        members: [],
+      };
+    });
+
+  const otherClasses = findItemsByKind("class")
+    .filter(item => item.name !== "Samurai")
+    .map(item => {
+      const classProps = findItemsByKind("property")
+        .filter(p => p.owner === item.name)
+        .map(p => p.signature || p.name);
+      return {
+        name: item.name,
+        properties: classProps,
+      };
+    });
 
   return {
     className: "Samurai",
@@ -121,5 +163,7 @@ export function buildSamuraiApiStructureViewModel(
     propertySignatures: uniqueOrdered(
       abilities.stats.map((stat) => renderSamuraiPropertySignature(stat, propertyLookup)),
     ),
+    enums,
+    otherClasses,
   };
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import { level009 } from "../../src/levels/beginner";
 
@@ -29,17 +30,18 @@ describe("Beginner Level 9", () => {
         // Look forward (west) and shoot enemies
         const spaces = t.doSense("look", "forward") as Space[];
         for (const space of spaces) {
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("shoot!", "forward");
             return;
           }
-          if (!space.isEmpty()) break;
+          if (u || space.terrain === Terrain.Wall) break;
         }
 
         // Rescue captives, walk forward
-        if (fwd.isCaptive()) {
+        if (fwd.unit?.isBound()) {
           t.doAction("rescue!", "forward");
-        } else if (fwd.isEnemy()) {
+        } else if (fwd.unit && !fwd.unit.isSamurai() && !fwd.unit.isGolem()) {
           t.doAction("attack!", "forward");
         } else {
           t.doAction("walk!", "forward");

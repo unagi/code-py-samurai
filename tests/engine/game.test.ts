@@ -52,7 +52,8 @@ function createTestPlayer(): IPlayer {
       // Attack adjacent enemy
       if (t.hasSense("feel")) {
         const fwd = t.doSense("feel", "forward") as Space;
-        if (fwd.isEnemy() && t.hasAction("attack!")) {
+        const u = fwd.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound() && t.hasAction("attack!")) {
           t.doAction("attack!", "forward");
           return;
         }

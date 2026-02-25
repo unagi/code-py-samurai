@@ -33,28 +33,29 @@ describe("Intermediate Level 8", () => {
         // If first two spaces both have enemies, detonate
         if (
           spaces.length >= 2 &&
-          spaces[0].isEnemy() &&
-          spaces[1].isEnemy()
+          spaces[0].unit && !spaces[0].unit.isSamurai() && !spaces[0].unit.isGolem() && !spaces[0].unit.isBound() &&
+          spaces[1].unit && !spaces[1].unit.isSamurai() && !spaces[1].unit.isGolem() && !spaces[1].unit.isBound()
         ) {
           t.doAction("detonate!", "forward");
           return;
         }
 
         // If adjacent enemy, attack
-        if (fwd.isEnemy()) {
+        const fwdU = fwd.unit;
+        if (fwdU && !fwdU.isSamurai() && !fwdU.isGolem() && !fwdU.isBound()) {
           t.doAction("attack!", "forward");
           return;
         }
 
         // Rescue adjacent captive
-        if (fwd.isCaptive()) {
+        if (fwdU?.isBound()) {
           t.doAction("rescue!", "forward");
           return;
         }
 
         // Check if there's a ticking captive - don't waste time resting
         const hasTicking = units.some(
-          (u) => u.isCaptive() && u.isTicking(),
+          (s) => s.unit?.isBound() && s.unit.hasAbility("explode!"),
         );
 
         // Only rest if no ticking captive to save and health is low

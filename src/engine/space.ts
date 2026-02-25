@@ -1,4 +1,4 @@
-import type { IFloor, IUnit } from "./types";
+import { Terrain, type IFloor, type IUnit } from "./types";
 
 export class Space {
   private readonly _floor: IFloor;
@@ -15,6 +15,13 @@ export class Space {
     return this._floor.get(this._x, this._y);
   }
 
+  get terrain(): Terrain {
+    if (this._floor.outOfBounds(this._x, this._y)) return Terrain.Wall;
+    const [sx, sy] = this._floor.stairsLocation;
+    if (this._x === sx && this._y === sy) return Terrain.Stairs;
+    return Terrain.Floor;
+  }
+
   get location(): [number, number] {
     return [this._x, this._y];
   }
@@ -22,59 +29,21 @@ export class Space {
   get character(): string {
     const u = this.unit;
     if (u) return u.character;
-    if (this.isStairs()) return ">";
+    if (this.terrain === Terrain.Stairs) return ">";
     return " ";
-  }
-
-  isWall(): boolean {
-    return this._floor.outOfBounds(this._x, this._y);
-  }
-
-  isEmpty(): boolean {
-    return this.unit === undefined && !this.isWall();
-  }
-
-  isStairs(): boolean {
-    const [sx, sy] = this._floor.stairsLocation;
-    return this._x === sx && this._y === sy;
-  }
-
-  isPlayer(): boolean {
-    return this.unitMatches((u) => u.isSamurai() || u.isGolem());
-  }
-
-  isEnemy(): boolean {
-    return this.unitMatches((u) => !u.isSamurai() && !u.isGolem() && !u.isBound());
-  }
-
-  isCaptive(): boolean {
-    return this.unitMatches((u) => u.isBound());
-  }
-
-  isTicking(): boolean {
-    return this.unitMatches((u) => u.hasAbility("explode!"));
-  }
-
-  isGolem(): boolean {
-    return this.unitMatches((u) => u.isGolem());
   }
 
   get nameKey(): string {
     const u = this.unit;
     if (u) return u.nameKey;
-    if (this.isWall()) return "wall";
+    if (this.terrain === Terrain.Wall) return "wall";
     return "nothing";
   }
 
   toString(): string {
     const u = this.unit;
     if (u) return u.toString();
-    if (this.isWall()) return "wall";
+    if (this.terrain === Terrain.Wall) return "wall";
     return "nothing";
-  }
-
-  private unitMatches(predicate: (unit: IUnit) => boolean): boolean {
-    const unit = this.unit;
-    return unit ? predicate(unit) : false;
   }
 }

@@ -1,5 +1,5 @@
 import type { RelativeDirection } from "../direction";
-import type { ILogger } from "../types";
+import { Terrain, type ILogger } from "../types";
 import type { Space } from "../space";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
@@ -24,11 +24,12 @@ export abstract class RangedEnemy extends BaseUnit {
     for (const direction of SEARCH_DIRECTIONS) {
       const spaces = turn.doSense("look", direction) as Space[];
       for (const space of spaces) {
-        if (space.isPlayer()) {
+        const u = space.unit;
+        if (u && (u.isSamurai() || u.isGolem())) {
           turn.doAction("shoot!", direction);
           return;
         }
-        if (!space.isEmpty()) {
+        if (u || space.terrain !== Terrain.Floor) {
           break;
         }
       }

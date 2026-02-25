@@ -6,6 +6,15 @@ import type { BaseAbility } from "./abilities/base";
 import type { Turn } from "./turn";
 
 /**
+ * Terrain types.
+ */
+export enum Terrain {
+  Floor = "f",
+  Wall = "w",
+  Stairs = "s",
+}
+
+/**
  * Minimal interface for Floor, used by Position/Space to avoid circular deps.
  */
 export interface IFloor {

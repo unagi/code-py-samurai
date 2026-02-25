@@ -3,6 +3,7 @@ import { Feel } from "@engine/abilities/feel";
 import { Floor } from "@engine/floor";
 import { Samurai } from "@engine/units/samurai";
 import { Sludge } from "@engine/units/sludge";
+import { Terrain } from "@engine/types";
 
 function setup() {
   const floor = new Floor(8, 1);
@@ -18,7 +19,7 @@ describe("Feel", () => {
     const { samurai } = setup();
     const feel = samurai.abilities.get("feel") as Feel;
     const space = feel.perform("forward");
-    expect(space.isEmpty()).toBe(true);
+    expect(!space.unit && space.terrain === Terrain.Floor).toBe(true);
   });
 
   it("returns space with enemy when sludge ahead", () => {
@@ -27,8 +28,8 @@ describe("Feel", () => {
     floor.add(sludge, 1, 0, "west");
     const feel = samurai.abilities.get("feel") as Feel;
     const space = feel.perform("forward");
-    expect(space.isEmpty()).toBe(false);
-    expect(space.isEnemy()).toBe(true);
+    expect(space.unit).toBe(sludge);
+    expect(!space.unit?.isSamurai() && !space.unit?.isGolem()).toBe(true);
   });
 
   it("returns wall space when facing wall", () => {
@@ -39,7 +40,7 @@ describe("Feel", () => {
     floor.add(samurai, 0, 0, "west");
     const feel = samurai.abilities.get("feel") as Feel;
     const space = feel.perform("forward");
-    expect(space.isWall()).toBe(true);
+    expect(space.terrain).toBe(Terrain.Wall);
   });
 
   it("feels backward", () => {
@@ -49,7 +50,7 @@ describe("Feel", () => {
     const feel = samurai.abilities.get("feel") as Feel;
     const backSpace = feel.perform("backward");
     // samurai at 0 facing east, backward = west = x-1 = wall
-    expect(backSpace.isWall()).toBe(true);
+    expect(backSpace.terrain).toBe(Terrain.Wall);
   });
 
   it("throws on invalid direction", () => {

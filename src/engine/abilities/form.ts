@@ -1,5 +1,6 @@
 import type { RelativeDirection } from "../direction";
 import type { Turn } from "../turn";
+import { Terrain } from "../types";
 import { BaseAbility } from "./base";
 import { Golem } from "../units/golem";
 
@@ -10,7 +11,7 @@ export class Form extends BaseAbility {
   ): void {
     this.verifyDirection(direction);
     const sp = this.space(direction);
-    if (sp.isEmpty()) {
+    if (sp.unit === undefined && sp.terrain !== Terrain.Wall) {
       const pos = this._unit.position!;
       const [fwd, rt] = this.offset(direction);
       const [x, y] = pos.translateOffset(fwd, rt);

@@ -12,7 +12,7 @@ export class Rescue extends BaseAbility {
   perform(direction: RelativeDirection = "forward"): void {
     this.verifyDirection(direction);
     const sp = this.space(direction);
-    if (sp.isCaptive()) {
+    if (sp.unit?.isBound()) {
       const recipient = this.unitAt(direction) as IUnit;
       this._unit.say({ key: "engine.rescueHit", params: { direction, target: recipient.nameKey } });
       recipient.unbind();

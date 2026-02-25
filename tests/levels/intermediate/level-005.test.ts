@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import type { RelativeDirection } from "@engine/direction";
 import { level005 } from "../../../src/levels/intermediate";
@@ -37,25 +38,27 @@ describe("Intermediate Level 5", () => {
         // Check adjacent spaces
         for (const dir of directions) {
           const space = t.doSense("feel", dir) as Space;
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("attack!", dir);
             return;
           }
-          if (space.isCaptive()) {
+          if (u?.isBound()) {
             t.doAction("rescue!", dir);
             return;
           }
         }
 
         // If enemies/captives still exist, walk toward first one
-        const nonStairsUnits = units.filter((u) => !u.isStairs());
+        const nonStairsUnits = units.filter((u) => u.terrain !== Terrain.Stairs);
         if (nonStairsUnits.length > 0 || units.length > 0) {
           // Prioritize enemies/captives over stairs
-          for (const unit of units) {
-            if (unit.isEnemy() || unit.isCaptive()) {
+          for (const s of units) {
+            const u = s.unit;
+            if ((u && !u.isSamurai() && !u.isGolem() && !u.isBound()) || u?.isBound()) {
               const dir = t.doSense(
                 "direction_of",
-                unit,
+                s,
               ) as RelativeDirection;
               t.doAction("walk!", dir);
               return;

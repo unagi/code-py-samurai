@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import { Turn } from "@engine/turn";
 import type { Space } from "@engine/space";
 import { level003 } from "../../src/levels/beginner";
@@ -13,7 +14,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEnemy()) {
+        const u = space.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
           t.doAction("attack!", "forward");
         } else if ((t.doSense("health") as number) < 20) {
           t.doAction("rest!");
@@ -37,7 +39,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEnemy()) {
+        const u = space.unit;
+        if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
           t.doAction("attack!", "forward");
         } else if ((t.doSense("health") as number) < 20) {
           t.doAction("rest!");
@@ -60,7 +63,8 @@ describe("Beginner Level 3", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const space = t.doSense("feel", "forward") as Space;
-        if (space.isEmpty()) {
+        const u = space.unit;
+        if (!u && space.terrain === Terrain.Floor) {
           t.doAction("walk!", "forward");
         } else {
           t.doAction("attack!", "forward");

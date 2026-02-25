@@ -51,14 +51,14 @@ function injectGetattr(source: string): string {
     "    LEFT = 'left'",
     "",
     "class Terrain:",
-    "    FLOOR = 'floor'",
-    "    WALL = 'wall'",
-    "    STAIRS = 'stairs'",
+    "    FLOOR = 'f'",
+    "    WALL = 'w'",
+    "    STAIRS = 's'",
     "",
     "class UnitKind:",
-    "    ENEMY = 'enemy'",
-    "    CAPTIVE = 'captive'",
-    "    ALLY = 'ally'",
+    "    ENEMY = 'e'",
+    "    CAPTIVE = 'c'",
+    "    ALLY = 'a'",
     "",
     "class _PlayerBase:",
     "    def __getattr__(self, name):",
@@ -75,24 +75,16 @@ function injectGetattr(source: string): string {
 
 /* ---------- JS ↔ Skulpt conversions ---------- */
 
-const SPACE_METHODS: ReadonlyArray<readonly [string, string]> = [
-  ["is_enemy", "isEnemy"],
-  ["is_captive", "isCaptive"],
-  ["is_stairs", "isStairs"],
-  ["is_wall", "isWall"],
-  ["is_ticking", "isTicking"],
-];
-
 const TERRAIN_VALUES = {
-  FLOOR: "floor",
-  WALL: "wall",
-  STAIRS: "stairs",
+  FLOOR: "f",
+  WALL: "w",
+  STAIRS: "s",
 } as const;
 
 const UNIT_KIND_VALUES = {
-  ENEMY: "enemy",
-  CAPTIVE: "captive",
-  ALLY: "ally",
+  ENEMY: "e",
+  CAPTIVE: "c",
+  ALLY: "a",
 } as const;
 
 /**
@@ -118,18 +110,6 @@ function getMethod(
   return undefined;
 }
 
-function callSpacePredicate(
-  obj: Record<string, unknown>,
-  snake: string,
-  camel: string,
-): boolean {
-  const fn = getMethod(obj, snake, camel);
-  if (!fn) {
-    throw new TypeError(`Space method ${snake}/${camel} is not available.`);
-  }
-  return Boolean(fn.call(obj));
-}
-
 function callOptionalSpacePredicate(
   obj: Record<string, unknown>,
   snake: string,
@@ -141,23 +121,35 @@ function callOptionalSpacePredicate(
 }
 
 function getTerrainValue(obj: Record<string, unknown>): string {
-  if (callSpacePredicate(obj, "is_wall", "isWall")) return TERRAIN_VALUES.WALL;
-  if (callSpacePredicate(obj, "is_stairs", "isStairs")) return TERRAIN_VALUES.STAIRS;
+  if (typeof obj.terrain === "string") return obj.terrain;
+  if (callOptionalSpacePredicate(obj, "is_wall", "isWall")) return TERRAIN_VALUES.WALL;
+  if (callOptionalSpacePredicate(obj, "is_stairs", "isStairs")) return TERRAIN_VALUES.STAIRS;
   return TERRAIN_VALUES.FLOOR;
 }
 
 function getOccupantInfo(
   obj: Record<string, unknown>,
 ): { kind: string; ticking: boolean } | null {
-  const jsSpaceUnit = "unit" in obj ? (obj as { unit?: unknown }).unit : undefined;
+  const unit = obj.unit as any;
+
   const enemy = callOptionalSpacePredicate(obj, "is_enemy", "isEnemy");
   const captive = callOptionalSpacePredicate(obj, "is_captive", "isCaptive");
-  const ticking = callOptionalSpacePredicate(obj, "is_ticking", "isTicking") ?? false;
+  const ticking =
+    (unit && typeof unit.hasAbility === "function"
+      ? unit.hasAbility("explode!")
+      : callOptionalSpacePredicate(obj, "is_ticking", "isTicking")) ?? false;
 
-  // Engine Space exposes a `unit` getter. If it is absent (test doubles), fall back to predicates.
-  if (jsSpaceUnit !== undefined) {
-    if (captive) return { kind: UNIT_KIND_VALUES.CAPTIVE, ticking };
-    if (enemy) return { kind: UNIT_KIND_VALUES.ENEMY, ticking };
+  if (unit !== undefined) {
+    // If it's a real unit, use its methods. If it's a POJO, use predicates if available.
+    const isBound = typeof unit.isBound === "function" ? unit.isBound() : captive;
+    if (isBound) return { kind: UNIT_KIND_VALUES.CAPTIVE, ticking };
+
+    const isSamurai = typeof unit.isSamurai === "function" ? unit.isSamurai() : false;
+    const isGolem = typeof unit.isGolem === "function" ? unit.isGolem() : false;
+    const isEnemy =
+      typeof unit.isSamurai === "function" ? !isSamurai && !isGolem : enemy;
+
+    if (isEnemy) return { kind: UNIT_KIND_VALUES.ENEMY, ticking };
     return { kind: UNIT_KIND_VALUES.ALLY, ticking };
   }
 
@@ -206,16 +198,6 @@ function jsSpaceToSk(sk: SkNamespace, raw: unknown): unknown {
 
     const unitGetter = new sk.builtin.func(() => jsOccupantToSk(sk, obj));
     $loc.unit = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [unitGetter]);
-
-    for (const [snake, camel] of SPACE_METHODS) {
-      ((s, c) => {
-        $loc[s] = new sk.builtin.func(() => {
-          return callSpacePredicate(obj, s, c)
-            ? sk.builtin.bool.true$
-            : sk.builtin.bool.false$;
-        });
-      })(snake, camel);
-    }
   }, "Space", []);
 
   const instance = sk.misceval.callsimArray(SpaceClass, []);
