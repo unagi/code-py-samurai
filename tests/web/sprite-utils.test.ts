@@ -30,16 +30,20 @@ describe("absoluteDirToSpriteDir", () => {
     expect(absoluteDirToSpriteDir("east")).toBe("right");
   });
 
-  it("maps north to right", () => {
-    expect(absoluteDirToSpriteDir("north")).toBe("right");
+  it("maps north to north", () => {
+    expect(absoluteDirToSpriteDir("north")).toBe("north");
   });
 
   it("maps west to left", () => {
     expect(absoluteDirToSpriteDir("west")).toBe("left");
   });
 
-  it("maps south to left", () => {
-    expect(absoluteDirToSpriteDir("south")).toBe("left");
+  it("maps south to south", () => {
+    expect(absoluteDirToSpriteDir("south")).toBe("south");
+  });
+
+  it("falls back to right for unknown direction", () => {
+    expect(absoluteDirToSpriteDir("unknown")).toBe("right");
   });
 });
 

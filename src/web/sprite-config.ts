@@ -8,21 +8,21 @@ export const SAMURAI_IDLE_FRAME_MS = 140;
 export const SPRITE_FRAME_MS = 160;
 
 export interface SpriteStateConfig {
-  /** パステンプレート — "{dir}" が "left" / "right" に置換される */
+  /** パステンプレート — "{dir}" が方向文字列に置換される */
   pathTemplate?: string;
-  /** 方向ごとの明示パス（left/right 入力を east/west ファイルにマップする用途） */
-  pathByDir?: Readonly<Record<SpriteDir, string>>;
+  /** 方向ごとの明示パス。north/south は省略可（left/right にフォールバック） */
+  pathByDir?: Readonly<Partial<Record<SpriteDir, string>>>;
   frames: number;
 }
 
 export interface CharSpriteConfig {
   idle: SpriteStateConfig;
-  attack: SpriteStateConfig;
-  damaged: SpriteStateConfig;
-  death: SpriteStateConfig;
+  attack?: SpriteStateConfig;
+  damaged?: SpriteStateConfig;
+  death?: SpriteStateConfig;
 }
 
-type CharSpriteState = keyof CharSpriteConfig;
+type CharSpriteState = "idle" | "attack" | "damaged" | "death";
 type SpriteAssetDirectionKey = "east" | "west" | "left" | "right" | "none";
 
 interface SpriteAssetManifestFrameDef {
@@ -116,8 +116,35 @@ function buildCaptiveSpriteConfigFromManifest(): CharSpriteConfig {
   };
 }
 
+function buildSamurai4DirStateConfig(
+  state: CharSpriteState,
+  northState: string,
+  southState: string,
+): SpriteStateConfig {
+  const leftRight = buildDirectionalSpriteStateConfigFromManifest("samurai-cat", state);
+  const north = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", northState);
+  const south = buildSingleVariantSpriteStateConfigFromManifest("samurai-cat", southState);
+  return {
+    pathByDir: {
+      ...leftRight.pathByDir,
+      north: north.pathTemplate!,
+      south: south.pathTemplate!,
+    },
+    frames: leftRight.frames,
+  };
+}
+
+function buildSamuraiSpriteConfigFromManifest(): CharSpriteConfig {
+  return {
+    idle: buildSamurai4DirStateConfig("idle", "idle-north", "idle-south"),
+    attack: buildSamurai4DirStateConfig("attack", "attack-north", "attack-south"),
+    damaged: buildSamurai4DirStateConfig("damaged", "damaged-north", "damaged-south"),
+  };
+}
+
 /** キャラ種別 → スプライトシート定義 */
 export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
+  samurai: buildSamuraiSpriteConfigFromManifest(),
   sludge: buildCharSpriteConfigFromManifest("sludge"),
   "thick-sludge": buildCharSpriteConfigFromManifest("thick-sludge"),
   wizard: buildCharSpriteConfigFromManifest("wizard"),
@@ -126,9 +153,16 @@ export const CHAR_SPRITES: Readonly<Record<string, CharSpriteConfig>> = {
 
 export const SPRITE_CAPABLE_KINDS: ReadonlySet<string> = new Set(Object.keys(CHAR_SPRITES));
 
+/** north/south → left/right のフォールバックマッピング */
+const SPRITE_DIR_FALLBACK: Readonly<Partial<Record<SpriteDir, SpriteDir>>> = {
+  north: "right",
+  south: "left",
+};
+
 export function resolveSpriteStateSrc(stateConfig: SpriteStateConfig, dir: SpriteDir): string {
   if (stateConfig.pathByDir) {
-    return stateConfig.pathByDir[dir];
+    const path = stateConfig.pathByDir[dir] ?? stateConfig.pathByDir[SPRITE_DIR_FALLBACK[dir]!];
+    if (path) return path;
   }
   if (stateConfig.pathTemplate) {
     return resolveSpriteDir(stateConfig.pathTemplate, dir);

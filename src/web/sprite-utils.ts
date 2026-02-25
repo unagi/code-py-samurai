@@ -1,4 +1,4 @@
-export type SpriteDir = "left" | "right";
+export type SpriteDir = "left" | "right" | "north" | "south";
 
 function mixUint32(seed: number): number {
   let value = Math.trunc(seed) >>> 0;
@@ -15,10 +15,15 @@ export function resolveSpriteDir(template: string, dir: SpriteDir): string {
   return template.replace("{dir}", dir);
 }
 
-/** AbsoluteDirection (engine) → スプライト左右 */
+/** AbsoluteDirection (engine) → スプライト方向 */
 export function absoluteDirToSpriteDir(absDir: string): SpriteDir {
-  // east / north → right,  west / south → left
-  return absDir === "west" || absDir === "south" ? "left" : "right";
+  switch (absDir) {
+    case "west": return "left";
+    case "east": return "right";
+    case "north": return "north";
+    case "south": return "south";
+    default: return "right";
+  }
 }
 
 /** 等間隔フレーム遷移の現在フレームを返す */

@@ -276,7 +276,15 @@ def select_ping_pong(
     """
     n = len(ordered)
     if n <= cycle_length:
-        return list(ordered)
+        # ordered は TSP パス (A→...→C) なので ping-pong 順にリマップ
+        # A→B1群→C→B2群(逆順) の形にする
+        a = ordered[0]
+        c = ordered[-1]
+        middle = ordered[1:-1]
+        half = len(middle) // 2
+        b1 = middle[:half]
+        b2 = middle[half:][::-1]
+        return [a] + b1 + [c] + b2
 
     if cycle_length == 3:
         # 3フレーム: A→B→C→B→A... (ping-pong bounce)
