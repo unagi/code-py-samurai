@@ -37,8 +37,9 @@ describe("Intermediate Level 6", () => {
         // Check adjacent spaces
         for (const dir of directions) {
           const space = t.doSense("feel", dir) as Space;
+          const u = space.unit;
           // Rescue ticking captives immediately
-          if (space.isCaptive() && space.isTicking()) {
+          if (u?.isBound() && u.hasAbility("explode!")) {
             t.doAction("rescue!", dir);
             return;
           }
@@ -46,7 +47,7 @@ describe("Intermediate Level 6", () => {
 
         // If there's a ticking captive somewhere, rush toward it
         const ticking = units.find(
-          (u) => u.isCaptive() && u.isTicking(),
+          (s) => s.unit?.isBound() && s.unit.hasAbility("explode!"),
         );
         if (ticking) {
           const tickDir = t.doSense(
@@ -54,7 +55,8 @@ describe("Intermediate Level 6", () => {
             ticking,
           ) as RelativeDirection;
           const spaceInDir = t.doSense("feel", tickDir) as Space;
-          if (spaceInDir.isEnemy()) {
+          const u = spaceInDir.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("attack!", tickDir);
             return;
           }
@@ -65,11 +67,12 @@ describe("Intermediate Level 6", () => {
         // Handle adjacent enemies/captives
         for (const dir of directions) {
           const space = t.doSense("feel", dir) as Space;
-          if (space.isEnemy()) {
+          const u = space.unit;
+          if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
             t.doAction("attack!", dir);
             return;
           }
-          if (space.isCaptive()) {
+          if (u?.isBound()) {
             t.doAction("rescue!", dir);
             return;
           }

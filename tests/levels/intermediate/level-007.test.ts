@@ -28,7 +28,8 @@ function collectAdjacentEnemies(t: Turn): RelativeDirection[] {
   const enemies: RelativeDirection[] = [];
   for (const dir of ALL_DIRS) {
     const space = t.doSense("feel", dir) as Space;
-    if (space.isEnemy()) enemies.push(dir);
+    const u = space.unit;
+    if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) enemies.push(dir);
   }
   return enemies;
 }
@@ -44,7 +45,8 @@ function rushTowardTicking(
     ticking,
   ) as RelativeDirection;
   const spaceInDir = t.doSense("feel", tickDir) as Space;
-  if (spaceInDir.isEnemy()) {
+  const u = spaceInDir.unit;
+  if (u && !u.isSamurai() && !u.isGolem() && !u.isBound()) {
     if (adjacentEnemies.length >= 2) {
       const otherEnemy = adjacentEnemies.find((d) => d !== tickDir);
       if (otherEnemy) {
@@ -81,7 +83,7 @@ describe("Intermediate Level 7", () => {
         // Priority 1: rescue adjacent ticking captive
         const tickingDir = findAdjacentDir(
           t,
-          (s) => s.isCaptive() && s.isTicking(),
+          (s) => !!(s.unit?.isBound() && s.unit.hasAbility("explode!")),
         );
         if (tickingDir) {
           t.doAction("rescue!", tickingDir);
@@ -89,7 +91,7 @@ describe("Intermediate Level 7", () => {
         }
 
         const ticking = units.find(
-          (u) => u.isCaptive() && u.isTicking(),
+          (s) => s.unit?.isBound() && s.unit.hasAbility("explode!"),
         );
         const adjacentEnemies = collectAdjacentEnemies(t);
 
@@ -100,7 +102,7 @@ describe("Intermediate Level 7", () => {
         }
 
         // Priority 3: rescue adjacent captive
-        const captiveDir = findAdjacentDir(t, (s) => s.isCaptive());
+        const captiveDir = findAdjacentDir(t, (s) => !!s.unit?.isBound());
         if (captiveDir) {
           t.doAction("rescue!", captiveDir);
           return;
