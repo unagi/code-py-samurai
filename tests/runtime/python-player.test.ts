@@ -9,6 +9,7 @@ class FakeSpace {
     private readonly captive: boolean,
     private readonly empty: boolean,
     private readonly ticking: boolean = false,
+    public readonly terrain: string = "f",
   ) {}
 
   isEnemy(): boolean {
@@ -24,11 +25,11 @@ class FakeSpace {
   }
 
   isStairs(): boolean {
-    return false;
+    return this.terrain === "s";
   }
 
   isWall(): boolean {
-    return false;
+    return this.terrain === "w";
   }
 
   isTicking(): boolean {
@@ -422,12 +423,8 @@ describe("compilePythonPlayer", () => {
       feel: (direction?: unknown) => {
         if (direction === "left") {
           return {
-            isEmpty: () => false,
-            isEnemy: () => false,
-            isCaptive: () => false,
+            terrain: "w",
             isWall: () => true,
-            isStairs: () => false,
-            isTicking: () => false,
           };
         }
         return new FakeSpace(true, false, false);
@@ -480,6 +477,7 @@ describe("compilePythonPlayer", () => {
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({
       feel: () => ({
+        terrain: "s",
         isWall: () => false,
         isStairs: () => true,
       }),
@@ -503,6 +501,7 @@ describe("compilePythonPlayer", () => {
     const player = compilePythonPlayer(source);
     const turn = new FakeTurn({
       feel: () => ({
+        terrain: "f",
         isWall: () => false,
         isStairs: () => false,
       }),
@@ -527,6 +526,7 @@ describe("compilePythonPlayer", () => {
     const turn = new FakeTurn({
       feel: () => ({
         unit: { id: "ally#1" },
+        terrain: "f",
         isEnemy: () => false,
         isCaptive: () => false,
         isTicking: () => false,

@@ -1,5 +1,5 @@
 import type { RelativeDirection } from "../direction";
-import type { ILogger } from "../types";
+import { Terrain, type ILogger } from "../types";
 import type { Space } from "../space";
 import { createAbility } from "../abilities/index";
 import { Turn } from "../turn";
@@ -29,7 +29,7 @@ export abstract class RangedEnemy extends BaseUnit {
           turn.doAction("shoot!", direction);
           return;
         }
-        if (u || space.terrain !== "floor") {
+        if (u || space.terrain !== Terrain.Floor) {
           break;
         }
       }

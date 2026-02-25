@@ -1873,6 +1873,11 @@ button:disabled {
   position: relative;
 }
 
+.api-structure-node-class:where(:not(:first-child)),
+.api-structure-node-leaf-enum:where(:not(:first-child)) {
+  margin-top: 0.75rem;
+}
+
 .api-structure-branch {
   position: relative;
   margin-left: 0.08rem;

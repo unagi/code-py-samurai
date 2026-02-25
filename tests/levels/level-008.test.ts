@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import { level008 } from "../../src/levels/beginner";
 
@@ -27,7 +28,7 @@ describe("Beginner Level 8", () => {
             t.doAction("shoot!", "forward");
             return;
           }
-          if (u || space.terrain === "wall") break;
+          if (u || space.terrain === Terrain.Wall) break;
         }
         // Walk forward if nothing to do
         t.doAction("walk!", "forward");

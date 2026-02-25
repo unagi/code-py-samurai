@@ -9,9 +9,9 @@ import type { Turn } from "./turn";
  * Terrain types.
  */
 export enum Terrain {
-  Floor = "floor",
-  Wall = "wall",
-  Stairs = "stairs",
+  Floor = "f",
+  Wall = "w",
+  Stairs = "s",
 }
 
 /**

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import { level007 } from "../../src/levels/beginner";
 
@@ -18,14 +19,14 @@ describe("Beginner Level 7", () => {
         const t = turn as Turn;
         const health = t.doSense("health") as number;
         const fwd = t.doSense("feel", "forward") as Space;
-        if (fwd.terrain === "wall" && !pivoted) {
+        if (fwd.terrain === Terrain.Wall && !pivoted) {
           t.doAction("pivot!");
           pivoted = true;
         } else if (fwd.unit && !fwd.unit.isSamurai() && !fwd.unit.isGolem()) {
           t.doAction("attack!", "forward");
         } else if (health < 20 && health >= lastHealth) {
           t.doAction("rest!");
-        } else if (health <= 10 && health < lastHealth && !fwd.unit && fwd.terrain !== "wall") {
+        } else if (health <= 10 && health < lastHealth && !fwd.unit && fwd.terrain !== Terrain.Wall) {
           // Retreat from ranged damage to rest safely
           t.doAction("walk!", "backward");
         } else {
@@ -45,7 +46,7 @@ describe("Beginner Level 7", () => {
       playTurn(turn: ITurn) {
         const t = turn as Turn;
         const fwd = t.doSense("feel", "forward") as Space;
-        if (!fwd.unit && fwd.terrain !== "wall") {
+        if (!fwd.unit && fwd.terrain !== Terrain.Wall) {
           t.doAction("walk!", "forward");
         }
       },

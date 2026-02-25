@@ -51,14 +51,14 @@ function injectGetattr(source: string): string {
     "    LEFT = 'left'",
     "",
     "class Terrain:",
-    "    FLOOR = 'floor'",
-    "    WALL = 'wall'",
-    "    STAIRS = 'stairs'",
+    "    FLOOR = 'f'",
+    "    WALL = 'w'",
+    "    STAIRS = 's'",
     "",
     "class UnitKind:",
-    "    ENEMY = 'enemy'",
-    "    CAPTIVE = 'captive'",
-    "    ALLY = 'ally'",
+    "    ENEMY = 'e'",
+    "    CAPTIVE = 'c'",
+    "    ALLY = 'a'",
     "",
     "class _PlayerBase:",
     "    def __getattr__(self, name):",
@@ -76,15 +76,15 @@ function injectGetattr(source: string): string {
 /* ---------- JS ↔ Skulpt conversions ---------- */
 
 const TERRAIN_VALUES = {
-  FLOOR: "floor",
-  WALL: "wall",
-  STAIRS: "stairs",
+  FLOOR: "f",
+  WALL: "w",
+  STAIRS: "s",
 } as const;
 
 const UNIT_KIND_VALUES = {
-  ENEMY: "enemy",
-  CAPTIVE: "captive",
-  ALLY: "ally",
+  ENEMY: "e",
+  CAPTIVE: "c",
+  ALLY: "a",
 } as const;
 
 /**

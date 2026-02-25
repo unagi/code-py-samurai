@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Level } from "@engine/level";
 import { Turn } from "@engine/turn";
 import type { IPlayer, ITurn } from "@engine/types";
+import { Terrain } from "@engine/types";
 import type { Space } from "@engine/space";
 import { level006 } from "../../src/levels/beginner";
 
@@ -25,7 +26,7 @@ describe("Beginner Level 6", () => {
             captiveRescued = true;
             lastHealth = health;
             return;
-          } else if (bwd.terrain === "wall") {
+          } else if (bwd.terrain === Terrain.Wall) {
             captiveRescued = true;
             // Fall through to phase 2 below
           } else {
@@ -40,7 +41,7 @@ describe("Beginner Level 6", () => {
           t.doAction("attack!", "forward");
         } else if (health < 20 && health >= lastHealth) {
           t.doAction("rest!");
-        } else if (health <= 10 && health < lastHealth && !fwd.unit && fwd.terrain !== "wall") {
+        } else if (health <= 10 && health < lastHealth && !fwd.unit && fwd.terrain !== Terrain.Wall) {
           t.doAction("walk!", "backward");
         } else {
           t.doAction("walk!", "forward");
