@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { assetUrl } from "./asset-url";
 import { GITHUB_ISSUES_URL } from "./site-links";
 
 interface Props {
@@ -19,7 +20,7 @@ function FallbackContent({ error }: { readonly error: Error | null }) {
   return (
     <div className="error-fallback">
       <img
-        src="/assets/brand/title-logo.png"
+        src={assetUrl("/assets/brand/title-logo.png")}
         alt="Python侍"
         className="error-fallback-logo"
       />

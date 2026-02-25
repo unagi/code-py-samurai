@@ -1,4 +1,5 @@
 import { towers } from "../levels";
+import { assetUrl } from "./asset-url";
 import archerGameplay from "@engine/unit-data/archer.gameplay.json";
 import golemGameplay from "@engine/unit-data/golem.gameplay.json";
 import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
@@ -24,14 +25,14 @@ const WIZARD_ALT_KEY = `tiles.${wizardGameplay.nameKey}`;
 const GOLEM_ALT_KEY = `tiles.${golemGameplay.nameKey}`;
 
 const TILE_META_BY_SYMBOL: Record<string, TileMeta> = {
-  " ": { kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
-  "-": { kind: "wall-h", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall.png" },
-  "|": { kind: "wall-v", altKey: "tiles.frame", assetPath: "/assets/tiles/cave-wall-top.png" },
-  ">": { kind: "stairs", altKey: "tiles.stairs", assetPath: "/assets/tiles/cave-stairs.png" },
+  " ": { kind: "floor", altKey: "tiles.empty", assetPath: assetUrl("/assets/tiles/cave-floor.png") },
+  "-": { kind: "wall-h", altKey: "tiles.frame", assetPath: assetUrl("/assets/tiles/cave-wall.png") },
+  "|": { kind: "wall-v", altKey: "tiles.frame", assetPath: assetUrl("/assets/tiles/cave-wall-top.png") },
+  ">": { kind: "stairs", altKey: "tiles.stairs", assetPath: assetUrl("/assets/tiles/cave-stairs.png") },
   [samuraiGameplay.symbol]: {
     kind: samuraiGameplay.kind,
     altKey: SAMURAI_ALT_KEY,
-    assetPath: "/assets/sprites/samurai-cat/idle-east.png",
+    assetPath: assetUrl("/assets/sprites/samurai-cat/idle-east.png"),
   },
   [sludgeGameplay.symbol]: { kind: sludgeGameplay.kind, altKey: SLUDGE_ALT_KEY },
   [thickSludgeGameplay.symbol]: { kind: thickSludgeGameplay.kind, altKey: THICK_SLUDGE_ALT_KEY, emoji: "\u{1F47E}" }, // 👾
@@ -99,11 +100,11 @@ export function buildBoardGrid(board: string): BoardGridData {
 
   const WALL_H_TILE: BoardTile = {
     symbol: "-", kind: "wall-h", altKey: "tiles.frame",
-    assetPath: "/assets/tiles/cave-wall.png",
+    assetPath: assetUrl("/assets/tiles/cave-wall.png"),
   };
   const WALL_V_TILE: BoardTile = {
     symbol: "|", kind: "wall-v", altKey: "tiles.frame",
-    assetPath: "/assets/tiles/cave-wall-top.png",
+    assetPath: assetUrl("/assets/tiles/cave-wall-top.png"),
   };
 
   const pushBoardRow = (line: string, isTopWallRow: boolean) => {
