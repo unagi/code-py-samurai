@@ -876,7 +876,7 @@ export default function App() {
               <li className="api-structure-node api-structure-node-class">
                 <div className="api-structure-row api-structure-row-class">
                   <span className="api-structure-twistie" aria-hidden="true">▾</span>
-                  <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-person-fill" /></span>
+                  <span className="api-structure-class-icon" aria-hidden="true"><i className="bi bi-box-fill" /></span>
                   <span className="api-structure-label">{samuraiApiStructure.className}</span>
                 </div>
                 <ul className="api-structure-branch api-structure-branch-leaves">
