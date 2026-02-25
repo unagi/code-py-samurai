@@ -68,6 +68,56 @@ describe("python error handling", () => {
     }
   });
 
+  it("reports line 1 for syntax error on the first line of user code", () => {
+    // Invalid token on line 1 — "@@" is not valid Python.
+    // "class Player:" is required for injectGetattr, so the error must be
+    // within the class body or after a valid class header on line 1.
+    const source = "class Player: @@\n    def play_turn(self, samurai):\n        pass";
+    try {
+      compilePythonPlayer(source);
+      expect.unreachable("should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(PythonSyntaxError);
+      const synErr = error as PythonSyntaxError;
+      expect(synErr.line).toBe(1);
+    }
+  });
+
+  it("reports correct line for errors deep in the source", () => {
+    // Syntax error on line 5 (missing colon on second method definition)
+    const source = [
+      "class Player:",
+      "    def play_turn(self, samurai):",
+      "        samurai.walk()",
+      "",
+      "    def broken(self)",   // line 5: missing colon
+      "        pass",
+    ].join("\n");
+    try {
+      compilePythonPlayer(source);
+      expect.unreachable("should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(PythonSyntaxError);
+      const synErr = error as PythonSyntaxError;
+      // Should be line 5 or 6 (Skulpt may report next line), but never 20+
+      expect(synErr.line).toBeDefined();
+      expect(synErr.line!).toBeGreaterThanOrEqual(5);
+      expect(synErr.line!).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it("includes line number in formatted output for compile-time errors", () => {
+    const source = "class Player:\n    self.x = 1\n    def play_turn(self, samurai):\n        pass";
+    try {
+      compilePythonPlayer(source);
+      expect.unreachable("should have thrown");
+    } catch (error) {
+      const formatted = formatPythonError(error);
+      expect(formatted).toMatch(/\(line 2\)/);
+      expect(formatted).toMatch(/^Python syntax error/);
+    }
+  });
+
   it("includes line number in formatted syntax error when available", () => {
     const error = new PythonSyntaxError("invalid syntax", 3, 5);
     expect(error.line).toBe(3);

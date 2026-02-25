@@ -46,15 +46,37 @@ function lineEndOffset(source: string, line: number): number {
   return offset;
 }
 
+let parseReady = false;
+
+/** @internal Reset configuration state. For testing only. */
+export function _resetParseReady(): void {
+  parseReady = false;
+}
+
+/** Ensure Skulpt has the minimal config required for Sk.parse(). */
+function ensureParseReady(): boolean {
+  if (parseReady) return true;
+  try {
+    // Sk.configure merges settings, so this is safe even if
+    // compilePythonPlayer has already fully configured Skulpt.
+    globalThis.Sk.configure({ __future__: globalThis.Sk.python3 });
+    parseReady = true;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Check Python source for syntax errors using `Sk.parse()`.
  *
  * Returns `null` when the source is syntactically valid (or when Skulpt
- * is not yet loaded — graceful degradation).
+ * is not yet loaded / not yet ready — graceful degradation).
  */
 export function checkPythonSyntax(source: string): PythonSyntaxDiagnostic | null {
   if (source.trim().length === 0) return null;
   if (typeof globalThis.Sk === "undefined") return null;
+  if (!ensureParseReady()) return null;
 
   try {
     globalThis.Sk.parse("<lint>", source);
