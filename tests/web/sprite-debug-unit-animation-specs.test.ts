@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SpriteDebugCardSpec } from "../../src/web/sprite-debug-data";
-import { unitAnimationTypeSpecs, unitPreviewSlotSpecs } from "../../src/web/sprite-debug-unit-animation-specs";
+import { artLayoutForSlotCount, unitAnimationTypeSpecs, unitPreviewSlotSpecs } from "../../src/web/sprite-debug-unit-animation-specs";
 
 function buildEnemyCard(kind: string, dir: "left" | "right"): SpriteDebugCardSpec {
   return {
@@ -156,5 +156,14 @@ describe("sprite debug unit animation specs", () => {
     expect(specs).toHaveLength(4);
     expect(specs[0].spriteFiles).toEqual(["sludge/idle-west.png", "sludge/idle-east.png"]);
     expect(specs[0].previewImageSrcs).toHaveLength(2);
+  });
+
+  it("artLayoutForSlotCount returns correct layout for each slot count", () => {
+    expect(artLayoutForSlotCount(4)).toBe("quad-grid");
+    expect(artLayoutForSlotCount(5)).toBe("quad-grid");
+    expect(artLayoutForSlotCount(2)).toBe("pair-grid");
+    expect(artLayoutForSlotCount(3)).toBe("pair-grid");
+    expect(artLayoutForSlotCount(1)).toBe("single");
+    expect(artLayoutForSlotCount(0)).toBe("single");
   });
 });

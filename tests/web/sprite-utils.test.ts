@@ -41,6 +41,10 @@ describe("absoluteDirToSpriteDir", () => {
   it("maps south to south", () => {
     expect(absoluteDirToSpriteDir("south")).toBe("south");
   });
+
+  it("falls back to right for unknown direction", () => {
+    expect(absoluteDirToSpriteDir("unknown")).toBe("right");
+  });
 });
 
 describe("computeSpriteFrameIndex", () => {

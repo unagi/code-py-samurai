@@ -103,7 +103,8 @@ function buildSpriteConfigImplementationText(
   return `${base.slice(0, -1)} 要求 ${expectedFrames} frames に対して実装は ${actualFrames} frames で不一致。`;
 }
 
-function artLayoutForSlotCount(slotCount: number): UnitAnimationArtLayout {
+/** @internal Exported for testing */
+export function artLayoutForSlotCount(slotCount: number): UnitAnimationArtLayout {
   if (slotCount >= 4) return "quad-grid";
   if (slotCount >= 2) return "pair-grid";
   return "single";
