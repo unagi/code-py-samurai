@@ -404,6 +404,10 @@
   --refdoc-tag-text-muted-fg: var(--pal-muted);
 }
 
+code, pre {
+  font-family: var(--code-font-family);
+}
+
 :root[data-theme="everforest-light"] {
   /* Palette-only override (Everforest light) */
   color-scheme: light;
@@ -1791,7 +1795,6 @@ button:disabled {
   border: 1px solid var(--logs-border);
   background: var(--logs-bg);
   color: var(--logs-fg);
-  font-family: var(--code-font-family);
   font-size: 0.84rem;
   line-height: 1.35;
   scrollbar-gutter: stable;
@@ -2518,7 +2521,6 @@ dialog.modal-backdrop::backdrop {
   border-radius: 4px;
   background: var(--refdoc-signature-bg);
   border: 1px solid var(--refdoc-signature-border);
-  font-family: var(--code-font-family);
   font-size: 0.85em;
 }
 
@@ -2528,7 +2530,6 @@ dialog.modal-backdrop::backdrop {
   background: var(--refdoc-signature-bg);
   border: 1px solid var(--refdoc-signature-border);
   border-radius: 6px;
-  font-family: var(--code-font-family);
   font-size: 0.78rem;
   line-height: 1.5;
   overflow-x: auto;
@@ -2876,7 +2877,6 @@ dialog.modal-backdrop::backdrop {
 .refdoc-entity-property-name {
   color: var(--refdoc-property-name-fg);
   font-weight: 700;
-  font-family: var(--code-font-family);
 }
 
 .refdoc-samurai-action-list .refdoc-item-method {
@@ -2908,7 +2908,6 @@ dialog.modal-backdrop::backdrop {
 .refdoc-compact-name {
   color: var(--refdoc-compact-name-fg);
   font-weight: 700;
-  font-family: var(--code-font-family);
 }
 
 .refdoc-signature-compact {
@@ -3002,7 +3001,6 @@ dialog.modal-backdrop::backdrop {
 
 .refdoc-signature code {
   white-space: pre;
-  font-family: var(--code-font-family);
   font-size: 0.88rem;
 }
 
