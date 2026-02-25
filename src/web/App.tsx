@@ -33,6 +33,7 @@ import {
   writeProgressStorage,
   writeThemeStorage,
 } from "./progress-storage";
+import { assetUrl } from "./asset-url";
 import AppFooter from "./AppFooter";
 import NoticeLine from "./NoticeLine";
 import { ResultModal } from "./ResultModal";
@@ -56,7 +57,7 @@ const COMPACT_BOARD_VIEWPORT_WIDTH_THRESHOLD_PX = 1080;
 const BOARD_LOG_PANEL_HEIGHT_PX = 160;
 const TOTAL_LEVELS = towers.reduce((sum, t) => sum + t.levelCount, 0);
 const API_REFERENCE_PATH = "/reference/python-api";
-const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
+const APP_HEADER_LOGO_SRC = assetUrl("/assets/brand/title-logo.png");
 const SPEED_OPTIONS = [
   { value: 1000, key: "controls.slow", rateLabel: "x0.5" },
   { value: 500, key: "controls.normal", rateLabel: "x1" },

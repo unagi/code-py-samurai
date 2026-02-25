@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { assetUrl } from "./asset-url";
 import AppFooter from "./AppFooter";
 
 import {
@@ -418,7 +419,7 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
   );
 }
 
-const APP_HEADER_LOGO_SRC = "/assets/brand/title-logo.png";
+const APP_HEADER_LOGO_SRC = assetUrl("/assets/brand/title-logo.png");
 
 export default function ReferencePage() {
   const { t, i18n } = useTranslation();

@@ -1,5 +1,6 @@
 import spriteAssetManifestJson from "./generated/sprite-assets.manifest.generated.json";
 import { resolveSpriteDir, type SpriteDir } from "./sprite-utils";
+import { assetUrl } from "./asset-url";
 
 // Transitional fallback until the samurai spritesheet is recreated.
 export const SAMURAI_IDLE_FRAME_COUNT = 1;
@@ -162,15 +163,15 @@ const SPRITE_DIR_FALLBACK: Readonly<Partial<Record<SpriteDir, SpriteDir>>> = {
 export function resolveSpriteStateSrc(stateConfig: SpriteStateConfig, dir: SpriteDir): string {
   if (stateConfig.pathByDir) {
     const path = stateConfig.pathByDir[dir] ?? stateConfig.pathByDir[SPRITE_DIR_FALLBACK[dir]!];
-    if (path) return path;
+    if (path) return assetUrl(path);
   }
   if (stateConfig.pathTemplate) {
-    return resolveSpriteDir(stateConfig.pathTemplate, dir);
+    return assetUrl(resolveSpriteDir(stateConfig.pathTemplate, dir));
   }
   throw new Error("SpriteStateConfig must define pathTemplate or pathByDir");
 }
 
 export function getSamuraiIdleFramePath(frameIndex: number): string {
   const frame = String((frameIndex % SAMURAI_IDLE_FRAME_COUNT) + 1).padStart(2, "0");
-  return `/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`;
+  return assetUrl(`/assets/sprites/samurai-cat/idle-east-frames/frame_${frame}.png`);
 }

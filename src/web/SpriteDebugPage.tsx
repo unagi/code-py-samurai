@@ -6,6 +6,7 @@ import sludgeGameplay from "@engine/unit-data/sludge.gameplay.json";
 import thickSludgeGameplay from "@engine/unit-data/thick-sludge.gameplay.json";
 import wizardGameplay from "@engine/unit-data/wizard.gameplay.json";
 
+import { assetUrl } from "./asset-url";
 import { BoardGridView } from "./BoardGridView";
 import {
   SPRITE_OVERRIDE_MS,
@@ -116,7 +117,7 @@ const TILE_SPEC_BY_KIND: Readonly<Record<string, BoardTile>> = {
     kind: captiveGameplay.kind,
     altKey: CAPTIVE_DEBUG_ALT_KEY,
   },
-  floor: { symbol: " ", kind: "floor", altKey: "tiles.empty", assetPath: "/assets/tiles/cave-floor.png" },
+  floor: { symbol: " ", kind: "floor", altKey: "tiles.empty", assetPath: assetUrl("/assets/tiles/cave-floor.png") },
 };
 
 function buildSingleTileBoardGrid(kind: string): BoardGridData {
