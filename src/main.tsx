@@ -18,15 +18,23 @@ if (!container) {
   throw new Error("#app was not found");
 }
 
-const normalizePathname = (pathname: string): string => {
+/** Strip Vite BASE_URL prefix and trailing slashes to get a route-level path. */
+const getRoutePath = (pathname: string): string => {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   let value = pathname;
+  if (base && value.startsWith(base)) {
+    value = value.slice(base.length);
+  }
+  if (!value.startsWith("/")) {
+    value = "/" + value;
+  }
   while (value.length > 1 && value.endsWith("/")) {
     value = value.slice(0, -1);
   }
   return value;
 };
 
-const pathname = normalizePathname(globalThis.location.pathname);
+const pathname = getRoutePath(globalThis.location.pathname);
 const theme = readThemeStorage();
 if (theme === "everforest-dark") {
   document.documentElement.removeAttribute("data-theme");
