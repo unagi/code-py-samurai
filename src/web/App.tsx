@@ -110,7 +110,11 @@ function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum-member"
   const text = signature.trim();
 
   if (kind === "enum-member") {
-    return <span className="api-structure-sig-text">{text}</span>;
+    return (
+      <span className="api-structure-sig-inline">
+        <span className="api-structure-sig-name-property">{text}</span>
+      </span>
+    );
   }
 
   if (kind === "property") {
