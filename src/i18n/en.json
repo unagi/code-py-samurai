@@ -160,32 +160,32 @@
       },
       "2": {
         "description": "It is too dark to see anything, but you smell toads nearby.",
-        "tip": "Use samurai.feel() to see what is in front. If it is None, walk; otherwise attack. Remember, you can only do one action per turn.",
-        "clue": "Add an if/else condition with `space = samurai.feel()` and `if space is None:` to decide whether to samurai.attack() or samurai.walk()."
+        "tip": "Use samurai.feel() to see what is in front. Check if its unit property is None. Remember, you can only do one action per turn.",
+        "clue": "Add an if/else condition with `space = samurai.feel()` and `if space.unit is None:` to decide whether to samurai.attack() or samurai.walk()."
       },
       "3": {
         "description": "The air feels thicker than before. There must be a horde of toads.",
         "tip": "Be careful not to die! Use samurai.hp to keep an eye on your health, and samurai.rest() to earn 10% of max health back.",
-        "clue": "When there is no enemy ahead of you call samurai.rest() until health is full before walking forward."
+        "clue": "When there is no unit ahead of you (space.unit is None) call samurai.rest() until health is full before walking forward."
       },
       "4": {
         "description": "Something whistles through the air ahead. A monkey is hurling persimmons.",
-        "tip": "No new abilities this time, but be careful not to rest while taking damage. Save your previous health in a variable (for example prev_hp) and compare it each turn.",
-        "clue": "Set prev_hp = samurai.hp at the end of each turn. If samurai.hp dropped since last turn then you're taking damage and should not rest."
+        "tip": "No new abilities this time, but be careful not to rest while taking damage. Save your previous health in a variable (for example self.prev_hp) and compare it each turn.",
+        "clue": "Set self.prev_hp = samurai.hp at the end of each turn. If samurai.hp dropped since last turn then you're taking damage and should not rest."
       },
       "5": {
         "description": "You hear cries for help. You need to rescue the crane.",
-        "tip": "Use space = samurai.feel() and check space is not None and space.is_captive() to detect captives, then call samurai.rescue(). Don't attack captives.",
+        "tip": "Use space = samurai.feel() and check space.unit is not None and space.unit.kind == UnitKind.CAPTIVE to detect captives, then call samurai.rescue(). Don't attack captives.",
         "clue": "Don't forget to constantly check if you're taking damage. Rest until your health is full if you aren't taking damage."
       },
       "6": {
         "description": "This room stretches deeper than usual. You hear another crane calling for help.",
         "tip": "You can walk backward by passing 'backward' as an argument to walk(). Same goes for feel(), rescue() and attack(). Archers have a limited attack distance.",
-        "clue": "Walk backward if you are taking damage from afar and do not have enough health to attack. You may also want to consider walking backward until samurai.feel('backward').is_wall()."
+        "clue": "Walk backward if you are taking damage from afar and do not have enough health to attack. You may also want to consider walking backward until samurai.feel('backward').terrain == Terrain.WALL."
       },
       "7": {
         "description": "You feel a wall right in front of you and an opening behind you.",
-        "tip": "You are not as effective at attacking backward. Use samurai.feel().is_wall() and samurai.pivot() to turn around."
+        "tip": "You are not as effective at attacking backward. Use samurai.feel().terrain == Terrain.WALL and samurai.pivot() to turn around."
       },
       "8": {
         "description": "You hear a tanuki muttering. Its sorcery feels dangerous.",
@@ -206,7 +206,7 @@
       "2": {
         "description": "Another large room, but with several enemies blocking your way to the stairs.",
         "tip": "Just like walking, you can attack and feel in multiple directions (forward, left, right, backward).",
-        "clue": "Call samurai.feel(direction).is_enemy() in each direction to make sure there isn't an enemy beside you (attack if there is). Call samurai.rest() if you're low on health when there are no enemies around."
+        "clue": "Call samurai.feel(direction).unit.kind == UnitKind.ENEMY in each direction to make sure there isn't an enemy beside you (attack if there is). Call samurai.rest() if you're low on health when there are no enemies around."
       },
       "3": {
         "description": "You sense toads on all sides, you're surrounded!",
