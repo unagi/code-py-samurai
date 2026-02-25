@@ -7,6 +7,7 @@ import "./i18n/config";
 import App from "./web/App";
 import { readThemeStorage } from "./web/progress-storage";
 import ReferencePage from "./web/ReferencePage";
+import ErrorBoundary from "./web/ErrorBoundary";
 import SpriteDebugPage from "./web/SpriteDebugPage";
 
 const API_REFERENCE_PATH = "/reference/python-api";
@@ -41,6 +42,8 @@ if (pathname === API_REFERENCE_PATH) {
 
 createRoot(container).render(
   <StrictMode>
-    {rootNode}
+    <ErrorBoundary>
+      {rootNode}
+    </ErrorBoundary>
   </StrictMode>,
 );

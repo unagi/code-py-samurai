@@ -3795,6 +3795,223 @@ dialog.modal-backdrop::backdrop {
   visibility: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+   #app root flex layout — pushes footer to page bottom
+   --------------------------------------------------------------------------- */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.app-main-layout {
+  flex: 1;
+}
+
+.refdoc-page {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------------- */
+
+.app-footer {
+  border-top: 1px solid var(--ui-panel-border);
+  padding: 0.65rem 0;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted);
+  line-height: 1.6;
+}
+
+.app-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+}
+
+.app-footer-copyright {
+  white-space: nowrap;
+}
+
+.app-footer a {
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-footer a:hover {
+  color: var(--pal-aqua);
+}
+
+.app-footer-credit {
+  opacity: 0.8;
+}
+
+.app-footer-links {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.app-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Notice line (single-line notification below header)
+   --------------------------------------------------------------------------- */
+
+.notice-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  border-bottom: 1px solid var(--ui-panel-border);
+}
+
+.notice-line-info {
+  background: rgba(var(--pal-blue-rgb), 0.08);
+  color: var(--pal-blue);
+}
+
+.notice-line-warning {
+  background: rgba(var(--pal-yellow-rgb), 0.10);
+  color: var(--pal-yellow);
+}
+
+.notice-line-message {
+  flex: 1;
+}
+
+.notice-line-message a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.notice-line-info a {
+  color: var(--pal-blue);
+}
+
+.notice-line-warning a {
+  color: var(--pal-yellow);
+}
+
+.notice-line-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.notice-line-dismiss:hover {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Error boundary fallback
+   --------------------------------------------------------------------------- */
+
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem;
+  text-align: center;
+  color: var(--ui-text-muted);
+  background: var(--app-body-bg);
+}
+
+.error-fallback-logo {
+  width: clamp(140px, 30vw, 240px);
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.error-fallback-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--pal-red);
+}
+
+.error-fallback-description {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.error-fallback-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.error-fallback-btn {
+  background: var(--pal-aqua);
+  color: var(--pal-bg-0);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.error-fallback-btn:hover {
+  opacity: 0.85;
+}
+
+.error-fallback-link {
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.error-fallback-link:hover {
+  color: var(--pal-aqua);
+}
+
+.error-fallback-details {
+  margin-top: 1.5rem;
+  text-align: left;
+  max-width: 600px;
+  width: 100%;
+}
+
+.error-fallback-details summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ui-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.error-fallback-details pre {
+  background: var(--ui-panel-bg);
+  border: 1px solid var(--ui-panel-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 900px) {
   .sprite-debug-header {
     grid-template-columns: 1fr;

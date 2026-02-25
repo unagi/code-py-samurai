@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import AppFooter from "./AppFooter";
+
 import {
   apiReferenceDocument,
   pickText,
@@ -464,6 +466,7 @@ export default function ReferencePage() {
   }, [locale, t]);
 
   return (
+    <>
     <div className="refdoc-page">
       <header className="refdoc-topbar">
         <div className="refdoc-topbar-inner">
@@ -573,5 +576,7 @@ export default function ReferencePage() {
         </section>
       </div>
     </div>
+    <AppFooter />
+    </>
   );
 }
