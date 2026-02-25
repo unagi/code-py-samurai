@@ -1,4 +1,6 @@
 class Player:
+    last_health = None
+
     def play_turn(self, samurai):
         health = samurai.hp
         space = samurai.feel()

@@ -1,4 +1,6 @@
 class Player:
+    pivoted = False
+
     def play_turn(self, samurai):
         fwd = samurai.feel()
         if not self.pivoted:

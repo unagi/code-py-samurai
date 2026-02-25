@@ -32,12 +32,11 @@ function getSk(): SkNamespace {
 /* ---------- Source preprocessing ---------- */
 
 /**
- * Inject a base class with `__getattr__` returning None, so that
- * uninitialized `self.xxx` returns None instead of raising AttributeError.
- * This matches Ruby Warrior's nil-default behaviour for instance variables.
+ * Prepend constant definitions (Direction, Terrain, UnitKind) to the user's
+ * Python source so they can be referenced without imports.
  *
- * Uses inheritance instead of source injection to avoid indentation issues
- * (user code may use 2-space, 4-space, or tab indentation).
+ * Player class uses standard Python semantics — accessing an uninitialized
+ * attribute raises AttributeError, just like pure Python.
  */
 interface InjectResult {
   source: string;
@@ -45,7 +44,7 @@ interface InjectResult {
   preambleLines: number;
 }
 
-function injectGetattr(source: string): InjectResult {
+function injectPreamble(source: string): InjectResult {
   if (!/^class\s+Player\s*:/m.test(source)) {
     throw new PythonSyntaxError("class Player not found.");
   }
@@ -66,19 +65,11 @@ function injectGetattr(source: string): InjectResult {
     "    CAPTIVE = 'c'",
     "    ALLY = 'a'",
     "",
-    "class _PlayerBase:",
-    "    def __getattr__(self, name):",
-    "        return None",
-    "",
     "",
   ];
   const base = preamble.join("\n");
-  const modified = source.replace(
-    /^(class\s+Player)\s*:/m,
-    "$1(_PlayerBase):",
-  );
   // join("\n") of N elements produces N-1 newlines; user code starts on line N.
-  return { source: base + modified, preambleLines: preamble.length - 1 };
+  return { source: base + source, preambleLines: preamble.length - 1 };
 }
 
 /* ---------- JS ↔ Skulpt conversions ---------- */
@@ -333,7 +324,7 @@ export function compilePythonPlayer(source: string): IPlayer {
   }
 
   const sk = getSk();
-  const inject = injectGetattr(source);
+  const inject = injectPreamble(source);
 
   // Compile and instantiate the Player class
   let playTurnMethod: unknown;
@@ -346,8 +337,7 @@ export function compilePythonPlayer(source: string): IPlayer {
     }
     const playerInstance = sk.misceval.callsimArray(PlayerClass, []) as SkInstance;
     playTurnMethod = playerInstance.tp$getattr(new sk.builtin.str("play_turn"));
-    // __getattr__ returns Sk.builtin.none.none$ for missing attrs, so check for that too
-    if (!playTurnMethod || playTurnMethod === sk.builtin.none.none$) {
+    if (!playTurnMethod) {
       throw new PythonSyntaxError("def play_turn(self, samurai) not found.");
     }
   } catch (error) {
