@@ -35,7 +35,6 @@ interface BoardGridViewProps {
   samuraiMaxHealth: number | null;
   statsFmt: StatsFormatter;
   tileSizePx: number;
-  onHoveredEnemyStatsChange: (value: string | null) => void;
 }
 
 interface SpriteVisual {
@@ -200,7 +199,6 @@ function BoardTileCell(props: Readonly<{
   statsFmt: StatsFormatter;
   tileSizePx: number;
   t: TranslateFn;
-  onHoveredEnemyStatsChange: (value: string | null) => void;
 }>): ReactElement {
   const {
     tile,
@@ -214,7 +212,6 @@ function BoardTileCell(props: Readonly<{
     statsFmt,
     tileSizePx,
     t,
-    onHoveredEnemyStatsChange,
   } = props;
 
   const displaySymbol = getDisplaySymbol(tile);
@@ -229,25 +226,14 @@ function BoardTileCell(props: Readonly<{
   const baseVisual = resolveBaseTileVisual(tile, override, spriteDir, samuraiFrame, tileAnimationSeed);
   const overlay = resolveOverlayVisual(override, spriteDir);
 
-  const handleHoverStart = (): void => {
-    if (!hoverText) return;
-    onHoveredEnemyStatsChange(hoverText);
-  };
-
-  const handleHoverEnd = (): void => {
-    onHoveredEnemyStatsChange(null);
-  };
-
   return (
     <div
       key={`${index}-${tile.kind}-${tile.symbol}`}
-      className={`board-tile tile-${tile.kind}`}
+      className={`board-tile tile-${tile.kind}${hoverText ? " has-tooltip" : ""}`}
       title={tileAlt}
       aria-label={tileAlt}
-      onMouseEnter={handleHoverStart}
-      onMouseLeave={handleHoverEnd}
-      onFocus={handleHoverStart}
-      onBlur={handleHoverEnd}
+      data-tooltip={hoverText ?? undefined}
+      tabIndex={hoverText ? 0 : undefined}
     >
       {renderBaseTileVisual(baseVisual, overlay.src, tileAlt, displaySymbol, tileSizePx)}
       {renderOverlayVisual(overlay, tileAlt)}
@@ -278,7 +264,6 @@ export function BoardGridView(props: Readonly<BoardGridViewProps>): ReactElement
     samuraiMaxHealth,
     statsFmt,
     tileSizePx,
-    onHoveredEnemyStatsChange,
   } = props;
   const visibleGrid = displayGrid ?? buildBoardDisplayGrid(boardGrid, "full");
 
@@ -303,7 +288,6 @@ export function BoardGridView(props: Readonly<BoardGridViewProps>): ReactElement
           statsFmt={statsFmt}
           tileSizePx={tileSizePx}
           t={t}
-          onHoveredEnemyStatsChange={onHoveredEnemyStatsChange}
         />
       ))}
     </div>

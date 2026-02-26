@@ -7,6 +7,7 @@ import AppFooter from "./AppFooter";
 import {
   apiReferenceDocument,
   pickText,
+  stdlibModules,
   type LocaleCode,
   type ReferenceItem,
   type ReferenceTag,
@@ -41,6 +42,29 @@ interface NavGroup {
   title: string;
   links: NavLink[];
 }
+
+const ITEM_KIND_ICON: Record<string, string> = {
+  method: "bi bi-gear-fill",
+  property: "bi bi-key-fill",
+  enum: "bi bi-list-columns-reverse",
+  class: "bi bi-box-fill",
+};
+
+/** Kind-based semantic CSS class for item name colour. */
+const ITEM_NAME_CLASS: Partial<Record<string, string>> = {
+  method: "refdoc-name--method",
+  property: "refdoc-name--property",
+  enum: "refdoc-name--enum",
+  class: "refdoc-name--class",
+};
+
+/** Kind-based CSS class for icon colour (shared colour system with API Outline). */
+const ITEM_ICON_CLASS: Partial<Record<string, string>> = {
+  method: "refdoc-kind-icon--method",
+  property: "refdoc-kind-icon--property",
+  enum: "refdoc-kind-icon--enum",
+  class: "refdoc-kind-icon--class",
+};
 
 type SignatureTokenKind =
   | "plain"
@@ -198,13 +222,15 @@ function renderExampleCode(code: string, itemId: string, label: string) {
 function renderReferenceItem(item: ReferenceItem, locale: LocaleCode, exampleLabel: string) {
   const tags = splitTagBuckets(item, locale);
   const isProperty = item.kind === "property";
+  const nameClass = ITEM_NAME_CLASS[item.kind];
+  const iconColorClass = ITEM_ICON_CLASS[item.kind] ?? "";
 
   return (
     <article key={item.id} id={item.id} className={`refdoc-item refdoc-item-${item.kind}`}>
       <header className="refdoc-item-header">
         <h4>
-          {item.owner ? <span className="refdoc-owner">{item.owner}.</span> : null}
-          {item.name}
+          {ITEM_KIND_ICON[item.kind] ? <i className={`${ITEM_KIND_ICON[item.kind]} refdoc-kind-icon ${iconColorClass}`} aria-hidden="true" /> : null}
+          {nameClass ? <code className={nameClass}>{item.name}</code> : item.name}
         </h4>
         {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
       </header>
@@ -261,7 +287,10 @@ function renderCompactMethodCard(item: ReferenceItem, locale: LocaleCode, return
   return (
     <article key={item.id} id={item.id} className="refdoc-compact-card">
       <div className="refdoc-compact-header">
-        <code className="refdoc-compact-name">{item.name}</code>
+        <code className={`refdoc-compact-name ${ITEM_NAME_CLASS[item.kind] ?? ""}`}>
+          {ITEM_KIND_ICON[item.kind] ? <i className={`${ITEM_KIND_ICON[item.kind]} refdoc-kind-icon ${ITEM_ICON_CLASS[item.kind] ?? ""}`} aria-hidden="true" /> : null}
+          {item.name}
+        </code>
         {since ? <span className="refdoc-inline-badge refdoc-level-badge">{since}</span> : null}
       </div>
       {item.signature ? (
@@ -303,9 +332,6 @@ function renderSamuraiSection(section: (typeof apiReferenceDocument.sections)[nu
 
   return (
     <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
-      <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
-      {section.intro ? <p className="refdoc-intro">{pickText(section.intro, locale)}</p> : null}
-
       {introItems.length > 0 ? (
         <div className="refdoc-items">
           {introItems.map((item) => renderReferenceItem(item, locale, exampleLabel))}
@@ -360,14 +386,14 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
 
   return (
     <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
-      <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
-      {section.intro ? <p className="refdoc-intro">{pickText(section.intro, locale)}</p> : null}
-
       <article className="refdoc-entity-card">
         {classItem ? (
           <>
             <header id={classItem.id} className="refdoc-class-focus-header">
-              <h4>{classItem.name}</h4>
+              <h4>
+                {ITEM_KIND_ICON[classItem.kind] ? <i className={`${ITEM_KIND_ICON[classItem.kind]} refdoc-kind-icon ${ITEM_ICON_CLASS[classItem.kind] ?? ""}`} aria-hidden="true" /> : null}
+                <code className={ITEM_NAME_CLASS[classItem.kind] ?? ""}>{classItem.name}</code>
+              </h4>
             </header>
             {classItem.signature ? (
               <pre className="refdoc-signature">{renderSignatureCode(classItem.signature, classItem)}</pre>
@@ -383,7 +409,7 @@ function renderEntitySection(section: (typeof apiReferenceDocument.sections)[num
               return (
                 <section key={item.id} id={item.id} className="refdoc-entity-property-row">
                   <div className="refdoc-entity-property-head">
-                    <code className="refdoc-entity-property-name">{item.name}</code>
+                    <code className={ITEM_NAME_CLASS[item.kind] ?? ""}>{ITEM_KIND_ICON[item.kind] ? <i className={`${ITEM_KIND_ICON[item.kind]} refdoc-kind-icon ${ITEM_ICON_CLASS[item.kind] ?? ""}`} aria-hidden="true" /> : null}{item.name}</code>
                     {tags.sinceTag ? <span className="refdoc-inline-badge refdoc-level-badge">{tags.sinceTag}</span> : null}
                   </div>
                   {item.signature ? (
@@ -462,6 +488,14 @@ export default function ReferencePage() {
             }));
           return { href: `#${section.id}`, label: className, children };
         }),
+      },
+      {
+        id: "stdlib-nav",
+        title: t("reference.sidebarStdlib"),
+        links: stdlibModules.map((entry) => ({
+          href: `#stdlib-${entry.module}`,
+          label: entry.module,
+        })),
       },
     ].filter((group) => group.links.length > 0);
   }, [locale, t]);
@@ -562,14 +596,34 @@ export default function ReferencePage() {
                     }
                     return (
                       <section key={section.id} id={section.id} className="refdoc-panel refdoc-section">
-                        <h3 className="refdoc-section-title">{pickText(section.title, locale)}</h3>
-                        {section.intro ? <p className="refdoc-intro">{pickText(section.intro, locale)}</p> : null}
                         <div className="refdoc-items">
                           {section.items.map((item) => renderReferenceItem(item, locale, exampleLabel))}
                         </div>
                       </section>
                     );
                   })}
+              </div>
+            </section>
+
+            <section className="refdoc-section-block">
+              <div className="refdoc-section-heading">
+                <h2>{t("reference.stdlib")}</h2>
+              </div>
+              <div className="refdoc-section-stack">
+                {stdlibModules.map((entry) => (
+                  <section key={entry.module} id={`stdlib-${entry.module}`} className="refdoc-panel refdoc-section">
+                    <h3 className="refdoc-section-title">{entry.module}</h3>
+                    <p className="refdoc-description">
+                      {renderInlineCode(pickText(entry.description, locale))}
+                    </p>
+                    {entry.examples ? renderExampleCode(pickText(entry.examples, locale), `stdlib-${entry.module}`, exampleLabel) : null}
+                    <p className="refdoc-stdlib-link">
+                      <a href={entry.url} target="_blank" rel="noopener noreferrer">
+                        {t("reference.stdlibOfficialDocs")} ↗
+                      </a>
+                    </p>
+                  </section>
+                ))}
               </div>
             </section>
 

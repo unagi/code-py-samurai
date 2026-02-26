@@ -85,13 +85,14 @@
   --api-tree-cutout: var(--ui-panel-bg);
   --api-tree-class-row-bg: rgba(var(--pal-white-rgb), 0.03);
   --api-tree-class-row-border: rgba(var(--pal-blue-rgb), 0.14);
-  --api-tree-class-row-text: var(--pal-green);
+  --api-tree-class-row-text: var(--pal-fg);
   --api-tree-group-text: var(--pal-blue);
   --api-tree-leaf-text: var(--pal-fg);
   --api-tree-icon: var(--pal-subtle);
   --api-tree-empty-text: var(--pal-subtle);
   --api-tree-method-rail: rgba(var(--pal-blue-rgb), 0.16);
   --api-tree-property-rail: rgba(var(--pal-green-rgb), 0.16);
+  --api-tree-enum-rail: rgba(var(--pal-aqua-rgb), 0.16);
 
   --cm-editor-fg: var(--pal-fg);
   --cm-editor-bg: var(--pal-bg-1);
@@ -108,6 +109,11 @@
   --syntax-string: var(--pal-yellow);
   --syntax-comment: var(--pal-subtle);
   --syntax-punctuation: var(--pal-muted);
+
+  /* Kind-based semantic colours (shared across API Outline & API Doc) */
+  --kind-method-fg: var(--pal-green);
+  --kind-property-fg: var(--pal-blue);
+  --kind-enum-fg: var(--pal-aqua);
 
   --app-body-bg:
     radial-gradient(85% 55% at 20% 0%, rgba(var(--pal-green-rgb), 0.08), transparent 62%),
@@ -215,7 +221,7 @@
   --board-status-chip-bg: rgba(var(--pal-bg-0-rgb), 0.82);
   --board-status-chip-fg: var(--pal-fg);
   --board-status-chip-sub-border: rgba(var(--pal-yellow-rgb), 0.22);
-  --board-status-chip-sub-bg: rgba(var(--pal-bg-1-rgb), 0.78);
+  --board-status-chip-sub-bg: rgba(var(--pal-bg-1-rgb), 0.95);
   --board-status-chip-sub-fg: var(--pal-yellow);
   --damage-popup-bg: rgba(57, 19, 22, 0.9);
   --damage-popup-border: rgba(245, 168, 158, 0.42);
@@ -368,8 +374,6 @@
   --refdoc-method-badge-fg: var(--pal-blue);
   --refdoc-property-line: rgba(var(--pal-blue-rgb), 0.2);
   --refdoc-property-line-strong: rgba(var(--pal-blue-rgb), 0.38);
-  --refdoc-property-name-fg: var(--pal-yellow);
-  --refdoc-compact-name-fg: var(--pal-green);
   --refdoc-compact-desc-fg: var(--pal-muted);
   --refdoc-compact-meta-border: rgba(var(--pal-blue-rgb), 0.14);
   --refdoc-compact-meta-fg: var(--pal-fg);
@@ -517,13 +521,14 @@ code, pre {
   --api-tree-cutout: var(--ui-panel-bg);
   --api-tree-class-row-bg: rgba(var(--pal-white-rgb), 0.03);
   --api-tree-class-row-border: rgba(var(--pal-subtle-rgb), 0.16);
-  --api-tree-class-row-text: var(--pal-green);
+  --api-tree-class-row-text: var(--pal-fg);
   --api-tree-group-text: var(--pal-purple);
   --api-tree-leaf-text: var(--pal-fg);
   --api-tree-icon: var(--pal-green);
   --api-tree-empty-text: var(--pal-muted);
   --api-tree-method-rail: rgba(var(--pal-blue-rgb), 0.16);
   --api-tree-property-rail: rgba(var(--pal-purple-rgb), 0.16);
+  --api-tree-enum-rail: rgba(var(--pal-orange-rgb), 0.16);
 
   --cm-editor-fg: var(--pal-fg);
   --cm-editor-bg: var(--pal-bg-0);
@@ -540,6 +545,10 @@ code, pre {
   --syntax-string: var(--pal-yellow);
   --syntax-comment: var(--pal-subtle);
   --syntax-punctuation: var(--pal-muted);
+
+  /* Rose-pine: pal-green = pal-blue, so use purple for property differentiation */
+  --kind-property-fg: var(--pal-purple);
+  --kind-enum-fg: var(--pal-orange);
 
   --app-body-bg:
     radial-gradient(85% 55% at 20% 0%, rgba(var(--pal-purple-rgb), 0.08), transparent 62%),
@@ -645,7 +654,7 @@ code, pre {
   --board-status-chip-bg: rgba(var(--pal-bg-1-rgb), 0.82);
   --board-status-chip-fg: var(--pal-fg);
   --board-status-chip-sub-border: rgba(var(--pal-orange-rgb), 0.28);
-  --board-status-chip-sub-bg: rgba(var(--pal-bg-1-rgb), 0.78);
+  --board-status-chip-sub-bg: rgba(var(--pal-bg-1-rgb), 0.95);
   --board-status-chip-sub-fg: var(--pal-orange);
   --damage-popup-bg: rgba(57, 19, 22, 0.9);
   --damage-popup-border: rgba(245, 168, 158, 0.42);
@@ -798,8 +807,6 @@ code, pre {
   --refdoc-method-badge-fg: var(--pal-purple);
   --refdoc-property-line: rgba(var(--pal-blue-rgb), 0.2);
   --refdoc-property-line-strong: rgba(var(--pal-blue-rgb), 0.38);
-  --refdoc-property-name-fg: var(--pal-orange);
-  --refdoc-compact-name-fg: var(--pal-blue);
   --refdoc-compact-desc-fg: var(--pal-muted);
   --refdoc-compact-meta-border: rgba(var(--pal-purple-rgb), 0.14);
   --refdoc-compact-meta-fg: var(--pal-fg);
@@ -1435,12 +1442,8 @@ body {
 }
 
 .board-status {
-  position: absolute;
-  top: calc(var(--board-desc-height, 0px) + 0.55rem);
-  left: 0.55rem;
-  right: 0.55rem;
-  z-index: 2;
-  pointer-events: none;
+  width: 100%;
+  padding: 0.3rem 0.55rem;
   display: flex;
   gap: 0.42rem;
   align-items: center;
@@ -1535,11 +1538,36 @@ body {
   border-color: var(--heal-popup-border);
 }
 
-.status-chip-sub {
-  margin-left: auto;
-  border-color: var(--board-status-chip-sub-border);
+/* Tile tooltip (hover / focus) */
+.board-tile.has-tooltip {
+  overflow: visible;
+}
+
+.board-tile[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--board-status-chip-sub-border);
   background: var(--board-status-chip-sub-bg);
   color: var(--board-status-chip-sub-fg);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.board-tile[data-tooltip]:hover::after,
+.board-tile[data-tooltip]:focus-within::after {
+  opacity: 1;
 }
 
 @keyframes damage-rise {
@@ -1910,6 +1938,7 @@ button:disabled {
 
 .api-structure-tree {
   color: var(--api-tree-leaf-text);
+  font-family: var(--code-font-family);
 }
 
 .api-structure-node {
@@ -1917,13 +1946,17 @@ button:disabled {
 }
 
 .api-structure-node-class:where(:not(:first-child)) {
-  margin-top: 0.75rem;
+  margin-top: 0.9rem;
 }
 
 .api-structure-branch {
   position: relative;
   margin-left: 0.08rem;
   padding-left: 0.62rem;
+  padding-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
 }
 
 .api-structure-branch::before {
@@ -1997,7 +2030,7 @@ button:disabled {
 }
 
 .api-structure-row-leaf-enum {
-  border-left: 2px solid var(--api-tree-property-rail);
+  border-left: 2px solid var(--api-tree-enum-rail);
 }
 
 .api-structure-label {
@@ -2010,8 +2043,8 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--api-tree-icon);
   font-size: 0.78rem;
+  /* color: inherits from .api-structure-row-class (--api-tree-class-row-text) */
 }
 
 .api-structure-twistie {
@@ -2047,12 +2080,15 @@ button:disabled {
 }
 
 .api-structure-item-icon-method {
-  color: var(--syntax-function);
+  color: var(--kind-method-fg);
 }
 
-.api-structure-item-icon-property,
+.api-structure-item-icon-property {
+  color: var(--kind-property-fg);
+}
+
 .api-structure-item-icon-enum {
-  color: var(--syntax-keyword);
+  color: var(--kind-enum-fg);
 }
 
 .api-structure-item-icon-empty {
@@ -2060,7 +2096,6 @@ button:disabled {
 }
 
 .api-structure-signature {
-  font-family: var(--code-font-family);
   font-size: 0.84rem;
   line-height: 1.35;
   color: inherit;
@@ -2069,11 +2104,15 @@ button:disabled {
 }
 
 .api-structure-sig-name-method {
-  color: var(--syntax-function);
+  color: var(--kind-method-fg);
 }
 
 .api-structure-sig-name-property {
-  color: var(--syntax-variable);
+  color: var(--kind-property-fg);
+}
+
+.api-structure-sig-name-enum {
+  color: var(--kind-enum-fg);
 }
 
 .api-structure-sig-self {
@@ -2874,10 +2913,11 @@ dialog.modal-backdrop::backdrop {
   gap: 0.6rem;
 }
 
-.refdoc-entity-property-name {
-  color: var(--refdoc-property-name-fg);
-  font-weight: 700;
-}
+/* Kind-based semantic name classes (shared colour system) */
+.refdoc-name--method   { color: var(--kind-method-fg);   font-weight: 700; }
+.refdoc-name--property { color: var(--kind-property-fg); font-weight: 700; }
+.refdoc-name--enum     { color: var(--kind-enum-fg);     font-weight: 700; }
+.refdoc-name--class    { color: var(--pal-fg);            font-weight: 700; }
 
 .refdoc-samurai-action-list .refdoc-item-method {
   border-left: 3px solid var(--refdoc-property-line-strong);
@@ -2906,7 +2946,6 @@ dialog.modal-backdrop::backdrop {
 }
 
 .refdoc-compact-name {
-  color: var(--refdoc-compact-name-fg);
   font-weight: 700;
 }
 
@@ -2966,6 +3005,16 @@ dialog.modal-backdrop::backdrop {
   font-weight: 650;
   line-height: 1.2;
 }
+
+.refdoc-kind-icon {
+  margin-right: 0.35em;
+  font-size: 0.85em;
+}
+
+.refdoc-kind-icon--method   { color: var(--kind-method-fg); }
+.refdoc-kind-icon--property { color: var(--kind-property-fg); }
+.refdoc-kind-icon--enum     { color: var(--kind-enum-fg); }
+.refdoc-kind-icon--class    { color: var(--pal-fg); }
 
 .refdoc-inline-badge {
   display: inline-flex;
@@ -4356,14 +4405,6 @@ dialog.modal-backdrop::backdrop {
     grid-template-columns: 1fr;
   }
 
-  .board-status {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  .status-chip-sub {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 899px) {
@@ -4461,9 +4502,7 @@ dialog.modal-backdrop::backdrop {
   }
 
   .board-status {
-    top: calc(var(--board-desc-height, 0px) + 0.45rem);
-    left: 0.45rem;
-    right: 0.45rem;
+    padding: 0.25rem 0.45rem;
     gap: 0.3rem;
   }
 
