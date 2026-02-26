@@ -12,7 +12,8 @@
     "samurai": "侍",
     "lv": "Lv.{{level}}",
     "hp": "HP {{current}}/{{max}}",
-    "atk": "ATK {{value}}"
+    "atk": "ATK {{value}}",
+    "samuraiStatus": "サムライステータス"
   },
   "controls": {
     "play": "再生",
@@ -130,7 +131,10 @@
     "returns": "戻り値",
     "example": "Example",
     "sidebarEnums": "Enums",
-    "sidebarClasses": "Classes"
+    "sidebarClasses": "Classes",
+    "stdlib": "Standard Library",
+    "sidebarStdlib": "Stdlib",
+    "stdlibOfficialDocs": "公式ドキュメント"
   },
   "footer": {
     "license": "MIT License",

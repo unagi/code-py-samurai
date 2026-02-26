@@ -115,6 +115,26 @@ export const apiReferenceDocument: ApiReferenceDocument = {
           examples: t("health = samurai.hp  # 現在のHP", "health = samurai.hp  # current HP"),
         },
         {
+          id: "samurai-max-hp",
+          kind: "property",
+          owner: "Samurai",
+          name: "max_hp",
+          signature: "max_hp: int  # read-only",
+          description: t("最大HP（変更不可）。", "Maximum HP (read-only)."),
+          tags: [{ name: "@type", value: t("int", "int") }],
+          examples: t("samurai.max_hp  # 20", "samurai.max_hp  # 20"),
+        },
+        {
+          id: "samurai-atk",
+          kind: "property",
+          owner: "Samurai",
+          name: "atk",
+          signature: "atk: int  # read-only",
+          description: t("攻撃力（変更不可）。", "Attack power (read-only)."),
+          tags: [{ name: "@type", value: t("int", "int") }],
+          examples: t("samurai.atk  # 5", "samurai.atk  # 5"),
+        },
+        {
           id: "samurai-action-methods",
           kind: "group",
           name: "Action Methods",
@@ -446,6 +466,28 @@ export const apiReferenceDocument: ApiReferenceDocument = {
     },
   ],
 };
+
+export interface StdlibModuleEntry {
+  module: string;
+  url: string;
+  description: LocalizedText;
+  examples?: LocalizedText;
+}
+
+export const stdlibModules: StdlibModuleEntry[] = [
+  {
+    module: "math",
+    url: "https://docs.python.org/3/library/math.html",
+    description: t(
+      "数学関数を提供する標準ライブラリ。`math.ceil()`, `math.floor()` など。",
+      "Standard library providing mathematical functions: `math.ceil()`, `math.floor()`, etc.",
+    ),
+    examples: t(
+      "math.ceil(20 / 3)   # 切り上げ → 7\nmath.floor(20 / 3)  # 切り捨て → 6",
+      "math.ceil(20 / 3)   # round up → 7\nmath.floor(20 / 3)  # round down → 6",
+    ),
+  },
+];
 
 export function pickText(value: LocalizedText, locale: LocaleCode): string {
   return value[locale];

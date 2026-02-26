@@ -1,7 +1,11 @@
 import type { SkInstance, SkNamespace } from "./skulpt";
 import type { ITurn, IPlayer } from "@engine/types";
+import samuraiGameplay from "@engine/unit-data/samurai.gameplay.json";
 import { asRuntimeTurn, type RuntimeTurn } from "./bridge";
 import { PythonRuntimeError, PythonSyntaxError } from "./errors";
+
+const SAMURAI_MAX_HP: number = samuraiGameplay.stats.maxHealth;
+const SAMURAI_ATK: number = samuraiGameplay.stats.attackPower;
 
 /* ---------- Skulpt access ---------- */
 
@@ -242,11 +246,19 @@ const SPACE_SENSE_NAMES = ["direction_of", "distance_of"] as const;
 /** Build a Skulpt Samurai instance that delegates to a RuntimeTurn. */
 function buildSamuraiInstance(sk: SkNamespace, turn: RuntimeTurn): unknown {
   const SamuraiClass = sk.misceval.buildClass({}, (_$gbl, $loc) => {
-    // hp property
+    // hp property (current, changes each turn)
     const hpGetter = new sk.builtin.func(() =>
       new sk.builtin.int_(turn.doSense("health") as number),
     );
     $loc.hp = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [hpGetter]);
+
+    // max_hp property (read-only constant)
+    const maxHpGetter = new sk.builtin.func(() => new sk.builtin.int_(SAMURAI_MAX_HP));
+    $loc.max_hp = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [maxHpGetter]);
+
+    // atk property (read-only constant)
+    const atkGetter = new sk.builtin.func(() => new sk.builtin.int_(SAMURAI_ATK));
+    $loc.atk = sk.misceval.callsimOrSuspendArray(sk.builtins.property, [atkGetter]);
 
     // Action methods
     for (const [pyName, engineName] of ACTION_ENTRIES) {

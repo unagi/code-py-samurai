@@ -48,7 +48,7 @@ import { absoluteDirToSpriteDir, type SpriteDir } from "./sprite-utils";
 import { useGameController } from "./use-game-controller";
 
 function buildStarterPlayerCode(comment: string): string {
-  return `class Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
+  return `import math\n\nclass Player:\n    def play_turn(self, samurai):\n        ${comment}\n        pass`;
 }
 
 const BOARD_TILE_GAP_PX = 2;
@@ -113,7 +113,7 @@ function renderApiStructureSignature(kind: ApiStructureEntryKind | "enum-member"
   if (kind === "enum-member") {
     return (
       <span className="api-structure-sig-inline">
-        <span className="api-structure-sig-name-property">{text}</span>
+        <span className="api-structure-sig-name-enum">{text}</span>
       </span>
     );
   }
@@ -176,7 +176,6 @@ export default function App() {
   const [speedMs, setSpeedMs] = useState(500);
   const starterCode = buildStarterPlayerCode(t("starterCode.comment"));
   const [playerCode, setPlayerCode] = useState(() => readPlayerCodeStorage(starterCode));
-  const [hoveredEnemyStats, setHoveredEnemyStats] = useState<string | null>(null);
   const [tileSizePx, setTileSizePx] = useState(20);
   const [boardViewportWidthPx, setBoardViewportWidthPx] = useState(0);
   const [samuraiFrame, setSamuraiFrame] = useState(0);
@@ -239,7 +238,7 @@ export default function App() {
     speedMs,
     spriteCapableKinds: SPRITE_CAPABLE_KINDS,
     setSamuraiLevel,
-    onResetVisualState: () => setHoveredEnemyStats(null),
+    onResetVisualState: () => {},
   });
   const samuraiApiStructure = useMemo(
     () => buildSamuraiApiStructureViewModel(unlockedSamuraiAbilities),
@@ -396,7 +395,6 @@ export default function App() {
 
     stopTimer();
     setShowResultModal(false);
-    setHoveredEnemyStats(null);
     clearStoredAppData();
 
     setCurrentGlobalLevel(1);
@@ -735,12 +733,6 @@ export default function App() {
                 "--board-log-height": `${BOARD_LOG_PANEL_HEIGHT_PX}px`,
               } as CSSProperties}
             >
-              <div className="board-status">
-                <span className="status-chip">
-                  {t("tiles.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
-                </span>
-                {hoveredEnemyStats ? <span className="status-chip status-chip-sub">{hoveredEnemyStats}</span> : null}
-              </div>
               <section className="board-description-panel" aria-label={t("board.stageIntro")}>
                 <p className="board-description-label">{t("board.stageIntro")}</p>
                 <p className="board-description-text">{t(levelDescKey)}</p>
@@ -759,8 +751,12 @@ export default function App() {
                   samuraiMaxHealth={samuraiMaxHealth}
                   statsFmt={statsFmt}
                   tileSizePx={tileSizePx}
-                  onHoveredEnemyStatsChange={setHoveredEnemyStats}
                 />
+              </div>
+              <div className="board-status" aria-label={t("board.samuraiStatus")}>
+                <span className="status-chip">
+                  {t("tiles.samurai")} {t(samuraiRank.key)} {t("board.lv", { level: samuraiLevel })}  {t("board.hp", { current: samuraiHealth ?? "--", max: samuraiMaxHealth ?? "--" })}  {t("board.atk", { value: 5 })}
+                </span>
               </div>
               <section className="board-log-panel" aria-label={t("logs.heading")}>
                 <pre id="logs">{formattedLogs || t("logs.empty")}</pre>

@@ -12,7 +12,8 @@
     "samurai": "SAMURAI",
     "lv": "Lv.{{level}}",
     "hp": "HP {{current}}/{{max}}",
-    "atk": "ATK {{value}}"
+    "atk": "ATK {{value}}",
+    "samuraiStatus": "Samurai Status"
   },
   "controls": {
     "play": "Play",
@@ -130,7 +131,10 @@
     "returns": "Returns",
     "example": "Example",
     "sidebarEnums": "Enums",
-    "sidebarClasses": "Classes"
+    "sidebarClasses": "Classes",
+    "stdlib": "Standard Library",
+    "sidebarStdlib": "Stdlib",
+    "stdlibOfficialDocs": "Official Docs"
   },
   "footer": {
     "license": "MIT License",
