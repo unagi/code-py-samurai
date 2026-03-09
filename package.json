@@ -50,7 +50,7 @@
     "@codemirror/lint": "^6.9.4",
     "bootstrap-icons": "^1.13.1",
     "codemirror": "^6.0.2",
-    "i18next": "^25.8.13",
+    "i18next": "^25.8.14",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
